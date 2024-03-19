@@ -1,1 +1,1 @@
-# Education Management System
+# Education Management System (Django Backend)
