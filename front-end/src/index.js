@@ -1,17 +1,23 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+/* Import statements */
+import React, { Suspense } from 'react'
+import ReactDOM from 'react-dom'
+import Spinner from 'react-bootstrap/Spinner'
+import './index.css'
+import App from './App'
+import { BrowserRouter } from 'react-router-dom'
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+ReactDOM.render(
+  <BrowserRouter>
+    <Suspense
+      fallback={
+        <div className='spinnerdiv'>
+          <Spinner animation='grow' variant='warning' role='status' size='lg'>
+            <span className='sr-only'>Loading...</span>
+          </Spinner>
+        </div>
+      }>
+      <App />
+    </Suspense>
+  </BrowserRouter>,
+  document.getElementById('root')
+)
