@@ -11,32 +11,40 @@ DEBUG = local_settings.DEBUG
 
 ALLOWED_HOSTS = local_settings.ALLOWED_HOSTS
 
+# Custom User Model
+AUTH_USER_MODEL = 'accounts.User'
 
 # Application definition
-INSTALLED_APPS = [
+DJANGO_DEFAULT_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "corsheaders",
+]
 
-    # Trusted Apps
+THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'django_filters',
     'rest_framework_simplejwt',
     'rest_framework_swagger',
-
-    # My Apps
-
-
-
 ]
+
+
+LOCAL_APPS = [
+    "accounts.apps.AccountsConfig",
+]
+
+
+INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -66,16 +74,24 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 
 # Database -> Postgresql
+# DATABASES = {
+#   'default': {
+#       'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#       'NAME': local_settings.DATABASE['NAME'],
+#       'HOST': local_settings.DATABASE['HOST'],
+#       'USER': local_settings.DATABASE['USER'],
+#       'PASSWORD': local_settings.DATABASE['PASSWORD'],
+#       'PORT': local_settings.DATABASE['PORT'],
+#   }
+# }
+
 DATABASES = {
-  'default': {
-      'ENGINE': 'django.db.backends.postgresql_psycopg2',
-      'NAME': local_settings.DATABASE['NAME'],
-      'HOST': local_settings.DATABASE['HOST'],
-      'USER': local_settings.DATABASE['USER'],
-      'PASSWORD': local_settings.DATABASE['PASSWORD'],
-      'PORT': local_settings.DATABASE['PORT'],
-  }
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
 }
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -124,6 +140,8 @@ else:
             'rest_framework.authentication.TokenAuthentication'
         )
     }
+
+CORS_ORIGIN_ALLOW_ALL = True
 
 # Email Configurations
 EMAIL_BACKEND = local_settings.Email_Configuration['EMAIL_BACKEND']
