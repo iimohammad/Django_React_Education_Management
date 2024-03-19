@@ -22,6 +22,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Trusted Apps
+    'rest_framework',
+    'rest_framework.authtoken',
+    'django_filters',
+    'rest_framework_simplejwt',
+    'rest_framework_swagger',
 
     # My Apps
 
@@ -103,4 +108,28 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATIC_URL = '/static/'
 STATIC_ROOT = './static_files/'
+
+if DEBUG:
+    REST_FRAMEWORK = {
+        'DEFAULT_AUTHENTICATION_CLASSES': (
+            'rest_framework_simplejwt.authentication.JWTAuthentication',
+            'rest_framework.authentication.TokenAuthentication',
+            'rest_framework.authentication.SessionAuthentication'
+        )
+    }
+else:
+    REST_FRAMEWORK = {
+        'DEFAULT_AUTHENTICATION_CLASSES': (
+            'rest_framework_simplejwt.authentication.JWTAuthentication',
+            'rest_framework.authentication.TokenAuthentication'
+        )
+    }
+
+# Email Configurations
+EMAIL_BACKEND = local_settings.Email_Configuration['EMAIL_BACKEND']
+EMAIL_HOST = local_settings.Email_Configuration['EMAIL_HOST']
+EMAIL_PORT = local_settings.Email_Configuration['EMAIL_PORT']
+EMAIL_HOST_USER = local_settings.Email_Configuration['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = local_settings.Email_Configuration['EMAIL_HOST_PASSWORD']
+EMAIL_USE_TLS = local_settings.Email_Configuration['EMAIL_USE_TLS']
 
