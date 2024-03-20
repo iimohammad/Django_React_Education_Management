@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 from config import local_settings
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -154,4 +155,21 @@ EMAIL_USE_TLS = local_settings.Email_Configuration['EMAIL_USE_TLS']
 
 GRAPHENE = {
   'SCHEMA': 'graphql_api.schema.schema'
+}
+
+
+# Loging 
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
 }
