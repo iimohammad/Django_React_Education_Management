@@ -16,7 +16,6 @@ class User(AbstractUser):
     phone = models.CharField(max_length=15, validators=[phone_validator], blank=True)
     address = models.TextField(blank=True , null=True)
     gender = models.CharField(max_length=2, choices=Gender.choices, default=Gender.UNSET)
-    is_active = models.BooleanField(default=False)
 
 class Teacher(User):
     department = models.ForeignKey('education.department', on_delete = models.PROTECT)
