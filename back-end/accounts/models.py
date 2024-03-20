@@ -12,7 +12,7 @@ class User(AbstractUser):
     user_number = models.CharField(max_length = 255)
     code_meli = models.CharField(max_lenth = 10)
     birthday = models.DateField()
-    profile_image = models.ImageField(upload_to='profile_images/' , null=True , blank=True)
+    profile_image = models.ImageField(upload_to='accounts/profile_images/' , null=True , blank=True)
     phone = models.CharField(max_length=15, validators=[phone_validator], blank=True)
     address = models.TextField(blank=True , null=True)
     gender = models.CharField(max_length=2, choices=Gender.choices, default=Gender.UNSET)

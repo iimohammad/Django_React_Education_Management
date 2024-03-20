@@ -27,3 +27,5 @@ class EmergencyRemovalRequest(models.Model):
 class EmploymentEducationRequest(models.Model):
     student = models.ForeignKey('accounts.Student' , on_delete = models.CASCADE)
     semester = models.ForeignKey('education.Semester' , on_delete = models.CASCADE)
+    certificate_issuance_place = models.CharField(max_length = 255)
+    study_employment_file = models.FileField(upload_to='enrollment/study_employment_files/' , null=True , blank=True)
