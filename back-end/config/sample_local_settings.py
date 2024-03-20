@@ -14,3 +14,7 @@ DATABASES = {
       'PORT': '<db_port>',
   }
 }
+
+GOOGLE_CLIENT_ID = '29522453275-mloh24dqtibhbb9d6mbh66vbts6ahslm.apps.googleusercontent.com'
+GOOGLE_CLIENT_SECRET = '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'
+GOOGLE_REDIRECT_URI = 'http://localhost:8000/google-auth/redirect/'
