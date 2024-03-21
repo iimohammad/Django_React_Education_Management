@@ -1,53 +1,39 @@
 from django.db import models
 
-from accounts.models import User
-
 class Department(models.Model):
-    department_name = models.CharField(max_length = 40)
+    department_name = models.CharField(max_length=40)
     department_code = models.PositiveSmallIntegerField()
     year_established = models.DateField()
-    department_location = models.TextField(blank = True)
+    department_location = models.TextField(blank=True)
     number_of_students = models.PositiveIntegerField()
-    vice_dean_name = models.ForeignKey("Teacher")
-    dean_name = models.ForeignKey("")
 
-    def __str__(self) -> str:
-        return self.dean_name
-    
+    def __str__(self):
+        return self.department_name
 
 class Major(models.Model):
     class Level(models.TextChoices):
         BACHELOR = 'B', 'Bachelor'
         MASTER = 'M', 'Master'
-        PHD = 'P', 'Phd'
+        PHD = 'P', 'PhD'
 
-    major_name = models.CharField(max_length = 30)
+    major_name = models.CharField(max_length=30)
     major_code = models.PositiveSmallIntegerField()
-    department = models.ForeignKey("")
+    department = models.ForeignKey(Department, on_delete=models.CASCADE)
     number_of_credits = models.PositiveIntegerField()
     level = models.CharField(max_length=1, choices=Level.choices, default=Level.BACHELOR)
     education_group = models.CharField(max_length=30)
 
     def __str__(self):
         return self.major_name
+
 class Course(models.Model):
-    PUBLIC = 'public'
-    ARBITRARY = 'arbitrary'
-    SPECIALIZED = 'specialized'
-
-    COURSE_TYPES = [
-        (PUBLIC, 'Public'),
-        (ARBITRARY, 'Arbitrary'),
-        (SPECIALIZED, 'Specialized'),
-    ]
-
     course_name = models.CharField(max_length=40)
     course_code = models.PositiveSmallIntegerField()
     credit_num = models.PositiveSmallIntegerField()
-    course_type = models.CharField(max_length=20, choices=COURSE_TYPES)
 
     def __str__(self):
         return self.course_name
+
 class Prerequisite(models.Model):
     course = models.ForeignKey(Course, related_name='prerequisites', on_delete=models.CASCADE)
     prerequisite = models.ForeignKey(Course, related_name='required_by', on_delete=models.CASCADE)
@@ -55,7 +41,6 @@ class Prerequisite(models.Model):
 class Corequisite(models.Model):
     course = models.ForeignKey(Course, related_name='corequisites', on_delete=models.CASCADE)
     corequisite = models.ForeignKey(Course, related_name='required_with', on_delete=models.CASCADE)
-
 
 class Semester(models.Model):
     name = models.CharField(max_length=100)
@@ -73,19 +58,13 @@ class Semester(models.Model):
     add_remove_end = models.DateTimeField()
 
     emergency_remove_start = models.DateTimeField()
-    emergency_remove_end= models.DateTimeField()
+    emergency_remove_end = models.DateTimeField()
 
     classes_start = models.DateTimeField()
     classes_end = models.DateTimeField()
 
-
-
     def __str__(self):
         return self.name
-
-
-
-
 
 class SemesterCourse(models.Model):
     DAYS_CHOICES = [
@@ -98,19 +77,17 @@ class SemesterCourse(models.Model):
         ('friday', 'Friday'),
     ]
 
-    semester = models.ForeignKey('Semester', on_delete=models.CASCADE)
-    course = models.ForeignKey('Course', on_delete=models.CASCADE)
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
     class_days = models.CharField(max_length=20, choices=DAYS_CHOICES, blank=True, null=True)
     class_time = models.TimeField()
     exam_datetime = models.DateTimeField()
     exam_location = models.CharField(max_length=100)
-    instructor = models.ForeignKey(User, on_delete=models.CASCADE)
+    instructor = models.ForeignKey('accounts.Teacher', on_delete=models.CASCADE)
     class_capacity = models.PositiveIntegerField()
 
     def __str__(self):
-        return f"{self.course.name} - {self.semester}"
-    
-
+        return f"{self.course.course_name} - {self.semester.name}"
 
 class StudentCourse(models.Model):
     REGISTERED = 'R'
@@ -123,8 +100,8 @@ class StudentCourse(models.Model):
         (WITHDRAWN, 'Withdrawn'),
     ]
 
-    student = models.ForeignKey(User, on_delete=models.CASCADE)
-    course = models.ForeignKey('Course', on_delete=models.CASCADE)
+    student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default=REGISTERED)
     score = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
 
@@ -135,4 +112,4 @@ class StudentCourse(models.Model):
         return False
 
     def __str__(self):
-        return f"{self.student.username} - {self.course.name}"
+        return f"{self.student.username} - {self.course.course_name}"
