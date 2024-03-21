@@ -78,23 +78,23 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 
 # Database -> Postgresql
-DATABASES = {
-  'default': {
-      'ENGINE': 'django.db.backends.postgresql_psycopg2',
-      'NAME': local_settings.DATABASE['NAME'],
-      'HOST': local_settings.DATABASE['HOST'],
-      'USER': local_settings.DATABASE['USER'],
-      'PASSWORD': local_settings.DATABASE['PASSWORD'],
-      'PORT': local_settings.DATABASE['PORT'],
-  }
-}
-
 # DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
+#   'default': {
+#       'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#       'NAME': local_settings.DATABASE['NAME'],
+#       'HOST': local_settings.DATABASE['HOST'],
+#       'USER': local_settings.DATABASE['USER'],
+#       'PASSWORD': local_settings.DATABASE['PASSWORD'],
+#       'PORT': local_settings.DATABASE['PORT'],
+#   }
 # }
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+}
 
 
 # Password validation
