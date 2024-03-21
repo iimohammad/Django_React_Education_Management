@@ -10,7 +10,7 @@ class User(AbstractUser):
         FEMALE = 'F', 'Female'
         UNSET = 'MF', 'Unset'
     user_number = models.CharField(max_length = 255)
-    national_code = models.CharField(max_lenth = 10)
+    national_code = models.CharField(max_length = 10)
     birthday = models.DateField()
     profile_image = models.ImageField(upload_to='accounts/profile_images/' , null=True , blank=True)
     phone = models.CharField(max_length=15, validators=[phone_validator], blank=True)
@@ -35,3 +35,8 @@ class Student(User):
 
 class EducationalAssistant(User):
     field = models.ForeignKey('education.Field' , on_delete = models.PROTECT)
+    department = models.ForeignKey("education.department",on_delete=models.PROTECT)
+
+
+class AdminIT(User):
+    pass
