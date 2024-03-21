@@ -5,6 +5,8 @@ __pycache__/
 
 # C extensions
 *.so
+Task_Management.xlsx
+~$Task_Management.xlsx
 
 # Distribution / packaging
 .Python
