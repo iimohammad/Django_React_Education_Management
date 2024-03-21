@@ -1,6 +1,7 @@
 from django.db import models
 from accounts.models import Student
-# Create your models here.
+
+
 class EmploymentEducationRequest(models.Model):
     student = models.ForeignKey(Student , on_delete = models.CASCADE)
     semester = models.ForeignKey('education.Semester' , on_delete = models.CASCADE)

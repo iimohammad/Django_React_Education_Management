@@ -13,7 +13,7 @@ DEBUG = local_settings.DEBUG
 ALLOWED_HOSTS = local_settings.ALLOWED_HOSTS
 
 # Custom User Model
-AUTH_USER_MODEL = 'accounts.User'
+AUTH_USER_MODEL = 'dashboard_panel.Admin'
 
 # Application definition
 DJANGO_DEFAULT_APPS = [
@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 
 # Database -> Postgresql
-DATABASES = {
+""" DATABASES = {
   'default': {
       'ENGINE': 'django.db.backends.postgresql_psycopg2',
       'NAME': local_settings.DATABASE['NAME'],
@@ -87,14 +87,14 @@ DATABASES = {
       'PASSWORD': local_settings.DATABASE['PASSWORD'],
       'PORT': local_settings.DATABASE['PORT'],
   }
-}
+} """
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+}
 
 
 # Password validation
