@@ -1,7 +1,7 @@
 from django.db import models
 class University(models.Model):
     name = models.CharField(max_length=100, verbose_name='University_name')
-    foundation_year = models.PositiveIntegerField(max_length=100 ,verbose_name='Establish_year')
+    foundation_year = models.PositiveIntegerField(verbose_name='Establish_year')
     address = models.CharField(max_length=200, verbose_name='address')
     phone_number = models.CharField(max_length=20, verbose_name='phone')
 
@@ -23,7 +23,7 @@ class AboutUs(models.Model):
     description = models.TextField(blank=True, verbose_name='Description')
     chancellor_name = models.CharField( max_length=200,verbose_name = 'Universty_manger_name')
     chancellor_email = models.EmailField(max_length=200,verbose_name='University_manager_email') 
-    total_students = models.PositiveIntegerField(max_length=200,verbose_name='number of student')
+    total_students = models.PositiveIntegerField(verbose_name='number of student')
     website_url = models.URLField(max_length=200,verbose_name='Website')
 
     def __str__(self):
