@@ -16,7 +16,7 @@ class SocialMediaLinks(models.Model):
     youtube = models.URLField(blank=True, verbose_name='youtube_link')
 
     def __str__(self):
-        return 'لینک‌های شبکه‌های اجتماعی'
+        return 'SocialMediaLinks'
 class AboutUs(models.Model):
     university = models.OneToOneField(University, on_delete=models.CASCADE, related_name='about_us', verbose_name='دانشگاه')
     email = models.EmailField(max_length=200, verbose_name='Communication email')
