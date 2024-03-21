@@ -38,8 +38,8 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "accounts.apps.AccountsConfig",
-    'education',
-    'enrollment',
+    'education.apps.EducationConfig',
+    'enrollment.apps.EnrollmentConfig',
 ]
 
 
