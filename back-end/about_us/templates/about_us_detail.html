@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}About Us Detail{% endblock %}</title>
+</head>
+<body>
+    <h1>{% block heading %}About Us Detail{% endblock %}</h1>
+    <p><strong>University Name:</strong> {{ university.name }}</p>
+    <p><strong>Email:</strong> {{ about_us.email }}</p>
+    <p><strong>Description:</strong> {{ about_us.description }}</p>
+    <!-- Add other fields as needed -->
+</body>
+</html>
+
