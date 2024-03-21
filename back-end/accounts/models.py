@@ -37,6 +37,3 @@ class EducationalAssistant(User):
     field = models.ForeignKey('education.Field' , on_delete = models.PROTECT)
     department = models.ForeignKey("education.department",on_delete=models.PROTECT)
 
-
-class AdminIT(User):
-    pass
