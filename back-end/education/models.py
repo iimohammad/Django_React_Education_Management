@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Department(models.Model):
     department_name = models.CharField(max_length=40)
     department_code = models.PositiveSmallIntegerField()
@@ -9,6 +10,7 @@ class Department(models.Model):
 
     def __str__(self):
         return self.department_name
+
 
 class Major(models.Model):
     class Level(models.TextChoices):
@@ -26,6 +28,7 @@ class Major(models.Model):
     def __str__(self):
         return self.major_name
 
+
 class Course(models.Model):
     course_name = models.CharField(max_length=40)
     course_code = models.PositiveSmallIntegerField()
@@ -34,13 +37,16 @@ class Course(models.Model):
     def __str__(self):
         return self.course_name
 
+
 class Prerequisite(models.Model):
     course = models.ForeignKey(Course, related_name='prerequisites', on_delete=models.CASCADE)
     prerequisite = models.ForeignKey(Course, related_name='required_by', on_delete=models.CASCADE)
 
+
 class Corequisite(models.Model):
     course = models.ForeignKey(Course, related_name='corequisites', on_delete=models.CASCADE)
     corequisite = models.ForeignKey(Course, related_name='required_with', on_delete=models.CASCADE)
+
 
 class Semester(models.Model):
     name = models.CharField(max_length=100)
@@ -66,6 +72,7 @@ class Semester(models.Model):
     def __str__(self):
         return self.name
 
+
 class SemesterCourse(models.Model):
     DAYS_CHOICES = [
         ('saturday', 'Saturday'),
@@ -88,6 +95,7 @@ class SemesterCourse(models.Model):
 
     def __str__(self):
         return f"{self.course.course_name} - {self.semester.name}"
+
 
 class StudentCourse(models.Model):
     REGISTERED = 'R'
