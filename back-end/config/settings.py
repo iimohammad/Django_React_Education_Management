@@ -13,7 +13,7 @@ DEBUG = local_settings.DEBUG
 ALLOWED_HOSTS = local_settings.ALLOWED_HOSTS
 
 # Custom User Model
-AUTH_USER_MODEL = 'dashboard_panel.Admin'
+AUTH_USER_MODEL = 'accounts.User'
 
 # Application definition
 DJANGO_DEFAULT_APPS = [
