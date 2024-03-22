@@ -11,7 +11,8 @@ urlpatterns = [
     # Home
     path('', home),
     # App Urls
-    path('accounts/', include('accounts.urls'), name='blog'),
+    path('accounts/', include('accounts.urls'), name='accounts'),
+    path('admin/', include('dashboard_panel.urls'), name='dashboard'),
     # path('about_us/', include('about_us.urls')),
     # Authentication URLS
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

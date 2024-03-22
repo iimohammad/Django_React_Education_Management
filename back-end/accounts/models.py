@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from .validators import phone_validator
-
+from education.models import Department, Major
 class User(AbstractUser):
     class Gender(models.TextChoices):
         MALE = 'M', 'Male'
@@ -16,13 +16,18 @@ class User(AbstractUser):
     address = models.TextField(blank=True, null=True)
     gender = models.CharField(max_length=2, choices=Gender.choices, default=Gender.UNSET)
 
-class Teacher(User):
+class Teacher(models.Model):
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
     expertise = models.CharField(max_length=255)
     rank = models.CharField(max_length=255)
     department = models.ForeignKey('education.Department', on_delete=models.PROTECT)
     past_courses = models.ForeignKey('education.Course', on_delete=models.SET_NULL, null=True)
 
-class Student(User):
+    def __str__(self) -> str:
+        return self.user.username
+
+class Student(models.Model):
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
     entry_semester = models.ForeignKey('education.Semester', on_delete=models.PROTECT)
     gpa = models.DecimalField(max_digits=4, decimal_places=2)
     entry_year = models.CharField(max_length=4)
@@ -31,6 +36,7 @@ class Student(User):
     military_service_status = models.CharField(max_length=100)
     year_of_study = models.PositiveSmallIntegerField()
 
-class EducationalAssistant(User):
-    field = models.ForeignKey('education.Major', on_delete=models.PROTECT)
-    department = models.ForeignKey('education.Department', on_delete=models.PROTECT)
+class EducationalAssistant(models.Model):
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    field = models.ForeignKey(Major, on_delete=models.PROTECT)
+    department = models.ForeignKey(Department, on_delete=models.PROTECT,null=True)

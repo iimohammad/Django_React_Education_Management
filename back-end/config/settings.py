@@ -41,8 +41,8 @@ LOCAL_APPS = [
     'education.apps.EducationConfig',
     'enrollment.apps.EnrollmentConfig',
     'home.apps.HomeConfig',
+    'dashboard_panel.apps.dashboard_panelConfig',
 ]
-
 
 INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -79,23 +79,23 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 
 # Database -> Postgresql
-DATABASES = {
-  'default': {
-      'ENGINE': 'django.db.backends.postgresql_psycopg2',
-      'NAME': local_settings.DATABASE['NAME'],
-      'HOST': local_settings.DATABASE['HOST'],
-      'USER': local_settings.DATABASE['USER'],
-      'PASSWORD': local_settings.DATABASE['PASSWORD'],
-      'PORT': local_settings.DATABASE['PORT'],
-  }
-}
-
 # DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
+#   'default': {
+#       'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#       'NAME': local_settings.DATABASE['NAME'],
+#       'HOST': local_settings.DATABASE['HOST'],
+#       'USER': local_settings.DATABASE['USER'],
+#       'PASSWORD': local_settings.DATABASE['PASSWORD'],
+#       'PORT': local_settings.DATABASE['PORT'],
+#   }
 # }
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+}
 
 
 # Password validation
