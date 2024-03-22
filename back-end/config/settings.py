@@ -39,8 +39,8 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "accounts.apps.AccountsConfig",
     'education.apps.EducationConfig',
-    'enrollment.apps.EnrollmentConfig',
     'home.apps.HomeConfig',
+    'admin_dashboard_panel.apps.dashboard_panelConfig',
     'dashboard_panel.apps.dashboard_panelConfig',
 ]
 
