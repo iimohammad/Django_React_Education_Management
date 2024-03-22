@@ -45,6 +45,8 @@ class AboutUsCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.university = University.objects.get(pk=self.kwargs['university_id'])
         return super().form_valid(form)
+    def index(request):
+        return HttpResponse("Hello, world. You're at the index.")
 
 class AboutUsDeleteView(LoginRequiredMixin, DeleteView):
     model = AboutUs
@@ -61,3 +63,5 @@ class AboutUsMixin:
         context = super().get_context_data(**kwargs)
         context['university'] = University.objects.get(pk=self.kwargs['university_id'])
         return context
+    
+   
