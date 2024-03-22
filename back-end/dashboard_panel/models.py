@@ -1,5 +1,5 @@
 from django.db import models
-from accounts.models import Student
+from accounts.models import Student, Teacher
 from education.models import SemesterCourse
 
 class StudentRegistrationRequest(models.Model):
@@ -29,3 +29,15 @@ class StudentDeleteSemesterRequest(StudentRegistrationRequest):
     student_explanations = models.TextField()
     result = models.CharField(max_length=100)
     educational_assistant_explanation = models.TextField()
+
+class EnrollmentRequest(models.Model):
+    APPROVAL_CHOICES = [
+        ('P', 'Pending'),
+        ('A', 'Approved'),
+        ('R', 'Rejected'),
+    ]
+    
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+    approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
+    reason_text= models.TextField(blank=False)

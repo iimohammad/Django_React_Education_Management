@@ -1,12 +1,20 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from .permissions import IsEducationalAssistant
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAuthenticated,IsAdminUser
+from .permissions import IsEducationalAssistant,IsStudent
 from accounts.models import Student, Teacher
 from accounts.serializers import StudentSerializer, TeacherSerializers
 from education.serializers import CourseSerializers
 from education.models import Course
-
+from .models import (
+    EnrollmentRequest,
+) 
+from .serializers import (
+    EducationalAssistantEnrollmentRequestSerializer,
+    EnrollmentRequestSerializer,
+    StudentEnrollmentRequestSerializer,
+)
 
 class BaseUpdateFieldViewSet(viewsets.ReadOnlyModelViewSet):
     allowed_fields = set()
@@ -36,3 +44,31 @@ class TeacherViewSet(BaseUpdateFieldViewSet):
     serializer_class = TeacherSerializers
     allowed_fields = {'expertise', 'rank'}
 
+class EnrollmentRequestViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated, IsEducationalAssistant | IsStudent | IsAdminUser]
+
+    def get_queryset(self):
+        return EnrollmentRequest.objects.all()
+
+    def get_serializer_class(self):
+        user = self.request.user
+        if hasattr(user, 'educationalassistant'):
+            return EducationalAssistantEnrollmentRequestSerializer
+        elif hasattr(user, 'student'):
+            return StudentEnrollmentRequestSerializer
+        else:
+            return EnrollmentRequestSerializer
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        approval_status = request.data.get('approval_status')
+        
+        if approval_status in ['A', 'R']:
+            if instance.approval_status != 'P':
+                return Response({'error': 'This request has already been processed'}, status=status.HTTP_400_BAD_REQUEST)
+
+            instance.approval_status = approval_status
+            instance.save()
+            return Response({'message': 'Enrollment request updated successfully'})
+
+        return Response({'error': 'Invalid approval status'}, status=status.HTTP_400_BAD_REQUEST)
