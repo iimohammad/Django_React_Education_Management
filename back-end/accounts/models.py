@@ -9,9 +9,9 @@ class User(AbstractUser):
         FEMALE = 'F', 'Female'
         UNSET = 'MF', 'Unset'
 
-    user_number = models.CharField(max_length=255)
-    national_code = models.CharField(max_length=10)
-    birthday = models.DateField()
+    user_number = models.CharField(max_length=255, null=True)
+    national_code = models.CharField(max_length=10, null=True)
+    birthday = models.DateField(null=True)
     profile_image = models.ImageField(upload_to='accounts/profile_images/', null=True, blank=True)
     phone = models.CharField(max_length=15, validators=[phone_validator], blank=True)
     address = models.TextField(blank=True, null=True)
