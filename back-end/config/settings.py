@@ -40,6 +40,7 @@ LOCAL_APPS = [
     "accounts.apps.AccountsConfig",
     'education.apps.EducationConfig',
     'enrollment.apps.EnrollmentConfig',
+    'home.apps.HomeConfig',
 ]
 
 
