@@ -6,10 +6,9 @@ from rest_framework.views import APIView
 from django.shortcuts import redirect
 from django.http import HttpResponseBadRequest
 from rest_framework.authtoken.models import Token
-from .serializers import RegisterSerializer
+from .serializers import RegisterSerializer, UserSerializer
 from django.conf import settings
 import requests
-from .serializers import UserSerializer
 
 
 class LogoutAPIView(APIView):
