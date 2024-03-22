@@ -10,7 +10,7 @@ class User(AbstractUser):
 
     user_number = models.CharField(max_length=255)
     national_code = models.CharField(max_length=10)
-    birthday = models.DateField()
+    birthday = models.DateField(null=True)
     profile_image = models.ImageField(upload_to='accounts/profile_images/', null=True, blank=True)
     phone = models.CharField(max_length=15, validators=[phone_validator], blank=True)
     address = models.TextField(blank=True, null=True)
