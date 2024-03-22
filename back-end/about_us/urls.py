@@ -1,8 +1,13 @@
-from django.urls import path
-from .views import *
+from rest_framework.routers import DefaultRouter
+from .views import ContactInfoViewSet, UniversityViewSet , CommentViewSet
+from django.urls import path, include
+
+router = DefaultRouter()  
+
+router.register('ContactInfo', ContactInfoViewSet, basename='ContactInfo') 
+router.register('University',UniversityViewSet,basename='University')
+router.register('Comment',CommentViewSet,basename='Comment')
+
 urlpatterns = [
-        path('detail/', AboutUsDetailView.as_view(), name='about_us_detail'),
-        path('update/', AboutUsUpdateView.as_view(), name='about_us_update'),
-        path('create/', AboutUsCreateView.as_view(), name='about_us_create'),
-        path('delete/', AboutUsDeleteView.as_view(), name='about_us_delete'),
+    path('', include(router.urls)),  
 ]
