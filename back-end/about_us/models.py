@@ -1,30 +1,30 @@
 from django.db import models
+
+class ContactInfo(models.Model):
+    email = models.EmailField(max_length=200)
+    phone_number = models.CharField(max_length=20)
+    mobile_number = models.CharField(max_length=20)
+    address = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.address
+
 class University(models.Model):
-    name = models.CharField(max_length=100, verbose_name='University_name')
-    foundation_year = models.PositiveIntegerField(verbose_name='Establish_year')
-    address = models.CharField(max_length=200, verbose_name='address')
-    phone_number = models.CharField(max_length=20, verbose_name='phone')
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    contactInfo = models.ForeignKey(ContactInfo, on_delete=models.CASCADE)
+    website_url = models.URLField(max_length=200)
+    social_media_links = models.JSONField()
 
     def __str__(self):
         return self.name
-    
-class SocialMediaLinks(models.Model):
-    facebook = models.URLField(blank=True, verbose_name='facebook_link')
-    twitter = models.URLField(blank=True, verbose_name='twitter_link')
-    instagram = models.URLField(blank=True, verbose_name='instagram_link')
-    linkedin = models.URLField(blank=True, verbose_name='linkdin_link')
-    youtube = models.URLField(blank=True, verbose_name='youtube_link')
+
+class Comment(models.Model):
+    university = models.ForeignKey(University, on_delete=models.CASCADE)
+    content = models.TextField()
+    author = models.CharField(max_length=100 , blank=True, null=True) 
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return 'SocialMediaLinks'
-class AboutUs(models.Model):
-    university = models.OneToOneField(University, on_delete=models.CASCADE, related_name='about_us', verbose_name='دانشگاه')
-    email = models.EmailField(max_length=200, verbose_name='Communication email')
-    description = models.TextField(blank=True, verbose_name='Description')
-    chancellor_name = models.CharField( max_length=200,verbose_name = 'Universty_manger_name')
-    chancellor_email = models.EmailField(max_length=200,verbose_name='University_manager_email') 
-    total_students = models.PositiveIntegerField(verbose_name='number of student')
-    website_url = models.URLField(max_length=200,verbose_name='Website')
-
-    def __str__(self):
-        return f'about_us- {self.university.name}'
+        return self.content

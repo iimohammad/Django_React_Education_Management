@@ -1,67 +1,36 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse, HttpResponseForbidden
-from django.urls import reverse
-from django.views.generic import View
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import University, AboutUs , SocialMediaLinks
-from .forms import AboutUsForm
+from .serializers import *
+from .models import *
+from rest_framework import viewsets, permissions
+from .permissions import IsAdminOrReadOnly
 
-# Mixin for permission check
-class AdminRequiredMixin(View):
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated or not request.user.is_superuser:
-            return redirect(reverse('login'))  # Redirect to login if user is not admin
-        return super().dispatch(request, *args, **kwargs)
 
-class AboutUsDetailView(View):
-    def get(self, request, *args, **kwargs):
-        university = get_object_or_404(University, pk=kwargs['university_id'])
-        about_us = get_object_or_404(AboutUs, university=university)
-        context = {
-            'university': university,
-            'about_us': about_us,
-        }
-        return render(request, 'about_us_detail.html', context)
+class ContactInfoViewSet(viewsets.ModelViewSet):
+    queryset = ContactInfo.objects.all()
+    serializer_class = ContactInfoSerialziers
+    permission_classes = [IsAdminOrReadOnly]
+    search_fields = ('email','phone_number')
 
-class AboutUsUpdateView(LoginRequiredMixin, UpdateView):
-    model = AboutUs
-    form_class = AboutUsForm
-    template_name = 'about_us_form.html'
-    success_url = '/'
 
-    def dispatch(self, request, *args, **kwargs):
-        obj = self.get_object()
-        if obj.university.user != self.request.user:
-            return HttpResponseForbidden()
-        return super().dispatch(request, *args, **kwargs)
+class UniversityViewSet(viewsets.ModelViewSet):
+    queryset = University.objects.all()
+    serializer_class = UniversitySerializers
+    permission_classes = [permissions.IsAuthenticated]
+    search_fields = ('name',)
 
-class AboutUsCreateView(LoginRequiredMixin, CreateView):
-    model = AboutUs
-    form_class = AboutUsForm
-    template_name = 'about_us_form.html'
-    success_url = '/'
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated] 
+    search_fields = ('content',)
 
-    def form_valid(self, form):
-        form.instance.university = University.objects.get(pk=self.kwargs['university_id'])
-        return super().form_valid(form)
-    def index(request):
-        return HttpResponse("Hello, world. You're at the index.")
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if not self.request.user.is_staff:
+            queryset = queryset.filter(is_active=True, author=self.request.user)
+        return queryset
 
-class AboutUsDeleteView(LoginRequiredMixin, DeleteView):
-    model = AboutUs
-    success_url = '/'
+    def perform_create(self, serializer):
 
-    def dispatch(self, request, *args, **kwargs):
-        obj = self.get_object()
-        if obj.university.user != self.request.user:
-            return HttpResponseForbidden()
-        return super().dispatch(request, *args, **kwargs)
-
-class AboutUsMixin:
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['university'] = University.objects.get(pk=self.kwargs['university_id'])
-        return context
-    
-   
+        author = self.request.user.username if self.request.user.is_authenticated else None
+        serializer.is_valid(raise_exception=True)
+        serializer.save(author=author, is_active=False)
