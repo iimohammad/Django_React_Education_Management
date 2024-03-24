@@ -20,9 +20,15 @@ class User(AbstractUser):
 
 
 class Teacher(models.Model):
+    class Rank(models.TextChoices):
+        INSTRUCTOR = 'I', 'Instructor'
+        ASSISTANT_PROF = 'ASP', 'Assistant Professor'
+        ASSOCIATE_PROF = 'ACP', 'Associate Professor'
+        PROFESSOR = 'P', 'Professor'
+    
     user = models.OneToOneField(User,on_delete=models.CASCADE)
     expertise = models.CharField(max_length=255)
-    rank = models.CharField(max_length=255)
+    rank = models.CharField(max_length=3, choices=Rank.choices, default=Rank.INSTRUCTOR)
     department = models.ForeignKey('education.Department', on_delete=models.PROTECT)
     past_courses = models.ForeignKey('education.Course', on_delete=models.SET_NULL, null=True)
 
