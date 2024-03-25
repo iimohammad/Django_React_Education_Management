@@ -1,30 +1,29 @@
 from django.db import models
 from accounts.models import Student, Teacher
-from education.models import SemesterCourse
+from education.models import SemesterCourse , StudentCourse
 
-class StudentRegistrationRequest(models.Model):
+class BaseStudentRegistrationRequest():
     student = models.ForeignKey(Student, on_delete=models.PROTECT)
-    code = models.PositiveSmallIntegerField()
     status = models.BooleanField(default=False)
 
-class SemesterRegistrationRequest(StudentRegistrationRequest):
+class SemesterRegistrationRequest(models.Model , BaseStudentRegistrationRequest):
     requested_courses = models.ManyToManyField(SemesterCourse, verbose_name='Requested_courses')
     
-class AddRemoveRequest(StudentRegistrationRequest):
-    removed_courses = models.ManyToManyField(SemesterCourse, related_name='removed_courses')
+class AddRemoveRequest(models.Model , BaseStudentRegistrationRequest):
+    removed_courses = models.ManyToManyField(StudentCourse, related_name='removed_courses')
     added_courses = models.ManyToManyField(SemesterCourse, related_name='added_courses')
 
-class RevisionRequest(StudentRegistrationRequest):
-    course = models.ForeignKey(SemesterCourse, on_delete=models.CASCADE)
+class RevisionRequest(models.Model , BaseStudentRegistrationRequest):
+    course = models.ForeignKey(StudentCourse, on_delete=models.CASCADE)
     text = models.TextField()
     answer = models.TextField()
 
-class EmergencyRemovalRequest(StudentRegistrationRequest):
-    course = models.ForeignKey(SemesterCourse, on_delete=models.CASCADE)
+class EmergencyRemovalRequest(models.Model , BaseStudentRegistrationRequest):
+    course = models.ForeignKey(StudentCourse, on_delete=models.CASCADE)
     student_explanation = models.TextField()
     educational_assistant_explanation = models.TextField()
 
-class StudentDeleteSemesterRequest(StudentRegistrationRequest):
+class StudentDeleteSemesterRequest(models.Model , BaseStudentRegistrationRequest):
     semester = models.ForeignKey(SemesterCourse, on_delete=models.CASCADE)
     student_explanations = models.TextField()
     result = models.CharField(max_length=100)
