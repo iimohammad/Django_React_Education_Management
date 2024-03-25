@@ -31,7 +31,8 @@ THIRD_PARTY_APPS = [
     'rest_framework.authtoken',
     'django_filters',
     'rest_framework_simplejwt',
-    'rest_framework_swagger',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
     'graphene_django',
     'import_export',
 ]
@@ -41,7 +42,9 @@ LOCAL_APPS = [
     'education.apps.EducationConfig',
     'home.apps.HomeConfig',
     'admin_dashboard_panel.apps.dashboard_panelConfig',
-    'dashboard_panel.apps.dashboard_panelConfig',
+    'dashboard_student.apps.DashboardStudentConfig',
+    'dashboard_teacher.apps.DashboardTeacherConfig',
+    'dashboard_educationalassistant.apps.DashboardEducationalAssistantConfig',
 ]
 
 INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -146,16 +149,29 @@ else:
             'rest_framework.authentication.TokenAuthentication'
         )
     }
+REST_FRAMEWORK['DEFAULT_SCHEMA_CLASS'] = 'drf_spectacular.openapi.AutoSchema'
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Education Management API',
+    'DESCRIPTION': 'a project for managing universicty',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SWAGGER_UI_DIST': 'SIDECAR',  
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    'REDOC_DIST': 'SIDECAR',
+}
+
+
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-# Email Configurations
-EMAIL_BACKEND = local_settings.Email_Configuration['EMAIL_BACKEND']
-EMAIL_HOST = local_settings.Email_Configuration['EMAIL_HOST']
-EMAIL_PORT = local_settings.Email_Configuration['EMAIL_PORT']
-EMAIL_HOST_USER = local_settings.Email_Configuration['EMAIL_HOST_USER']
-EMAIL_HOST_PASSWORD = local_settings.Email_Configuration['EMAIL_HOST_PASSWORD']
-EMAIL_USE_TLS = local_settings.Email_Configuration['EMAIL_USE_TLS']
+# # Email Configurations
+# EMAIL_BACKEND = local_settings.Email_Configuration['EMAIL_BACKEND']
+# EMAIL_HOST = local_settings.Email_Configuration['EMAIL_HOST']
+# EMAIL_PORT = local_settings.Email_Configuration['EMAIL_PORT']
+# EMAIL_HOST_USER = local_settings.Email_Configuration['EMAIL_HOST_USER']
+# EMAIL_HOST_PASSWORD = local_settings.Email_Configuration['EMAIL_HOST_PASSWORD']
+# EMAIL_USE_TLS = local_settings.Email_Configuration['EMAIL_USE_TLS']
 
 GRAPHENE = {
   'SCHEMA': 'graphql_api.schema.schema'

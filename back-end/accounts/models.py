@@ -30,7 +30,6 @@ class Teacher(models.Model):
     expertise = models.CharField(max_length=255)
     rank = models.CharField(max_length=3, choices=Rank.choices, default=Rank.INSTRUCTOR)
     department = models.ForeignKey('education.Department', on_delete=models.PROTECT)
-    past_courses = models.ForeignKey('education.Course', on_delete=models.SET_NULL, null=True)
 
     def __str__(self) -> str:
         return self.user.username
@@ -38,7 +37,7 @@ class Teacher(models.Model):
 
 class Student(models.Model):
     user = models.OneToOneField(User,on_delete=models.CASCADE)
-    entry_semester = models.ForeignKey('education.Semester', on_delete=models.PROTECT)
+    entry_semester = models.CharField(max_length = 100)
     gpa = models.DecimalField(max_digits=4, decimal_places=2)
     entry_year = models.CharField(max_length=4)
     major = models.ForeignKey('education.Major', on_delete=models.PROTECT)
@@ -56,8 +55,6 @@ class Student(models.Model):
 class EducationalAssistant(models.Model):
     user = models.OneToOneField(User,on_delete=models.CASCADE)
     field = models.ForeignKey(Major, on_delete=models.PROTECT)
-    department = models.ForeignKey(Department, on_delete=models.PROTECT,null=True)
-
     def __str__(self) -> str:
         if self.user.first_name and self.user.last_name:
             return f"{self.user.first_name} {self.user.last_name}"
