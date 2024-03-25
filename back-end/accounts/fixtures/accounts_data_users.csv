@@ -1,0 +1,6 @@
+id,password,username,first_name,last_name,user_number,national_code,birthday,phone,address,gender
+2,pbkdf2_sha256$600000$nB7H4Xy2nQ5IQCDkPO8Nho$QVMDAB7w4Zjv2mg1bw1YYmIE8AhnDRXlfYb21N2IZCk=,HamidFar,Hamid,Farahani,3,1324355416,7/23/1964,9122104710,South Dibaji,M
+3,pbkdf2_sha256$600000$Ju2EBSbH6UZVKryr1xhR2a$4EvJ965yMW4RkHfOHaskPChuUFPLG6TtLgjReSrJSks=,ArmanFar,Arman,Farahani,2,,,9122234446,,M
+4,pbkdf2_sha256$600000$ACvAhxveZWTJjZlM1mwqqp$Ghmu/YbkSqz/8wL2CgK8ef4Mbd6RC/C4zVQdwWhiK/U=,ArshiaAsl,Arshia,Aslani,5,,,9221343876,,M
+5,pbkdf2_sha256$600000$ZdDBwWlQzFSTq4KNUlgMQc$DnvCkByRBes3d0qtvrc58+IviENj7h/XPadZLP0lfiA=,AmirmhRah,Amirmohammad,Rahmani,4,,,9214578121,,M
+6,pbkdf2_sha256$600000$gcnw3Cx8RRebQ4uaOUjgRu$AhBBHYVTZE2f/s86JpCF5WBYd8Zx/LbqaBkMc1ufu+o=,AmirAgh,Amir,Aghdasi,6,,,9214487622,,M

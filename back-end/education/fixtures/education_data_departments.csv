@@ -1,0 +1,9 @@
+id,department_name,department_code,year_established,department_location,number_of_students
+1,Computer Science,101,1990-01-01,"Building A, Room 302",200
+2,Electrical Engineering,201,1985-05-15,"Building B, Room 105",150
+3,Mechanical Engineering,301,1988-09-10,"Building C, Room 210",180
+4,Physics,401,1975-03-20,"Building D, Room 150",100
+5,Mathematics,501,1982-07-05,"Building E, Room 310",120
+6,Chemistry,601,1978-12-12,"Building F, Room 200",90
+7,Biology,701,1980-06-25,"Building G, Room 120",140
+8,Environmental Science,801,1995-04-08,"Building H, Room 410",80

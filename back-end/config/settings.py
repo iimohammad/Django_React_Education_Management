@@ -33,8 +33,8 @@ THIRD_PARTY_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_swagger',
     'graphene_django',
+    'import_export',
 ]
-
 
 LOCAL_APPS = [
     "accounts.apps.AccountsConfig",
@@ -125,6 +125,7 @@ USE_I18N = True
 
 USE_TZ = True
 
+IMPORT_EXPORT_USE_TRANSACTIONS = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATIC_URL = '/static/'

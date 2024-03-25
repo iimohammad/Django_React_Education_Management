@@ -2,18 +2,21 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils import timezone
 from .models import Teacher, Student, EducationalAssistant, User
+from import_export.admin import ImportExportActionModelAdmin
+from accounts.resource import *
 from django.utils.html import format_html
 
 
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(UserAdmin, ImportExportActionModelAdmin):
     list_display = ('username', 'email', 'user_number', 'gender', 'phone', 'is_staff')
     list_filter = ('gender', 'birthday', 'is_active', 'is_staff')
     sortable_by = ('username', 'user_number')
     list_editable = ('is_staff',)
-    readonly_fields = ('user_number',)
+    # readonly_fields = ('user_number',)
     ordering = ('date_joined',)
     search_fields = ('username', 'email', 'user_number', 'phone')
     search_help_text = "Search in: Username, Email, User Number, Phone"
+    resource_class = UserResource
     # list_display_links = ('username', 'user_number')
     # date_hierarchy = 'birthday'
     save_as = True
@@ -48,16 +51,17 @@ class CustomUserAdmin(UserAdmin):
 admin.site.register(User, CustomUserAdmin)
 
 
-class TeacherAdmin(admin.ModelAdmin):
+class TeacherAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     list_display = ('user', 'expertise', 'rank', 'department_link', 'past_courses_link')
     list_filter = ('rank',)
     sortable_by = ('user', 'past_courses')
     list_editable = ('rank',)
-    readonly_fields = ('expertise',)
+    # readonly_fields = ('expertise',)
     ordering = ('user',)
     search_fields = ('user', 'expertise', 'department')
     search_help_text = "Search in: Username, Expertise, Department"
     list_display_links = ('user', 'department_link', 'past_courses_link')
+    resource_class = TeacherResource
     save_as = True
     list_per_page = 10
     list_max_show_all = 50
@@ -116,16 +120,17 @@ class TeacherAdmin(admin.ModelAdmin):
 admin.site.register(Teacher, TeacherAdmin)
 
 
-class StudentAdmin(admin.ModelAdmin):
+class StudentAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     list_display = ('user', 'major_link', 'entry_year', 'entry_semester_link', 'gpa', 'military_service_status')
     list_filter = ('major', 'entry_year', 'military_service_status')
     sortable_by = ('user', 'entry_year', 'gpa')
     list_editable = ('military_service_status',)
-    readonly_fields = ('gpa',)
+    # readonly_fields = ('gpa',)
     ordering = ('entry_year',)
     search_fields = ('user', 'entry_semester')
     search_help_text = "Search in: Username, Entry Semester"
     list_display_links = ('user', 'major_link', 'entry_semester_link')
+    resource_class = StudentResource
     save_as = True
     list_per_page = 10
     list_max_show_all = 50
@@ -147,7 +152,7 @@ class StudentAdmin(admin.ModelAdmin):
 admin.site.register(Student, StudentAdmin)
 
 
-class EducationalAssistantAdmin(admin.ModelAdmin):
+class EducationalAssistantAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     list_display = ('user', 'field_link', 'department_link')
     list_filter = ('department', 'field')
     sortable_by = ('user',)
@@ -155,6 +160,7 @@ class EducationalAssistantAdmin(admin.ModelAdmin):
     search_fields = ('department', 'field')
     search_help_text = "Search in: Department, Field"
     list_display_links = ('user', 'field_link', 'department_link')
+    resource_class = EducationalAssistantResource
     save_as = True
     list_per_page = 10
     list_max_show_all = 50

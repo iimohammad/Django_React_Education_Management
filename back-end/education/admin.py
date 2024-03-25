@@ -1,16 +1,19 @@
 from django.contrib import admin
-from .models import Department, Course, Major, Semester, SemesterCourse, StudentCourse
+from education.models import Department, Course, Major, Semester, SemesterCourse, StudentCourse
+from import_export.admin import ImportExportActionModelAdmin
+from education.resource import *
 from datetime import timedelta
 from django.utils.html import format_html
 
 
-class DepartmentAdmin(admin.ModelAdmin):
+class DepartmentAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     list_display = ('department_name', 'department_code', 'year_established', 'number_of_students')
     sortable_by = ('department_code', 'number_of_students')
-    readonly_fields = ('department_code',)
+    # readonly_fields = ('department_code',)
     ordering = ('year_established',)
     search_fields = ('department_name', 'year_established')
     search_help_text = "Search in: Department Name, Year of Establishment"
+    resource_class = DepartmentResource
     save_as = True
     list_per_page = 10
     list_max_show_all = 50
@@ -28,12 +31,13 @@ class DepartmentAdmin(admin.ModelAdmin):
 admin.site.register(Department, DepartmentAdmin)
 
 
-class CourseAdmin(admin.ModelAdmin):
+class CourseAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     list_display = ('course_name', 'course_code', 'credit_num')
     sortable_by = ('course_name',)
-    readonly_fields = ('course_code',)
+    # readonly_fields = ('course_code',)
     search_fields = ('course_name', 'credit_num')
     search_help_text = "Search in: Course Name, Credit Number"
+    resource_class = CourseResource
     save_as = True
     list_per_page = 10
     list_max_show_all = 50
@@ -41,15 +45,16 @@ class CourseAdmin(admin.ModelAdmin):
 admin.site.register(Course, CourseAdmin)
 
 
-class MajorAdmin(admin.ModelAdmin):
+class MajorAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     list_display = ('major_name', 'major_code', 'department_link', 'level', 'education_group')
     list_filter = ('department', 'level', 'education_group')
     sortable_by = ('department', 'level')
     list_editable = ('level',)
-    readonly_fields = ('major_code',)
+    # readonly_fields = ('major_code',)
     search_fields = ('major_name', 'department_link', 'education_group')
     search_help_text = "Search in: Major Name, Department, Education Group"
     list_display_links = ('major_name', 'department_link')
+    resource_class = MajorResource
     save_as = True
     list_per_page = 10
     list_max_show_all = 50
@@ -63,11 +68,12 @@ class MajorAdmin(admin.ModelAdmin):
 admin.site.register(Major, MajorAdmin)
 
 
-class SemesterAdmin(admin.ModelAdmin):
+class SemesterAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     list_display = ('name', 'start_semester', 'end_semester', 'exam_start', 'exam_end')
     list_editable = ('exam_start', 'exam_end')
     search_fields = ('name',)
     search_help_text = "Search in: Semester Name"
+    resource_class = SemesterResource
     save_as = True
     list_per_page = 10
     list_max_show_all = 50
