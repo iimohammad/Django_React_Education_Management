@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 from config import local_settings
-
+from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -46,6 +46,7 @@ LOCAL_APPS = [
     'dashboard_student.apps.DashboardStudentConfig',
     'dashboard_teacher.apps.DashboardTeacherConfig',
     'dashboard_educationalassistant.apps.DashboardEducationalAssistantConfig',
+    'academic_events.apps.AcademicConfig',
 ]
 
 INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -166,12 +167,13 @@ SPECTACULAR_SETTINGS = {
 CORS_ORIGIN_ALLOW_ALL = True
 
 # # Email Configurations
-# EMAIL_BACKEND = local_settings.Email_Configuration['EMAIL_BACKEND']
-# EMAIL_HOST = local_settings.Email_Configuration['EMAIL_HOST']
-# EMAIL_PORT = local_settings.Email_Configuration['EMAIL_PORT']
-# EMAIL_HOST_USER = local_settings.Email_Configuration['EMAIL_HOST_USER']
-# EMAIL_HOST_PASSWORD = local_settings.Email_Configuration['EMAIL_HOST_PASSWORD']
-# EMAIL_USE_TLS = local_settings.Email_Configuration['EMAIL_USE_TLS']
+EMAIL_BACKEND = local_settings.Email_Configuration['EMAIL_BACKEND']
+EMAIL_HOST = local_settings.Email_Configuration['EMAIL_HOST']
+EMAIL_PORT = local_settings.Email_Configuration['EMAIL_PORT']
+EMAIL_HOST_USER = local_settings.Email_Configuration['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = local_settings.Email_Configuration['EMAIL_HOST_PASSWORD']
+EMAIL_USE_TLS = local_settings.Email_Configuration['EMAIL_USE_TLS']
+DEFAULT_FROM_EMAIL = 'mohammadbaharloo96@gmail.com'
 
 GRAPHENE = {
   'SCHEMA': 'graphql_api.schema.schema'
@@ -198,3 +200,15 @@ LOGGING = {
 GOOGLE_CLIENT_ID = local_settings.GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET = local_settings.GOOGLE_CLIENT_SECRET
 GOOGLE_REDIRECT_URI = local_settings.GOOGLE_REDIRECT_URI
+
+
+
+CELERY_BROKER_URL = 'amqp://localhost'
+
+CELERY_BEAT_SCHEDULE = {
+    'send-periodic-email': {
+        'task': 'academic_events.tasks.send_periodic_email',  # Update 'your_app' with your app name
+        'schedule': timedelta(minutes=1),  # Schedule to run every minute
+    },
+}
+
