@@ -1,0 +1,11 @@
+department_id,id,major_name,major_code,number_of_credits,level,education_group
+4,10,Industrial Psychology,302,120,M,Social Sciences
+3,9,Financial Economics,204,130,M,Business
+1,8,Data Science,104,140,M,Science
+4,7,Human Resource Management,301,110,B,Business
+2,6,Digital Marketing,203,120,M,Business
+1,5,Software Engineering,103,130,M,Science
+3,4,Finance and Accounting,202,120,B,Business
+2,3,Marketing Management,201,110,B,Business
+1,2,Electrical Engineering,102,130,B,Engineering
+1,1,Computer Science,101,120,B,Science

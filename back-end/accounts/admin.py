@@ -52,15 +52,15 @@ admin.site.register(User, CustomUserAdmin)
 
 
 class TeacherAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('user', 'expertise', 'rank', 'department_link', 'past_courses_link')
+    list_display = ('user', 'expertise', 'rank', 'department_link')
     list_filter = ('rank',)
-    sortable_by = ('user', 'past_courses')
+    sortable_by = ('user',)
     list_editable = ('rank',)
     # readonly_fields = ('expertise',)
     ordering = ('user',)
     search_fields = ('user', 'expertise', 'department')
     search_help_text = "Search in: Username, Expertise, Department"
-    list_display_links = ('user', 'department_link', 'past_courses_link')
+    list_display_links = ('user', 'department_link')
     resource_class = TeacherResource
     save_as = True
     list_per_page = 10
@@ -108,20 +108,14 @@ class TeacherAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
         department_url = f"http://127.0.0.1:8000/ITM/education/department/{department_id}/change/"
         return format_html('<a href="{}">{}</a>', department_url, obj.department)
 
-    def past_courses_link(self, obj):
-        past_courses_id = obj.past_courses.id
-        past_courses_url = f"http://127.0.0.1:8000/ITM/education/course/{past_courses_id}/change/"
-        return format_html('<a href="{}">{}</a>', past_courses_url, obj.past_courses)
-
     # user_link.short_description = "User"
     department_link.short_description = "Department"
-    past_courses_link.short_description = "Past Courses"
 
 admin.site.register(Teacher, TeacherAdmin)
 
 
 class StudentAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('user', 'major_link', 'entry_year', 'entry_semester_link', 'gpa', 'military_service_status')
+    list_display = ('user', 'major_link', 'entry_year', 'entry_semester', 'gpa', 'military_service_status')
     list_filter = ('major', 'entry_year', 'military_service_status')
     sortable_by = ('user', 'entry_year', 'gpa')
     list_editable = ('military_service_status',)
@@ -129,7 +123,7 @@ class StudentAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     ordering = ('entry_year',)
     search_fields = ('user', 'entry_semester')
     search_help_text = "Search in: Username, Entry Semester"
-    list_display_links = ('user', 'major_link', 'entry_semester_link')
+    list_display_links = ('user', 'major_link')
     resource_class = StudentResource
     save_as = True
     list_per_page = 10
@@ -140,26 +134,20 @@ class StudentAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
         major_url = f"http://127.0.0.1:8000/ITM/education/major/{major_id}/change/"
         return format_html('<a href="{}">{}</a>', major_url, obj.major)
 
-    def entry_semester_link(self, obj):
-        entry_semester_id = obj.entry_semester.id
-        entry_semester_url = f"http://127.0.0.1:8000/ITM/education/semester/{entry_semester_id}/change/"
-        return format_html('<a href="{}">{}</a>', entry_semester_url, obj.entry_semester)
-
     # user_link.short_description = "User"
     major_link.short_description = "Major"
-    entry_semester_link.short_description = "Entry Semester"
 
 admin.site.register(Student, StudentAdmin)
 
 
 class EducationalAssistantAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('user', 'field_link', 'department_link')
-    list_filter = ('department', 'field')
+    list_display = ('user', 'field_link')
+    list_filter = ('field',)
     sortable_by = ('user',)
     ordering = ('user',)
-    search_fields = ('department', 'field')
-    search_help_text = "Search in: Department, Field"
-    list_display_links = ('user', 'field_link', 'department_link')
+    search_fields = ('field',)
+    search_help_text = "Search in: Field"
+    list_display_links = ('user', 'field_link')
     resource_class = EducationalAssistantResource
     save_as = True
     list_per_page = 10
@@ -170,13 +158,7 @@ class EducationalAssistantAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
         field_url = f"http://127.0.0.1:8000/ITM/education/major/{field_id}/change/"
         return format_html('<a href="{}">{}</a>', field_url, obj.field)
 
-    def department_link(self, obj):
-        department_id = obj.department.id
-        department_url = f"http://127.0.0.1:8000/ITM/education/department/{department_id}/change/"
-        return format_html('<a href="{}">{}</a>', department_url, obj.department)
-
     # user_link.short_description = "User"
     field_link.short_description = "Field"
-    department_link.short_description = "Department"
 
 admin.site.register(EducationalAssistant, EducationalAssistantAdmin)

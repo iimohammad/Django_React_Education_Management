@@ -54,6 +54,7 @@ class Semester(models.Model):
         Fall = 'F', 'Fall'
         Winter = 'W', 'Winter'
         Summer = 'S', 'Summer'
+
     name = models.CharField(max_length=100)
     start_semester = models.DateTimeField()
     end_semester = models.DateTimeField()

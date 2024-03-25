@@ -1,14 +1,14 @@
 from import_export import resources, fields
 from import_export.widgets import ForeignKeyWidget
-from accounts.models import User, Teacher
-from education.models import Department, Course, Semester, Major
+from accounts.models import *
+from education.models import Department, Major
 
 
 class UserResource(resources.ModelResource):
      class Meta:
          model = User
-         fields = ('id', 'username', 'password', 'first_name', 'last_name', 'user_number',
-                   'national_code', 'birthday', 'phone', 'address', 'gender')
+         fields = ('id', 'username', 'password', 'first_name', 'last_name', 'email', 'user_number',
+                   'national_code', 'birthday', 'phone', 'address', 'gender', 'is_staff')
          import_id_fields = ('id',)
 
 
@@ -23,16 +23,10 @@ class TeacherResource(resources.ModelResource):
         attribute='department',
         widget=ForeignKeyWidget(Department, field='id')
     )
-    past_courses_id = fields.Field(
-        column_name='past_courses_id',
-        attribute='past_courses',
-        widget=ForeignKeyWidget(model=Course, field='id')
-    )
 
     class Meta:
         model = Teacher
-        fields = ('id', 'user_id', 'expertise', 'rank',
-                  'department_id', 'past_courses_id')
+        fields = ('id', 'user_id', 'expertise', 'rank', 'department_id')
         import_id_fields = ('id',)
 
 
@@ -42,11 +36,6 @@ class StudentResource(resources.ModelResource):
         attribute='user',
         widget=ForeignKeyWidget(User, field='id')
     )
-    entry_semester_id = fields.Field(
-        column_name='entry_semester_id',
-        attribute='entry_semester',
-        widget=ForeignKeyWidget(model=Semester, field='id')
-    )
     major_id = fields.Field(
         column_name='major_id',
         attribute='major',
@@ -54,8 +43,8 @@ class StudentResource(resources.ModelResource):
     )
 
     class Meta:
-        model = Teacher
-        fields = ('id', 'user_id', 'entry_year', 'entry_semester_id',
+        model = Student
+        fields = ('id', 'user_id', 'entry_year', 'entry_semester',
                   'major_id', 'military_service_status', 'year_of_study', 'gpa')
         import_id_fields = ('id',)
 
@@ -71,13 +60,8 @@ class EducationalAssistantResource(resources.ModelResource):
         attribute='field',
         widget=ForeignKeyWidget(model=Major, field='id')
     )
-    department_id = fields.Field(
-        column_name='department_id',
-        attribute='department',
-        widget=ForeignKeyWidget(model=Department, field='id')
-    )
 
     class Meta:
-        model = Teacher
-        fields = ('id', 'user_id', 'field_id', 'department_id')
+        model = EducationalAssistant
+        fields = ('id', 'user_id', 'field_id')
         import_id_fields = ('id',)

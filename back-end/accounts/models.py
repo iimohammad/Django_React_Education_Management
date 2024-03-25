@@ -55,6 +55,7 @@ class Student(models.Model):
 class EducationalAssistant(models.Model):
     user = models.OneToOneField(User,on_delete=models.CASCADE)
     field = models.ForeignKey(Major, on_delete=models.PROTECT)
+    
     def __str__(self) -> str:
         if self.user.first_name and self.user.last_name:
             return f"{self.user.first_name} {self.user.last_name}"
