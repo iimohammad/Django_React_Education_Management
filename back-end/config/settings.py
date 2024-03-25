@@ -34,18 +34,17 @@ THIRD_PARTY_APPS = [
     'drf_spectacular',
     'drf_spectacular_sidecar',
     'graphene_django',
-    'import_export',
 ]
 
 
 LOCAL_APPS = [
-    "accounts.apps.AccountsConfig",
-    'education.apps.EducationConfig',
-    'home.apps.HomeConfig',
-    'admin_dashboard_panel.apps.dashboard_panelConfig',
-    'dashboard_student.apps.DashboardStudentConfig',
-    'dashboard_teacher.apps.DashboardTeacherConfig',
-    'dashboard_educationalassstnat.apps.DashboardEducationalassstnatConfig',
+    "accounts",
+    'education',
+    'home',
+    'admin_dashboard_panel',
+    'dashboard_student',
+    'dashboard_teacher',
+    'dashboard_educationalassstnat',
 ]
 
 INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
