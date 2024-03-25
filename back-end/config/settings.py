@@ -43,7 +43,7 @@ LOCAL_APPS = [
     'education.apps.EducationConfig',
     'home.apps.HomeConfig',
     'admin_dashboard_panel.apps.dashboard_panelConfig',
-    'dashboard_student.apps.DashboardStudentConfig',
+    'dashboard_student.apps.dashboard_panelConfig',
     'dashboard_teacher.apps.DashboardTeacherConfig',
     'dashboard_educationalassstnat.apps.DashboardEducationalassstnatConfig',
 ]
