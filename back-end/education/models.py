@@ -31,6 +31,7 @@ class Major(models.Model):
 class Course(models.Model):
     course_name = models.CharField(max_length=40)
     course_code = models.PositiveSmallIntegerField()
+    department = models.ForeignKey(Department,on_delete = models.PROTECT)
     credit_num = models.PositiveSmallIntegerField()
     prerequisite = models.ManyToManyField('self' , related_name='prerequisites' , symmetrical=False)
     corequisite = models.ManyToManyField('self', related_name='corequisites' , symmetrical=False)
@@ -130,7 +131,7 @@ class StudentCourse(models.Model):
     ]
 
     student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE)
-    course = models.ForeignKey(SemesterCourse, on_delete=models.PROTECT)
+    semester_course = models.ForeignKey(SemesterCourse, on_delete=models.PROTECT)
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default=REGISTERED)
     score = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
 

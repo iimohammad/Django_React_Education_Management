@@ -25,6 +25,7 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
     #DashboardEducationalAssistant
     path('dashboard_educationalassistant/',include('dashboard_educationalassistant.urls'), name='dashboard_educationalassistant'),
+    
     #swagger
     # YOUR PATTERNS
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

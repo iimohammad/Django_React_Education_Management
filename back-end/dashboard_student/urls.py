@@ -4,22 +4,23 @@ from admin_dashboard_panel.views import CourseViewSet,SemesterCourseViewSet
 from .views import (StudentViewSet,
                     TeacherViewSet,
                     EnrollmentRequestViewSet,
+                    SemesterCourseViewSet,
+                    StudentCoursesViewSet,
                     )
 
 router = DefaultRouter()
-# Educational Assistant Urls
+
 router.register("EucationalAssistantPanel/Students", StudentViewSet, basename="Student")
 router.register("EucationalAssistantPanel/Teachers", TeacherViewSet, basename="teacher")
 router.register("EucationalAssistantPanel/Course", CourseViewSet, basename="Course")
 router.register("EucationalAssistantPanel/SemesterCourse", SemesterCourseViewSet, basename="SemesterCourse")
 
 
-# Student Urls 
 
 router.register(r'enrollment-requests', EnrollmentRequestViewSet,basename='enrollment')
 
-
-# Teachers Urls 
+router.register('semester_courses' , SemesterCourseViewSet , basename='semestercourse')
+router.register('student_courses' , StudentCoursesViewSet , basename='studentcourses')
 
 
 
