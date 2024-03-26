@@ -12,6 +12,8 @@ urlpatterns = [
     # Home
     path('', home),
     # App Urls
+    path('academic_events/', include('academic_events.urls'), name='accounts'),
+
     path('accounts/', include('accounts.urls'), name='accounts'),
     path('admin/', include('admin_dashboard_panel.urls'), name='admin_dashboard'),
     path('dashboard_student/', include('dashboard_student.urls'), name='dashboard_student'),

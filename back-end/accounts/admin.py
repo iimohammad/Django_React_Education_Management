@@ -8,7 +8,7 @@ from django.utils.html import format_html
 
 
 class CustomUserAdmin(UserAdmin, ImportExportActionModelAdmin):
-    list_display = ('username', 'email', 'user_number', 'gender', 'phone', 'is_staff')
+    list_display = ('id','username', 'email', 'user_number', 'gender', 'phone', 'is_staff')
     list_filter = ('gender', 'birthday', 'is_active', 'is_staff')
     sortable_by = ('username', 'user_number')
     list_editable = ('is_staff',)
@@ -52,7 +52,7 @@ admin.site.register(User, CustomUserAdmin)
 
 
 class TeacherAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('user', 'expertise', 'rank', 'department_link')
+    list_display = ('id','user', 'expertise', 'rank', 'department_link')
     list_filter = ('rank',)
     sortable_by = ('user',)
     list_editable = ('rank',)
@@ -115,7 +115,7 @@ admin.site.register(Teacher, TeacherAdmin)
 
 
 class StudentAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('user', 'major_link', 'entry_year', 'entry_semester', 'gpa', 'military_service_status')
+    list_display = ('id','user', 'major_link', 'entry_year', 'entry_semester', 'gpa', 'military_service_status')
     list_filter = ('major', 'entry_year', 'military_service_status')
     sortable_by = ('user', 'entry_year', 'gpa')
     list_editable = ('military_service_status',)
@@ -141,7 +141,7 @@ admin.site.register(Student, StudentAdmin)
 
 
 class EducationalAssistantAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('user', 'field_link')
+    list_display = ('id','user', 'field_link')
     list_filter = ('field',)
     sortable_by = ('user',)
     ordering = ('user',)
