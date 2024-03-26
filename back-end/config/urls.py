@@ -18,6 +18,7 @@ urlpatterns = [
     path('admin/', include('admin_dashboard_panel.urls'), name='admin_dashboard'),
     path('dashboard_student/', include('dashboard_student.urls'), name='dashboard_student'),
     # path('about_us/', include('about_us.urls')),
+    
     # Authentication URLS
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
