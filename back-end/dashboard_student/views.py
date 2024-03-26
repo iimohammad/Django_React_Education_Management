@@ -5,8 +5,12 @@ from rest_framework.permissions import IsAuthenticated,IsAdminUser
 from .permissions import IsEducationalAssistant,IsStudent
 from accounts.models import Student, Teacher
 from accounts.serializers import StudentSerializer, TeacherSerializers
-from education.serializers import CourseSerializers
-from education.models import Course
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+from .serializers import SemesterCourseSerializer , StudentCourseSerializer
+from education.models import SemesterCourse , StudentCourse
+from .filters import SemesterCourseFilter , StudentCourseFilter
+from .pagination import DefaultPagination
 from .models import (
     EnrollmentRequest,
 ) 
@@ -72,3 +76,24 @@ class EnrollmentRequestViewSet(viewsets.ModelViewSet):
             return Response({'message': 'Enrollment request updated successfully'})
 
         return Response({'error': 'Invalid approval status'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = SemesterCourse.objects.all()
+    serializer_class = SemesterCourseSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = SemesterCourseFilter
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated,IsStudent]
+    search_fields = ['title', 'description']
+    ordering_fields = ['entry_semester']
+
+class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = StudentCourse.objects.all()
+    serializer_class = StudentCourseSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = StudentCourseFilter
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated,IsStudent]
+    search_fields = ['title', 'description']
+    ordering_fields = ['entry_semester']
