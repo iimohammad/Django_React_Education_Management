@@ -38,7 +38,6 @@ THIRD_PARTY_APPS = [
     'import_export',
 ]
 
-
 LOCAL_APPS = [
     "accounts.apps.AccountsConfig",
     'education.apps.EducationConfig',
@@ -131,6 +130,7 @@ USE_I18N = True
 
 USE_TZ = True
 
+IMPORT_EXPORT_USE_TRANSACTIONS = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATIC_URL = '/static/'

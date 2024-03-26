@@ -49,6 +49,13 @@ jobs:
       - name: Run backend tests
         run: python back-end/manage.py test
 
+      - name: Check PEP8 compliance
+        run: |
+          # Install flake8 (PEP8 linter)
+          pip install flake8
+          # Run PEP8 checks
+          flake8 backend/
+
   deploy:
     runs-on: ubuntu-latest
     needs: [build-frontend, build-backend]

@@ -1,50 +1,67 @@
 from import_export import resources, fields
-from .models import User, Student, Teacher, EducationalAssistant
+from import_export.widgets import ForeignKeyWidget
+from accounts.models import *
+from education.models import Department, Major
+
 
 class UserResource(resources.ModelResource):
-    id = fields.Field(attribute='id', column_name='ID', readonly=True)
+     class Meta:
+         model = User
+         fields = ('id', 'username', 'password', 'first_name', 'last_name', 'email', 'user_number',
+                   'national_code', 'birthday', 'phone', 'address', 'gender', 'is_staff')
+         import_id_fields = ('id',)
 
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'user_number', 'national_code', 'birthday', 'phone', 'address', 'gender']
-        import_id_fields = ['id']
-
-    def before_import_row(self, row, **kwargs):
-        if 'id' not in row:
-            row['id'] = None
 
 class TeacherResource(resources.ModelResource):
-    id = fields.Field(attribute='id', column_name='ID', readonly=True)
+    user_id = fields.Field(
+        column_name='user_id',
+        attribute='user',
+        widget=ForeignKeyWidget(User, field='id')
+    )
+    department_id = fields.Field(
+        column_name='department_id',
+        attribute='department',
+        widget=ForeignKeyWidget(Department, field='id')
+    )
 
     class Meta:
         model = Teacher
-        fields = ['id', 'user__username', 'expertise', 'rank', 'department__department_name']
-        import_id_fields = ['id']
+        fields = ('id', 'user_id', 'expertise', 'rank', 'department_id')
+        import_id_fields = ('id',)
 
-    def before_import_row(self, row, **kwargs):
-        if 'id' not in row:
-            row['id'] = None
 
 class StudentResource(resources.ModelResource):
-    id = fields.Field(attribute='id', column_name='ID', readonly=True)
+    user_id = fields.Field(
+        column_name='user_id',
+        attribute='user',
+        widget=ForeignKeyWidget(User, field='id')
+    )
+    major_id = fields.Field(
+        column_name='major_id',
+        attribute='major',
+        widget=ForeignKeyWidget(model=Major, field='id')
+    )
 
     class Meta:
         model = Student
-        fields = ['id', 'user__username', 'entry_semester', 'gpa', 'entry_year', 'major__major_name', 'advisor__user__username', 'military_service_status', 'year_of_study']
-        import_id_fields = ['id']
+        fields = ('id', 'user_id', 'entry_year', 'entry_semester',
+                  'major_id', 'military_service_status', 'year_of_study', 'gpa')
+        import_id_fields = ('id',)
 
-    def before_import_row(self, row, **kwargs):
-        if 'id' not in row:
-            row['id'] = None
 
 class EducationalAssistantResource(resources.ModelResource):
-    id = fields.Field(attribute='id', column_name='ID', readonly=True)
+    user_id = fields.Field(
+        column_name='user_id',
+        attribute='user',
+        widget=ForeignKeyWidget(model=User, field='id')
+    )
+    field_id = fields.Field(
+        column_name='field_id',
+        attribute='field',
+        widget=ForeignKeyWidget(model=Major, field='id')
+    )
 
     class Meta:
         model = EducationalAssistant
-        fields = ['id', 'user__username', 'field__major_name']
-        import_id_fields = ['id']
-
-    def before_import_row(self, row, **kwargs):
-        if 'id' not in row:
-            row['id'] = None
+        fields = ('id', 'user_id', 'field_id')
+        import_id_fields = ('id',)
