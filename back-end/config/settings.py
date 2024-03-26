@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from config import local_settings
+from celery.schedules import crontab
 from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -206,9 +207,8 @@ GOOGLE_REDIRECT_URI = local_settings.GOOGLE_REDIRECT_URI
 CELERY_BROKER_URL = 'amqp://localhost'
 
 CELERY_BEAT_SCHEDULE = {
-    'send-periodic-email': {
-        'task': 'academic_events.tasks.send_periodic_email',  # Update 'your_app' with your app name
-        'schedule': timedelta(minutes=1),  # Schedule to run every minute
+    'send-new-year-email': {
+        'task': 'tasks.send_new_year_email',
+        'schedule': crontab(day_of_month=1, month_of_year=1, hour=0, minute=0),  
     },
 }
-
