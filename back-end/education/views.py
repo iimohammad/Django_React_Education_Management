@@ -7,4 +7,3 @@ from .pagination import DefaultPagination
 from .permissions import IsEducationalAssistant
 from rest_framework.permissions import IsAuthenticated
 
-class 
