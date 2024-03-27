@@ -37,7 +37,9 @@ THIRD_PARTY_APPS = [
     'graphene_django',
     'import_export',
     
+    
 ]
+        
 
 LOCAL_APPS = [
     "accounts.apps.AccountsConfig",
@@ -61,8 +63,15 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
 ]
+if local_settings.USE_DEBUG_TOOLBAR:
+    MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
+    INSTALLED_APPS.append("debug_toolbar")
 
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
@@ -145,6 +154,7 @@ if DEBUG:
             'rest_framework.authentication.SessionAuthentication'
         )
     }
+    
 else:
     REST_FRAMEWORK = {
         'DEFAULT_AUTHENTICATION_CLASSES': (
