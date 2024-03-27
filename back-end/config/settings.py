@@ -36,8 +36,10 @@ THIRD_PARTY_APPS = [
     'drf_spectacular_sidecar',
     'graphene_django',
     'import_export',
+    
+    
 ]
-
+        
 
 LOCAL_APPS = [
     "accounts.apps.AccountsConfig",
@@ -63,6 +65,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     
 ]
+if local_settings.USE_DEBUG_TOOLBAR:
+    MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
+    INSTALLED_APPS.append("debug_toolbar")
 
 INTERNAL_IPS = [
     "127.0.0.1",
@@ -149,8 +154,7 @@ if DEBUG:
             'rest_framework.authentication.SessionAuthentication'
         )
     }
-    THIRD_PARTY_APPS.append("debug_toolbar")
-    MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
+    
 else:
     REST_FRAMEWORK = {
         'DEFAULT_AUTHENTICATION_CLASSES': (

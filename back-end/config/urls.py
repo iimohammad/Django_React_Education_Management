@@ -36,5 +36,5 @@ urlpatterns = [
     #debug_toolbar
     
 ]
-if local_settings.DEBUG_TOOLBAR:
+if local_settings.USE_DEBUG_TOOLBAR:
     urlpatterns.append(path("__debug__/", include("debug_toolbar.urls")))
