@@ -1,0 +1,200 @@
+[
+    {
+        "model": "accounts.User",
+        "pk": 1,
+        "fields": {
+          "username": "user1",
+          "first_name": "James",
+          "last_name": "Smith",
+          "email": "user1@example.com",
+          "user_number":"123456",
+          "national_code":"1234567",
+          "birthday":"2020-10-10",
+          "phone": "09370222989",
+          "address": "70 Elm St, Town",
+          "gender": "MF",
+          "password":"pbkdf2_sha256$720000$Gt4dxGAqqJ3FMFFiU2si4E$BqePS1jPiUhl9pgIgwMSyj2sLJ1Vyuejln/ECrw+nVQ="
+        }
+      },
+    {
+        "model": "accounts.User",
+        "pk": 2,
+        "fields": {
+          "username": "user2",
+          "first_name": "user2James",
+          "last_name": "user2Smith",
+          "email": "user2@example.com",
+          "user_number":"123456",
+          "national_code":"1234567",
+          "birthday":"2020-10-10",
+          "phone": "09370222989",
+          "address": "70 Elm St, Town",
+          "gender": "MF",
+          "password":"pbkdf2_sha256$720000$Gt4dxGAqqJ3FMFFiU2si4E$BqePS1jPiUhl9pgIgwMSyj2sLJ1Vyuejln/ECrw+nVQ="
+        }
+      },
+      {
+        "model": "education.Department",
+        "pk": 0,
+        "fields": {
+            "department_name":"computer",
+            "department_code":"1",
+            "year_established":"2000-01-01",
+            "department_location":"fghfghfgh"
+        }
+      },
+    {
+        "model": "accounts.Teacher",
+        "pk": 0,
+        "fields": {
+            "user":"1",
+            "expertise":"asdasdasdassd",
+            "rank":"sdfsfgsdfsdf",
+            "department":"0"
+        }
+      },
+    {
+        "model": "education.Major",
+        "pk": 0,
+        "fields": {
+            "major_name":"software",
+            "major_code":"1",
+            "department":"0",
+            "number_of_credits":"140",
+            "level":"140",
+            "education_group":"asdsadasd"
+
+        }
+      },
+
+    {
+        "model": "accounts.Student",
+        "pk": 0,
+        "fields": {
+            "user":"1",
+            "entry_semester":"Fall",
+            "gpa":"15",
+            "entry_year":"2020",
+            "major":"0",
+            "advisor":"0",
+            "military_service_status":"asdasd",
+            "year_of_study":"2"
+        }
+      },
+    {
+        "model": "accounts.Student",
+        "pk": 1,
+        "fields": {
+            "user":"2",
+            "entry_semester":"Fall",
+            "gpa":"17",
+            "entry_year":"2021",
+            "major":"0",
+            "advisor":"0",
+            "military_service_status":"asdasd",
+            "year_of_study":"2"
+        }
+      },
+      {
+        "model": "education.Course",
+        "pk": 0,
+        "fields": {
+            "course_name":"programming1",
+            "course_code":"1",
+            "department":"0",
+            "credit_num":"3",
+            "prerequisite":""
+
+        }
+      },
+      {
+        "model": "education.Semester",
+        "pk": 0,
+        "fields": {
+            "name":"20201",
+            "start_semester":"2020-05-10",
+            "end_semester":"2020-07-10",
+            "semester_type":"F"
+        }
+      },
+      {
+        "model": "education.SemesterUnitSelection",
+        "pk": 0,
+        "fields": {
+            "semester":"0",
+            "unit_selection_start":"2020-05-10",
+            "unit_selection_end":"2020-07-10"
+        }
+      },
+      {
+        "model": "education.SemesterClass",
+        "pk": 0,
+        "fields": {
+            "semester":"0",
+            "classes_start":"2020-05-10",
+            "classes_end":"2020-07-10"
+        }
+      },
+      {
+        "model": "education.SemesterAddRemove",
+        "pk": 0,
+        "fields": {
+            "semester":"0",
+            "addremove_start":"2020-05-10",
+            "addremove_end":"2020-07-10"
+        }
+      },
+      {
+        "model": "education.SemesterExam",
+        "pk": 0,
+        "fields": {
+            "semester":"0",
+            "exam_start":"2020-05-10",
+            "exam_end":"2020-07-10"
+        }
+      },
+      {
+        "model": "education.SemesterEmergency",
+        "pk": 0,
+        "fields": {
+            "semester":"0",
+            "emergency_remove_start":"2020-05-10",
+            "emergency_remove_end":"2020-07-10"
+        }
+      },
+      {
+        "model": "education.SemesterCourse",
+        "pk": 0,
+        "fields": {
+            "semester":"0",
+            "course":"0",
+            "class_days":"monday",
+            "class_time":"10:00",
+            "exam_datetime":"2020-08-01 11:00",
+            "exam_location":"dfgdfgdfgdfgfdg",
+            "instructor":"0",
+            "course_capacity":"10"
+        }
+      },
+      {
+        "model": "education.StudentCourse",
+        "pk": 0,
+        "fields": {
+            "student":"0",
+            "semester_course":"0",
+            "status":"Registered",
+            "score":"15"
+        }
+      },
+      {
+        "model": "education.StudentCourse",
+        "pk": 1,
+        "fields": {
+            "student":"1",
+            "semester_course":"0",
+            "status":"Registered",
+            "score":"10"
+        }
+      }
+
+    ]

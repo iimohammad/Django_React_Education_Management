@@ -31,6 +31,7 @@ class Major(models.Model):
 class Course(models.Model):
     course_name = models.CharField(max_length=40)
     course_code = models.PositiveSmallIntegerField()
+    department = models.ForeignKey(Department,on_delete = models.PROTECT)
     credit_num = models.PositiveSmallIntegerField()
     prerequisite = models.ManyToManyField('self' , related_name='prerequisites' , symmetrical=False)
     corequisite = models.ManyToManyField('self', related_name='corequisites' , symmetrical=False)
@@ -65,31 +66,31 @@ class Semester(models.Model):
 
 
 class SemesterUnitSelection(models.Model):
-    semester = models.OneToOneField(Semester , on_delete=models.CASCADE)
+    semester = models.OneToOneField(Semester , on_delete=models.CASCADE , related_name = 'unit_selection')
     unit_selection_start = models.DateField()
     unit_selection_end = models.DateField()
 
 
 class SemesterClass(models.Model):
-    semester = models.OneToOneField(Semester , on_delete=models.CASCADE)
+    semester = models.OneToOneField(Semester , on_delete=models.CASCADE , related_name ='classes')
     classes_start = models.DateField()
     classes_end = models.DateField()
 
 
 class SemesterAddRemove(models.Model):
-    semester = models.OneToOneField(Semester , on_delete=models.CASCADE)
+    semester = models.OneToOneField(Semester , on_delete=models.CASCADE, related_name ='addremove')
     addremove_start = models.DateField()
     addremove_end = models.DateField()
 
 
 class SemesterExam(models.Model):
-    semester = models.OneToOneField(Semester , on_delete=models.CASCADE)
+    semester = models.OneToOneField(Semester , on_delete=models.CASCADE, related_name ='exam')
     exam_start = models.DateField()
     exam_end = models.DateField()
 
 
 class SemesterEmergency(models.Model):
-    semester = models.OneToOneField(Semester , on_delete=models.CASCADE)
+    semester = models.OneToOneField(Semester , on_delete=models.CASCADE, related_name ='emergency')
     emergency_remove_start = models.DateField()
     emergency_remove_end = models.DateField()
 
@@ -112,8 +113,13 @@ class SemesterCourse(models.Model):
     exam_datetime = models.DateTimeField()
     exam_location = models.CharField(max_length=100)
     instructor = models.ForeignKey('accounts.Teacher', on_delete=models.PROTECT)
-    course_capacity = models.PositiveIntegerField()
-
+    course_capacity = models.PositiveSmallIntegerField()
+    corse_reserve_capasity = models.PositiveSmallIntegerField(default = 0)
+    @property
+    def remain_course_capacity(self):
+        capacity = self.course_capacity
+        occupied_capacity = StudentCourse.objects.filter(semester_course = self).count()
+        return capacity-occupied_capacity
     def __str__(self):
         return f"{self.course.course_name} - {self.semester.name}"
 
@@ -130,7 +136,7 @@ class StudentCourse(models.Model):
     ]
 
     student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE)
-    course = models.ForeignKey(SemesterCourse, on_delete=models.PROTECT)
+    semester_course = models.ForeignKey(SemesterCourse, on_delete=models.PROTECT)
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default=REGISTERED)
     score = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
 

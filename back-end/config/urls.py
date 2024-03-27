@@ -12,10 +12,13 @@ urlpatterns = [
     # Home
     path('', home),
     # App Urls
+    path('academic_events/', include('academic_events.urls'), name='accounts'),
+
     path('accounts/', include('accounts.urls'), name='accounts'),
     path('admin/', include('admin_dashboard_panel.urls'), name='admin_dashboard'),
     path('dashboard_student/', include('dashboard_student.urls'), name='dashboard_student'),
     # path('about_us/', include('about_us.urls')),
+    
     # Authentication URLS
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
@@ -23,10 +26,15 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
     #DashboardEducationalAssistant
     path('dashboard_educationalassistant/',include('dashboard_educationalassistant.urls'), name='dashboard_educationalassistant'),
+    
     #swagger
-    # YOUR PATTERNS
+        # YOUR PATTERNS
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    # Optional UI:
+        # Optional UI:
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    #debug_toolbar
+    
 ]
+if local_settings.USE_DEBUG_TOOLBAR:
+    urlpatterns.append(path("__debug__/", include("debug_toolbar.urls")))

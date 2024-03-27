@@ -1,7 +1,8 @@
 from pathlib import Path
 import os
 from config import local_settings
-
+from celery.schedules import crontab
+from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -35,7 +36,10 @@ THIRD_PARTY_APPS = [
     'drf_spectacular_sidecar',
     'graphene_django',
     'import_export',
+    
+    
 ]
+        
 
 LOCAL_APPS = [
     "accounts.apps.AccountsConfig",
@@ -45,6 +49,7 @@ LOCAL_APPS = [
     'dashboard_student.apps.DashboardStudentConfig',
     'dashboard_teacher.apps.DashboardTeacherConfig',
     'dashboard_educationalassistant.apps.DashboardEducationalAssistantConfig',
+    'academic_events.apps.AcademicConfig',
 ]
 
 INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -58,8 +63,15 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
 ]
+if local_settings.USE_DEBUG_TOOLBAR:
+    MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
+    INSTALLED_APPS.append("debug_toolbar")
 
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
@@ -142,6 +154,7 @@ if DEBUG:
             'rest_framework.authentication.SessionAuthentication'
         )
     }
+    
 else:
     REST_FRAMEWORK = {
         'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -166,12 +179,13 @@ SPECTACULAR_SETTINGS = {
 CORS_ORIGIN_ALLOW_ALL = True
 
 # # Email Configurations
-# EMAIL_BACKEND = local_settings.Email_Configuration['EMAIL_BACKEND']
-# EMAIL_HOST = local_settings.Email_Configuration['EMAIL_HOST']
-# EMAIL_PORT = local_settings.Email_Configuration['EMAIL_PORT']
-# EMAIL_HOST_USER = local_settings.Email_Configuration['EMAIL_HOST_USER']
-# EMAIL_HOST_PASSWORD = local_settings.Email_Configuration['EMAIL_HOST_PASSWORD']
-# EMAIL_USE_TLS = local_settings.Email_Configuration['EMAIL_USE_TLS']
+EMAIL_BACKEND = local_settings.Email_Configuration['EMAIL_BACKEND']
+EMAIL_HOST = local_settings.Email_Configuration['EMAIL_HOST']
+EMAIL_PORT = local_settings.Email_Configuration['EMAIL_PORT']
+EMAIL_HOST_USER = local_settings.Email_Configuration['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = local_settings.Email_Configuration['EMAIL_HOST_PASSWORD']
+EMAIL_USE_TLS = local_settings.Email_Configuration['EMAIL_USE_TLS']
+DEFAULT_FROM_EMAIL = 'mohammadbaharloo96@gmail.com'
 
 GRAPHENE = {
   'SCHEMA': 'graphql_api.schema.schema'
@@ -198,3 +212,14 @@ LOGGING = {
 GOOGLE_CLIENT_ID = local_settings.GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET = local_settings.GOOGLE_CLIENT_SECRET
 GOOGLE_REDIRECT_URI = local_settings.GOOGLE_REDIRECT_URI
+
+
+
+CELERY_BROKER_URL = 'amqp://localhost'
+
+CELERY_BEAT_SCHEDULE = {
+    'send-new-year-email': {
+        'task': 'tasks.send_new_year_email',
+        'schedule': crontab(day_of_month=1, month_of_year=1, hour=0, minute=0),  
+    },
+}

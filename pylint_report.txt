@@ -1,0 +1,27 @@
+************* Module config.settings
+back-end\config\settings.py:39:0: C0303: Trailing whitespace (trailing-whitespace)
+back-end\config\settings.py:185:8: C0303: Trailing whitespace (trailing-whitespace)
+back-end\config\settings.py:215:0: C0304: Final newline missing (missing-final-newline)
+back-end\config\settings.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+back-end\config\settings.py:5:0: C0411: standard import "datetime.timedelta" should be placed before third party imports "config.local_settings", "celery.schedules.crontab" (wrong-import-order)
+back-end\config\settings.py:2:0: W0611: Unused import os (unused-import)
+back-end\config\settings.py:5:0: W0611: Unused timedelta imported from datetime (unused-import)
+************* Module logger.admin
+back-end\logger\admin.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+back-end\logger\admin.py:1:0: W0611: Unused admin imported from django.contrib (unused-import)
+************* Module logger.apps
+back-end\logger\apps.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+back-end\logger\apps.py:4:0: C0115: Missing class docstring (missing-class-docstring)
+************* Module logger.models
+back-end\logger\models.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+back-end\logger\models.py:1:0: W0611: Unused models imported from django.db (unused-import)
+************* Module logger.tests
+back-end\logger\tests.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+back-end\logger\tests.py:1:0: W0611: Unused TestCase imported from django.test (unused-import)
+************* Module logger.views
+back-end\logger\views.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+back-end\logger\views.py:1:0: W0611: Unused render imported from django.shortcuts (unused-import)
+
+-----------------------------------
+Your code has been rated at 6.96/10
+

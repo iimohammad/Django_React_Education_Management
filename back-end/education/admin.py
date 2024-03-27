@@ -139,7 +139,7 @@ admin.site.register(SemesterCourse, SemesterCourseAdmin)
 
 
 class StudentCourseAdmin(admin.ModelAdmin):
-    list_display = ('student', 'course', 'status', 'score')
+    list_display = ('student', 'get_course_name', 'status', 'score')
     list_filter = ('status',)
     sortable_by = ('score',)
     search_fields = ('semester', 'course')
@@ -147,5 +147,8 @@ class StudentCourseAdmin(admin.ModelAdmin):
     save_as = True
     list_per_page = 10
     list_max_show_all = 50
+    def get_course_name(self, obj):
+        return obj.course.course_name
+    get_course_name.short_description = 'Course Name'
 
 admin.site.register(StudentCourse, StudentCourseAdmin)

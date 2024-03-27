@@ -6,6 +6,8 @@ from education.models import SemesterCourse , StudentCourse , Semester
 class BaseStudentRegistrationRequest():
     student = models.ForeignKey(Student, on_delete=models.PROTECT)
     status = models.BooleanField(default=False)
+    teacher_visited = models.BooleanField(default=False)
+    educational_assistant_visited = models.BooleanField(default=False)
 
 
 class SemesterRegistrationRequest(models.Model , BaseStudentRegistrationRequest):
