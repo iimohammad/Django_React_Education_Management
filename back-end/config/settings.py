@@ -3,6 +3,8 @@ import os
 from config import local_settings
 from celery.schedules import crontab
 from datetime import timedelta
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -47,9 +49,12 @@ LOCAL_APPS = [
     'home.apps.HomeConfig',
     'admin_dashboard_panel.apps.dashboard_panelConfig',
     'dashboard_student.apps.DashboardStudentConfig',
+    'dashboard_student_amirabbas.apps.DashboardStudentAmirabbasConfig',
     'dashboard_teacher.apps.DashboardTeacherConfig',
     'dashboard_educationalassistant.apps.DashboardEducationalAssistantConfig',
+
     'academic_events.apps.AcademicConfig',
+
 ]
 
 INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
