@@ -30,6 +30,7 @@ class Teacher(models.Model):
     expertise = models.CharField(max_length=255)
     rank = models.CharField(max_length=3, choices=Rank.choices, default=Rank.INSTRUCTOR)
     department = models.ForeignKey('education.Department', on_delete=models.PROTECT)
+    can_be_advisor = models.BooleanField(default = False)
 
     def __str__(self) -> str:
         return self.user.username
