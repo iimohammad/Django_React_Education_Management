@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from django.shortcuts import redirect
 from django.http import HttpResponseBadRequest
 from rest_framework.authtoken.models import Token
-from .serializers import RegisterSerializer, UserSerializer, EmailUserSerializer, PasswordResetActionSerializer
+from .serializers import RegisterSerializer, UserSerializer, EmailUserSerializer, PasswordResetActionSerializer, PasswordResetLoginSerializer
 from django.conf import settings
 import requests
 import string
@@ -15,7 +15,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from .tasks import send_verification_code
 import secrets
-from django.urls import reverse
+from rest_framework.reverse import reverse_lazy
 from .models import User
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -87,6 +87,7 @@ class GenerateVerificationCodeView(APIView):
     def generate_verification_code(self):
         alphabet = string.ascii_letters + string.digits
         return ''.join(secrets.choice(alphabet) for _ in range(6))
+    print(generate_verification_code)
 
     def store_verification_code_in_redis(self, email, verification_code):
         redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
@@ -102,7 +103,7 @@ class GenerateVerificationCodeView(APIView):
             verification_code = self.generate_verification_code()
             self.store_verification_code_in_redis(email, verification_code)
             self.send_verification_code(email, verification_code)
-            change_password_url = reverse('change-password-action')
+            change_password_url = reverse_lazy('change-password-action')
 
             return Response({'message': 'Verification code sent successfully', 'change_password_url': change_password_url}, status=status.HTTP_200_OK)
         else:
@@ -120,6 +121,8 @@ def get_user_by_verification_code(code):
                 return None
         else:
             return None
+        
+
 class PasswordResetActionView(APIView):
     serializer_class = PasswordResetActionSerializer
     
@@ -145,6 +148,17 @@ class PasswordResetActionView(APIView):
                 return Response({'message': 'Invalid verification code'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class ChangePasswordLoginView(APIView):
+    def post(self, request):
+        serializer = PasswordResetLoginSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Password changed successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 

@@ -63,3 +63,27 @@ class EmailUserSerializer(serializers.ModelSerializer):
 class PasswordResetActionSerializer(serializers.Serializer):
     code = serializers.CharField()
     new_password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+
+    def save(self):
+        user = self.context['request'].user
+        new_password = self.validated_data['new_password']
+        user.set_password(new_password)
+        user.save()
+        return user
+
+class PasswordResetLoginSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Old password is incorrect.")
+        return value
+
+    def save(self):
+        user = self.context['request'].user
+        new_password = self.validated_data['new_password']
+        user.set_password(new_password)
+        user.save()
+        return user
