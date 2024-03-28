@@ -6,9 +6,15 @@ from rest_framework.views import APIView
 from django.shortcuts import redirect
 from django.http import HttpResponseBadRequest
 from rest_framework.authtoken.models import Token
-from .serializers import RegisterSerializer, UserSerializer
+from .serializers import RegisterSerializer, UserSerializer, EmailUserSerializer
 from django.conf import settings
 import requests
+import string
+import redis
+from django.conf import settings
+from django.http import JsonResponse
+from .tasks import send_verification_code
+import secrets
 
 
 class LogoutAPIView(APIView):
@@ -69,3 +75,24 @@ def google_auth_callback(request):
             # You can then authenticate the user in Django and redirect them to the appropriate page
             return "Authentication successful"
     return "Authentication failed"
+
+
+class GenerateVerificationCodeView(APIView):
+    serializer_class = EmailUserSerializer
+
+    def post(self, request):
+        email = request.data.get('email')
+
+        def post(self, request):
+            serializer = self.serializer_class(data=request.data)
+            if serializer.is_valid():
+                email = serializer.validated_data['email']
+                alphabet = string.ascii_letters + string.digits
+                verification_code = ''.join(secrets.choice(alphabet) for _ in range(6))
+                redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
+                redis_client.setex(email, 120, verification_code)
+                send_verification_code.delay(email, verification_code)
+
+                return Response({'message': 'Verification code sent successfully'}, status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -52,3 +52,9 @@ class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = '__all__' 
+
+
+class EmailUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email']
