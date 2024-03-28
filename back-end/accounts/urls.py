@@ -8,7 +8,8 @@ urlpatterns = [
     path('login/', obtain_auth_token, name='login'),
     path('logout/', LogoutAPIView.as_view()),
     path('', RegisterUserApi.as_view()),
-    path('', GenerateVerificationCodeView.as_view()),
+    path('change-password-request/', GenerateVerificationCodeView.as_view()),
+    path('change-password-action/', name='change-password-action'),
 
     # Google Login
     path('google-auth/', google_auth_redirect, name='google_auth_redirect'),

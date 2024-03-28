@@ -15,6 +15,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from .tasks import send_verification_code
 import secrets
+from django.urls import reverse
 
 
 class LogoutAPIView(APIView):
@@ -77,22 +78,44 @@ def google_auth_callback(request):
     return "Authentication failed"
 
 
+import string
+import secrets
+from django.conf import settings
+from django.urls import reverse
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+import redis
+
 class GenerateVerificationCodeView(APIView):
     serializer_class = EmailUserSerializer
 
+    def generate_verification_code(self):
+        alphabet = string.ascii_letters + string.digits
+        return ''.join(secrets.choice(alphabet) for _ in range(6))
+
+    def store_verification_code_in_redis(self, email, verification_code):
+        redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
+        redis_client.setex(email, 120, verification_code)
+
+    def send_verification_code(self, email, verification_code):
+        send_verification_code.delay(email, verification_code)
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data['email']
-            alphabet = string.ascii_letters + string.digits
-            verification_code = ''.join(secrets.choice(alphabet) for _ in range(6))
-            redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
-            redis_client.setex(email, 120, verification_code)
-            send_verification_code.delay(email, verification_code)
+            verification_code = self.generate_verification_code()
+            self.store_verification_code_in_redis(email, verification_code)
+            self.send_verification_code(email, verification_code)
+            change_password_url = reverse('change-password-action', kwargs={'verification_code': verification_code})
 
-            return Response({'message': 'Verification code sent successfully'}, status=status.HTTP_200_OK)
+            return Response({'message': 'Verification code sent successfully', 'change_password_url': change_password_url}, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        
+
+
             
 
