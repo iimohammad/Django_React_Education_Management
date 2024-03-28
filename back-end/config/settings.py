@@ -212,3 +212,8 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(day_of_month=1, month_of_year=1, hour=0, minute=0),  
     },
 }
+
+# redis configurations
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+REDIS_DB = 0

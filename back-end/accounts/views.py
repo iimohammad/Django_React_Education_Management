@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from django.shortcuts import redirect
 from django.http import HttpResponseBadRequest
 from rest_framework.authtoken.models import Token
-from .serializers import RegisterSerializer, UserSerializer, EmailUserSerializer
+from .serializers import RegisterSerializer, UserSerializer, EmailUserSerializer, PasswordResetActionSerializer
 from django.conf import settings
 import requests
 import string
@@ -16,6 +16,7 @@ from django.http import JsonResponse
 from .tasks import send_verification_code
 import secrets
 from django.urls import reverse
+from .models import User
 
 
 class LogoutAPIView(APIView):
@@ -113,6 +114,46 @@ class GenerateVerificationCodeView(APIView):
             return Response({'message': 'Verification code sent successfully', 'change_password_url': change_password_url}, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
+def get_user_by_verification_code(code):
+        redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
+        email = redis_client.get(code)
+        if email:
+            try:
+                user = User.objects.get(email=email.decode('utf-8'))
+                return user
+            except User.DoesNotExist:
+                return None
+        else:
+            return None
+class PasswordResetActionView(APIView):
+    serializer_class = PasswordResetActionSerializer
+    
+    
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            code = serializer.validated_data['code']
+            new_password = serializer.validated_data['new_password']
+            
+            redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
+            stored_code = redis_client.get(code)
+            
+            if stored_code and stored_code.decode('utf-8') == code:
+                user = get_user_by_verification_code(code)
+                if user:
+                    user.set_password(new_password)
+                    user.save()
+                    return Response({'message': 'Password reset successfully'}, status=status.HTTP_200_OK)
+                else:
+                    return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            else:
+                return Response({'message': 'Invalid verification code'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
         
 
