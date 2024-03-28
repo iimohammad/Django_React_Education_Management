@@ -151,6 +151,7 @@ class PasswordResetActionView(APIView):
         
 
 class ChangePasswordLoginView(APIView):
+    permission_classes = (IsAuthenticated,)
     def post(self, request):
         serializer = PasswordResetLoginSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
