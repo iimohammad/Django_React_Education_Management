@@ -62,3 +62,6 @@ class EducationalAssistant(models.Model):
             return f"{self.user.first_name} {self.user.last_name}"
         else:
             return str(self.user)
+
+class AdminUser(models.Model):
+    user = models.OneToOneField(User,on_delete=models.CASCADE)

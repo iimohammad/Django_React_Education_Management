@@ -6,10 +6,12 @@ from rest_framework.views import APIView
 from django.shortcuts import redirect
 from django.http import HttpResponseBadRequest
 from rest_framework.authtoken.models import Token
-from .serializers import RegisterSerializer, UserSerializer
+
+from accounts.models import User
+from .serializers import ProfileSerializer, RegisterSerializer, UserSerializer
 from django.conf import settings
 import requests
-
+from rest_framework import viewsets
 
 class LogoutAPIView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -69,3 +71,14 @@ def google_auth_callback(request):
             # You can then authenticate the user in Django and redirect them to the appropriate page
             return "Authentication successful"
     return "Authentication failed"
+
+
+
+# Change Profile implement Here
+class change_profile(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProfileSerializer()
+    queryset = User.objects.all()
+
+    
+
