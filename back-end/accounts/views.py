@@ -6,12 +6,14 @@ from rest_framework.views import APIView
 from django.shortcuts import redirect
 from django.http import HttpResponseBadRequest
 from rest_framework.authtoken.models import Token
-
+# from rest_framework.views import LoginView
 from accounts.models import User
 from .serializers import ProfileSerializer, RegisterSerializer, UserSerializer
 from django.conf import settings
 import requests
 from rest_framework import viewsets
+from django.urls import reverse_lazy
+from django.contrib.auth import logout
 
 class LogoutAPIView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -39,14 +41,13 @@ class RegisterUserApi(generics.GenericAPIView):
         })
 
 
-
-
 def google_auth_redirect(request):
     # Redirect to Google's OAuth2 authentication page
     redirect_uri = settings.GOOGLE_REDIRECT_URI
     client_id = settings.GOOGLE_CLIENT_ID
     auth_url = f"https://accounts.google.com/o/oauth2/auth?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code&scope=email profile openid"
     return redirect(auth_url)
+
 
 def google_auth_callback(request):
     # Handle Google's OAuth2 callback
@@ -73,12 +74,18 @@ def google_auth_callback(request):
     return "Authentication failed"
 
 
-
 # Change Profile implement Here
 class change_profile(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = ProfileSerializer()
     queryset = User.objects.all()
 
-    
 
+class CustomLogoutView(APIView):
+    def post(self, request):
+        logout(request)
+        return Response({'detail': 'Logged out successfully'}, status=200)
+
+    def get(self, request):
+        logout(request)
+        return redirect(reverse_lazy('rest_framework:login'))

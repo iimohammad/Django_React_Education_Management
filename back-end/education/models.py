@@ -57,8 +57,8 @@ class Semester(models.Model):
         Summer = 'S', 'Summer'
 
     name = models.CharField(max_length=100)
-    start_semester = models.DateTimeField()
-    end_semester = models.DateTimeField()
+    start_semester = models.DateField()
+    end_semester = models.DateField()
     semester_type = models.CharField(max_length=1, choices=SemesterType.choices, default=SemesterType.Fall)
 
     def __str__(self):

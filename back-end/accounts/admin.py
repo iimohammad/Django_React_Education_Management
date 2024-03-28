@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils import timezone
-from .models import Teacher, Student, EducationalAssistant, User
+from .models import Teacher, Student, EducationalAssistant, User, AdminUser
 from import_export.admin import ImportExportActionModelAdmin
 from accounts.resource import *
 from django.utils.html import format_html
@@ -162,3 +162,4 @@ class EducationalAssistantAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     field_link.short_description = "Field"
 
 admin.site.register(EducationalAssistant, EducationalAssistantAdmin)
+admin.site.register(AdminUser)
