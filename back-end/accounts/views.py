@@ -17,6 +17,8 @@ from .tasks import send_verification_code
 import secrets
 from django.urls import reverse
 from .models import User
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 
 
 class LogoutAPIView(APIView):
@@ -78,16 +80,7 @@ def google_auth_callback(request):
             return "Authentication successful"
     return "Authentication failed"
 
-
-import string
-import secrets
-from django.conf import settings
-from django.urls import reverse
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-import redis
-
+@method_decorator(csrf_exempt, name= 'dispatch')
 class GenerateVerificationCodeView(APIView):
     serializer_class = EmailUserSerializer
 
@@ -109,7 +102,7 @@ class GenerateVerificationCodeView(APIView):
             verification_code = self.generate_verification_code()
             self.store_verification_code_in_redis(email, verification_code)
             self.send_verification_code(email, verification_code)
-            change_password_url = reverse('change-password-action', kwargs={'verification_code': verification_code})
+            change_password_url = reverse('change-password-action')
 
             return Response({'message': 'Verification code sent successfully', 'change_password_url': change_password_url}, status=status.HTTP_200_OK)
         else:
