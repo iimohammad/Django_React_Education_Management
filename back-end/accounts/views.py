@@ -80,19 +80,19 @@ def google_auth_callback(request):
 class GenerateVerificationCodeView(APIView):
     serializer_class = EmailUserSerializer
 
+
     def post(self, request):
-        email = request.data.get('email')
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            alphabet = string.ascii_letters + string.digits
+            verification_code = ''.join(secrets.choice(alphabet) for _ in range(6))
+            redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
+            redis_client.setex(email, 120, verification_code)
+            send_verification_code.delay(email, verification_code)
 
-        def post(self, request):
-            serializer = self.serializer_class(data=request.data)
-            if serializer.is_valid():
-                email = serializer.validated_data['email']
-                alphabet = string.ascii_letters + string.digits
-                verification_code = ''.join(secrets.choice(alphabet) for _ in range(6))
-                redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
-                redis_client.setex(email, 120, verification_code)
-                send_verification_code.delay(email, verification_code)
+            return Response({'message': 'Verification code sent successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
 
-                return Response({'message': 'Verification code sent successfully'}, status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

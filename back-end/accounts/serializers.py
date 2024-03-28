@@ -58,3 +58,8 @@ class EmailUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['email']
+
+
+class PasswordResetActionSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
