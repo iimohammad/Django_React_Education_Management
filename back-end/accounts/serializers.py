@@ -55,7 +55,6 @@ class EducationalAssistantSerializer(serializers.ModelSerializer):
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
-<<<<<<< HEAD
         fields = '__all__' 
 
 
@@ -68,7 +67,7 @@ class EmailUserSerializer(serializers.ModelSerializer):
 class PasswordResetActionSerializer(serializers.Serializer):
     code = serializers.CharField()
     new_password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-=======
+    class Meta:
         fields = '__all__'
 
 
@@ -76,4 +75,3 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['profile_image', 'address', 'phone']
->>>>>>> main
