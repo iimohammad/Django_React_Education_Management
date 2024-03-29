@@ -187,7 +187,7 @@ EMAIL_PORT = local_settings.Email_Configuration['EMAIL_PORT']
 EMAIL_HOST_USER = local_settings.Email_Configuration['EMAIL_HOST_USER']
 EMAIL_HOST_PASSWORD = local_settings.Email_Configuration['EMAIL_HOST_PASSWORD']
 EMAIL_USE_TLS = local_settings.Email_Configuration['EMAIL_USE_TLS']
-DEFAULT_FROM_EMAIL = 'mohammadbaharloo96@gmail.com'
+DEFAULT_FROM_EMAIL = 'shojaie.payman32@gmail.com'
 
 GRAPHENE = {
     'SCHEMA': 'graphql_api.schema.schema'
@@ -216,7 +216,8 @@ GOOGLE_CLIENT_SECRET = local_settings.GOOGLE_CLIENT_SECRET
 GOOGLE_REDIRECT_URI = local_settings.GOOGLE_REDIRECT_URI
 
 
-CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# CELERY_BROKER_URL = 'amqp://localhost'
 
 CELERY_BEAT_SCHEDULE = {
     'send-new-year-email': {
@@ -225,6 +226,20 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
+# redis configurations
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',  # Adjust host and port if necessary
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+REDIS_DB = 0
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
