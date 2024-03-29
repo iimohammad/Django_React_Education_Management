@@ -1,17 +1,9 @@
 from django.urls import path, reverse_lazy
 from rest_framework.authtoken.views import obtain_auth_token
 from django.views.generic.base import RedirectView
-<<<<<<< HEAD
-from .views import LogoutAPIView, RegisterUserApi, GenerateVerificationCodeView, PasswordResetActionView
 from django.views.generic.base import RedirectView
 from rest_framework.authtoken.views import ObtainAuthToken, obtain_auth_token
-
-from .views import (LogoutAPIView, RegisterUserApi, google_auth_callback,
-                    google_auth_redirect)
-
-=======
 from .views import LogoutAPIView, RegisterUserApi, GenerateVerificationCodeView, PasswordResetActionView, ChangePasswordLoginView
->>>>>>> c4ee2b9219b36e6be06d3536cfdae7622cdd5c49
 
 urlpatterns = [
     # path('login/', ObtainAuthToken.as_view()),
