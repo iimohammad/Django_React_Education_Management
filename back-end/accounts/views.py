@@ -71,7 +71,6 @@ class GenerateVerificationCodeView(APIView):
             verification_code = self.generate_verification_code()
             self.send_verification_code(email_in, verification_code)
             user = User.objects.get(email = email_in)
-            print(cache.get('code'))
             return redirect('change-password-action', user_id=user.id)
 
         else:
@@ -85,11 +84,9 @@ class PasswordResetActionView(APIView):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             code = serializer.validated_data['code']
-            print("new")
             new_password = serializer.validated_data['new_password']
             user = User.objects.get(id=user_id)          
             codes = cache.get('code')
-            print("yes")
   
             if code == codes:
                 if user:
