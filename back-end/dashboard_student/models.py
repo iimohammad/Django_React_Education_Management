@@ -1,10 +1,6 @@
 from django.db import models
 from accounts.models import Student, Teacher
 from education.models import SemesterCourse , StudentCourse , Semester
-from education.models import Semester
-
-
-
 
 class SemesterRegistrationRequest(models.Model):
     student = models.ForeignKey(Student, on_delete=models.PROTECT)
