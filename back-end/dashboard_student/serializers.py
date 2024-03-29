@@ -1,25 +1,27 @@
 from rest_framework import serializers
-from education.models import SemesterClass, SemesterCourse , Semester , Department , Course , StudentCourse
+from education.models import SemesterClass, SemesterCourse , Semester , Department , \
+                                Course , StudentCourse
 from accounts.models import Student, Teacher , User
-from .models import (
-    EnrollmentRequest,
-)
+from .models import SemesterRegistrationRequest , RevisionRequest , AddRemoveRequest , \
+                    EnrollmentRequest , EmergencyRemovalRequest , StudentDeleteSemesterRequest , \
+                    EmploymentEducationRequest
+from django.utils import timezone
 
 
-class EnrollmentRequestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EnrollmentRequest
-        fields = '__all__'
+# class EnrollmentRequestSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = EnrollmentRequest
+#         fields = '__all__'
 
-class EducationalAssistantEnrollmentRequestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EnrollmentRequest
-        fields = '__all__'
+# class EducationalAssistantEnrollmentRequestSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = EnrollmentRequest
+#         fields = '__all__'
 
-class StudentEnrollmentRequestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EnrollmentRequest
-        exclude = ['is_approved']
+# class StudentEnrollmentRequestSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = EnrollmentRequest
+#         exclude = ['is_approved']
         
         
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -75,9 +77,12 @@ class StudentCourseSerializer(serializers.ModelSerializer):
         model = StudentCourse
         fields = ['semester_course','status','score']
 
-
+class ExamSemesterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Semester
+        fields = ['name']
 class ExamSemesterCourseSerializer(serializers.ModelSerializer):
-    semester = SemesterSerializer()
+    semester = ExamSemesterSerializer()
     course = CourseSerializer()
     class Meta:
         model = SemesterCourse
@@ -97,3 +102,42 @@ class ProfileStudentSerializer(serializers.ModelSerializer):
         model = Student
         fields = ['user','entry_semester', 'gpa', 'entry_year'
                   , 'advisor', 'military_service_status', 'year_of_study','major']
+
+
+class SemesterRegistrationRequestSemesterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Semester
+        fields = ['name']
+
+class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
+    semester = SemesterRegistrationRequestSemesterSerializer()
+    class Meta:
+        model = SemesterRegistrationRequest
+        fields = ['id','status', 'teacher_visited','educational_assistant_visited' ,
+                  'created_at' , 'semester','explanation']
+        
+        read_only_fields = ['status', 'teacher_visited','educational_assistant_visited' ,
+                            'created_at' ,'explanation']
+    def create(self, validated_data):
+        semester_data = validated_data.pop('semester')
+        user = self.context['user']
+        
+        try:
+            semester_instance = Semester.objects.get(name=semester_data['name'])
+            if semester_instance.classes.classes_end < timezone.now().date():
+                raise serializers.ValidationError("This semester ended!")
+        except Semester.DoesNotExist:
+            raise serializers.ValidationError("Invalid semester")
+        
+        existing_request = SemesterRegistrationRequest.objects.filter(semester=semester_instance, student__user=user).exists()
+        if existing_request:
+            raise serializers.ValidationError("A registration request for this semester already exists")
+        
+        try:
+            student = Student.objects.get(user = user)
+        except Semester.DoesNotExist:
+            raise serializers.ValidationError("Invalid student")
+        
+        semester_registration_request = SemesterRegistrationRequest.objects.create(semester=semester_instance, student = student)
+
+        return semester_registration_request

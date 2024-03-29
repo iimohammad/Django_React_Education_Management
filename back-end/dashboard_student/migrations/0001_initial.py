@@ -24,7 +24,6 @@ class Migration(migrations.Migration):
                 ('educational_assistant_explanation', models.TextField()),
                 ('semester', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='education.semestercourse')),
             ],
-            bases=(models.Model, dashboard_student.models.BaseStudentRegistrationRequest),
         ),
         migrations.CreateModel(
             name='SemesterRegistrationRequest',
@@ -32,7 +31,6 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('requested_courses', models.ManyToManyField(to='education.semestercourse', verbose_name='Requested_courses')),
             ],
-            bases=(models.Model, dashboard_student.models.BaseStudentRegistrationRequest),
         ),
         migrations.CreateModel(
             name='RevisionRequest',
@@ -42,7 +40,6 @@ class Migration(migrations.Migration):
                 ('answer', models.TextField()),
                 ('course', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='education.studentcourse')),
             ],
-            bases=(models.Model, dashboard_student.models.BaseStudentRegistrationRequest),
         ),
         migrations.CreateModel(
             name='EnrollmentRequest',
@@ -52,7 +49,6 @@ class Migration(migrations.Migration):
                 ('reason_text', models.TextField()),
                 ('teacher', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='accounts.teacher')),
             ],
-            bases=(models.Model, dashboard_student.models.BaseStudentRegistrationRequest),
         ),
         migrations.CreateModel(
             name='EmploymentEducationRequest',
@@ -60,7 +56,6 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('semester', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='education.semester')),
             ],
-            bases=(models.Model, dashboard_student.models.BaseStudentRegistrationRequest),
         ),
         migrations.CreateModel(
             name='EmergencyRemovalRequest',
@@ -70,7 +65,6 @@ class Migration(migrations.Migration):
                 ('educational_assistant_explanation', models.TextField()),
                 ('course', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='education.studentcourse')),
             ],
-            bases=(models.Model, dashboard_student.models.BaseStudentRegistrationRequest),
         ),
         migrations.CreateModel(
             name='AddRemoveRequest',
@@ -79,6 +73,5 @@ class Migration(migrations.Migration):
                 ('added_courses', models.ManyToManyField(related_name='added_courses', to='education.semestercourse')),
                 ('removed_courses', models.ManyToManyField(related_name='removed_courses', to='education.studentcourse')),
             ],
-            bases=(models.Model, dashboard_student.models.BaseStudentRegistrationRequest),
         ),
     ]
