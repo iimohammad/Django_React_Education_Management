@@ -1,8 +1,24 @@
+from calendar import Day
 from django.contrib import admin
-from education.models import *
-from import_export.admin import ImportExportActionModelAdmin
-from education.resource import *
 from django.utils.html import format_html
+from import_export.admin import ImportExportActionModelAdmin
+
+from education.models import (
+    Course,
+    Department,
+    Major,
+    Prerequisite,
+    Requisite,
+    Semester,
+    SemesterAddRemove, SemesterClass,
+    SemesterCourse,
+    SemesterEmergency,
+    SemesterExam,
+    SemesterUnitSelection,
+    StudentCourse,
+    Day,
+)
+from education.resource import DepartmentResource, MajorResource, SemesterResource
 
 
 class SemesterUnitSelectionInline(admin.StackedInline):
@@ -46,7 +62,8 @@ class SemesterEmergencyInline(admin.StackedInline):
 
 
 class DepartmentAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('department_name', 'department_code', 'year_established', 'department_location')
+    list_display = ('department_name', 'department_code',
+                    'year_established', 'department_location')
     sortable_by = ('department_code',)
     # readonly_fields = ('department_code',)
     ordering = ('year_established',)
@@ -57,38 +74,30 @@ class DepartmentAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     list_per_page = 10
     list_max_show_all = 50
 
+
 admin.site.register(Department, DepartmentAdmin)
 
 
-class CourseAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('course_name', 'course_code', 'credit_num', 'prerequisite_link', 'corequisite_link')
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ('id', 'course_name', 'course_code', 'credit_num')
     sortable_by = ('course_name',)
-    # readonly_fields = ('course_code',)
     search_fields = ('course_name', 'credit_num')
     search_help_text = "Search in: Course Name, Credit Number"
-    list_display_links = ('course_name', 'prerequisite_link', 'corequisite_link')
-    resource_class = CourseResource
+    list_display_links = ('course_name',)
     save_as = True
     list_per_page = 10
     list_max_show_all = 50
 
-    def prerequisite_link(self, obj):
-        prerequisite_id = obj.prerequisite.id
-        prerequisite_url = f"http://127.0.0.1:8000/ITM/education/course/{prerequisite_id}/change/"
-        return format_html('<a href="{}">{}</a>', prerequisite_url, obj.prerequisite)
-    prerequisite_link.short_description = "Prerequisite"
-
-    def corequisite_link(self, obj):
-        corequisite_id = obj.corequisite.id
-        corequisite_url = f"http://127.0.0.1:8000/ITM/education/course/{corequisite_id}/change/"
-        return format_html('<a href="{}">{}</a>', corequisite_url, obj.corequisite)
-    corequisite_link.short_description = "Corequisite"
 
 admin.site.register(Course, CourseAdmin)
 
+admin.site.register(Requisite)
+admin.site.register(Prerequisite)
+
 
 class MajorAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('major_name', 'major_code', 'department_link', 'level', 'education_group')
+    list_display = ('major_name', 'major_code',
+                    'department_link', 'level', 'education_group')
     list_filter = ('department', 'level', 'education_group')
     sortable_by = ('department', 'level')
     list_editable = ('level',)
@@ -103,16 +112,24 @@ class MajorAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
 
     def department_link(self, obj):
         department_id = obj.department.id
-        department_url = f"http://127.0.0.1:8000/ITM/education/department/{department_id}/change/"
-        return format_html('<a href="{}">{}</a>', department_url, obj.department)
+        department_url = f"http://127.0.0.1:8000/ITM/education/department/{
+            department_id}/change/"
+        return format_html('<a href="{}">{}</a>',
+                           department_url, obj.department)
+
     department_link.short_description = "Department"
+
 
 admin.site.register(Major, MajorAdmin)
 
 
 class SemesterAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    inlines = (SemesterUnitSelectionInline, SemesterClassInline,
-               SemesterAddRemoveInline, SemesterExamInline, SemesterEmergencyInline)
+    inlines = (
+        SemesterUnitSelectionInline,
+        SemesterClassInline,
+        SemesterAddRemoveInline,
+        SemesterExamInline,
+        SemesterEmergencyInline)
     list_display = ('name', 'start_semester', 'end_semester', 'semester_type')
     list_editable = ('semester_type',)
     search_fields = ('name',)
@@ -122,30 +139,37 @@ class SemesterAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     list_per_page = 10
     list_max_show_all = 50
 
+
 admin.site.register(Semester, SemesterAdmin)
 
 
-class SemesterCourseAdmin(admin.ModelAdmin):
-    list_display = ('semester', 'course', 'class_days', 'class_time', 'instructor', 'course_capacity')
-    list_filter = ('class_days',)
-    sortable_by = ('course_capacity',)
-    search_fields = ('semester', 'course', 'instructor')
-    search_help_text = "Search in: Semester Name, Course Name, Instructor Name"
-    save_as = True
-    list_per_page = 10
-    list_max_show_all = 50
+# class SemesterCourseAdmin(admin.ModelAdmin):
+#     list_display = ('semester', 'course', 'class_days', 'class_time', 'instructor', 'course_capacity')
+#     list_filter = ('class_days',)
+#     sortable_by = ('course_capacity',)
+#     search_fields = ('semester', 'course', 'instructor')
+#     search_help_text = "Search in: Semester Name, Course Name, Instructor Name"
+#     save_as = True
+#     list_per_page = 10
+#     list_max_show_all = 50
 
-admin.site.register(SemesterCourse, SemesterCourseAdmin)
+admin.site.register(SemesterCourse)
+admin.site.register(Day)
+
+# class StudentCourseAdmin(admin.ModelAdmin):
+#     list_display = ('student', 'get_course_name', 'status', 'score')
+#     list_filter = ('status',)
+#     sortable_by = ('score',)
+#     search_fields = ('semester', 'course')
+#     search_help_text = "Search in: Semester Name, Course Name"
+#     save_as = True
+#     list_per_page = 10
+#     list_max_show_all = 50
+#
+#     def get_course_name(self, obj):
+#         return obj.course.course_name
+#
+#     get_course_name.short_description = 'Course Name'
 
 
-class StudentCourseAdmin(admin.ModelAdmin):
-    list_display = ('student', 'course', 'status', 'score')
-    list_filter = ('status',)
-    sortable_by = ('score',)
-    search_fields = ('semester', 'course')
-    search_help_text = "Search in: Semester Name, Course Name"
-    save_as = True
-    list_per_page = 10
-    list_max_show_all = 50
-
-admin.site.register(StudentCourse, StudentCourseAdmin)
+admin.site.register(StudentCourse)
