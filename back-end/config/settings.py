@@ -1,8 +1,11 @@
-from pathlib import Path
 import os
-from config import local_settings
-from celery.schedules import crontab
 from datetime import timedelta
+from pathlib import Path
+
+from celery.schedules import crontab
+
+from config import local_settings
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -36,7 +39,10 @@ THIRD_PARTY_APPS = [
     'drf_spectacular_sidecar',
     'graphene_django',
     'import_export',
+
+
 ]
+
 
 LOCAL_APPS = [
     "accounts.apps.AccountsConfig",
@@ -44,7 +50,7 @@ LOCAL_APPS = [
     'home.apps.HomeConfig',
     'admin_dashboard_panel.apps.dashboard_panelConfig',
     'dashboard_student.apps.DashboardStudentConfig',
-    'dashboard_teacher.apps.DashboardTeacherConfig',
+    'dashboard_professors.apps.DashboardProfessorsConfig',
     'dashboard_educationalassistant.apps.DashboardEducationalAssistantConfig',
     'academic_events.apps.AcademicConfig',
 ]
@@ -60,8 +66,15 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
 
+]
+if local_settings.USE_DEBUG_TOOLBAR:
+    MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
+    INSTALLED_APPS.append("debug_toolbar")
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
@@ -144,6 +157,7 @@ if DEBUG:
             'rest_framework.authentication.SessionAuthentication'
         )
     }
+
 else:
     REST_FRAMEWORK = {
         'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -158,11 +172,10 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'a project for managing universicty',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
-    'SWAGGER_UI_DIST': 'SIDECAR',  
+    'SWAGGER_UI_DIST': 'SIDECAR',
     'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
     'REDOC_DIST': 'SIDECAR',
 }
-
 
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -177,11 +190,11 @@ EMAIL_USE_TLS = local_settings.Email_Configuration['EMAIL_USE_TLS']
 DEFAULT_FROM_EMAIL = 'shojaie.payman32@gmail.com'
 
 GRAPHENE = {
-  'SCHEMA': 'graphql_api.schema.schema'
+    'SCHEMA': 'graphql_api.schema.schema'
 }
 
 
-# Loging 
+# Loging
 
 LOGGING = {
     'version': 1,
@@ -203,13 +216,13 @@ GOOGLE_CLIENT_SECRET = local_settings.GOOGLE_CLIENT_SECRET
 GOOGLE_REDIRECT_URI = local_settings.GOOGLE_REDIRECT_URI
 
 
-
-CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# CELERY_BROKER_URL = 'amqp://localhost'
 
 CELERY_BEAT_SCHEDULE = {
     'send-new-year-email': {
         'task': 'tasks.send_new_year_email',
-        'schedule': crontab(day_of_month=1, month_of_year=1, hour=0, minute=0),  
+        'schedule': crontab(day_of_month=1, month_of_year=1, hour=0, minute=0),
     },
 }
 
@@ -227,3 +240,6 @@ CACHES = {
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 REDIS_DB = 0
+
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'

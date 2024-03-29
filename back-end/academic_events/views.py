@@ -1,4 +1,5 @@
 from django.shortcuts import redirect
+
 from .tasks import send_email_task
 
 

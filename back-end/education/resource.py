@@ -1,14 +1,19 @@
-from import_export import resources, fields
+from import_export import fields, resources
 from import_export.widgets import ForeignKeyWidget
-from education.models import Department, Course, Semester, Major
+
+from education.models import Course, Department, Major, Semester
 
 
 class DepartmentResource(resources.ModelResource):
-     class Meta:
-         model = Department
-         fields = ('id', 'department_name', 'department_code', 'year_established',
-                   'department_location')
-         import_id_fields = ('id',)
+    class Meta:
+        model = Department
+        fields = (
+            'id',
+            'department_name',
+            'department_code',
+            'year_established',
+            'department_location')
+        import_id_fields = ('id',)
 
 
 class MajorResource(resources.ModelResource):
@@ -20,8 +25,14 @@ class MajorResource(resources.ModelResource):
 
     class Meta:
         model = Major
-        fields = ('id', 'major_name', 'major_code', 'department_id', 'number_of_credits',
-                  'level', 'education_group')
+        fields = (
+            'id',
+            'major_name',
+            'major_code',
+            'department_id',
+            'number_of_credits',
+            'level',
+            'education_group')
         import_id_fields = ('id',)
 
 
@@ -38,14 +49,15 @@ class CourseResource(resources.ModelResource):
     )
 
     class Meta:
-         model = Course
-         fields = ('id', 'course_name', 'course_code', 'credit_num',
-                   'prerequisite_id', 'corequisite_id')
-         import_id_fields = ('id',)
+        model = Course
+        fields = ('id', 'course_name', 'course_code', 'credit_num',
+                  'prerequisite_id', 'corequisite_id')
+        import_id_fields = ('id',)
 
 
 class SemesterResource(resources.ModelResource):
-     class Meta:
-         model = Semester
-         fields = ('id', 'name', 'start_semester', 'end_semester', 'semester_type')
-         import_id_fields = ('id',)
+    class Meta:
+        model = Semester
+        fields = ('id', 'name', 'start_semester',
+                  'end_semester', 'semester_type')
+        import_id_fields = ('id',)

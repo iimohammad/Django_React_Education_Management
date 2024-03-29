@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+
 # use communication app to send
 
 
