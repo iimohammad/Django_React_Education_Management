@@ -8,16 +8,14 @@ from accounts.permissions import IsAdmin, IsStudent, IsTeacher, IsEducationalAss
 def login(request):
     user = request.user
 
-    if IsAdmin().has_permission(request, None):  # Check if user is admin
+    if IsAdmin().has_permission(request, None):
         return redirect('/admin/')
-    elif IsStudent().has_permission(request, None):  # Check if user is student
+    elif IsStudent().has_permission(request, None):
         return redirect('/dashboard_student/')
-    elif IsTeacher().has_permission(request, None):  # Check if user is teacher
+    elif IsTeacher().has_permission(request, None):
         return redirect('/dashboard_professors/')
-    elif IsEducationalAssistant().has_permission(request, None):  # Check if user is educational assistant
-        return redirect(
-            'educational_assistant_dashboard')  # Replace 'educational_assistant_dashboard' with the actual URL name
+    elif IsEducationalAssistant().has_permission(request, None):
+        return redirect('/dashboard_educationalassistant/')
     else:
-        # If user role is not recognized, redirect to the login page
         login_url = reverse('rest_framework:login')
         return redirect(login_url)
