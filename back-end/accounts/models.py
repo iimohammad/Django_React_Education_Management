@@ -15,13 +15,10 @@ class User(AbstractUser):
     user_number = models.CharField(max_length=255, blank=True)
     national_code = models.CharField(max_length=10, blank=True)
     birthday = models.DateField(null=True, blank=True)
-    profile_image = models.ImageField(
-        upload_to='accounts/profile_images/', null=True, blank=True)
-    phone = models.CharField(max_length=15, validators=[
-                             phone_validator], blank=True)
+    profile_image = models.ImageField(upload_to='accounts/profile_images/', null=True, blank=True)
+    phone = models.CharField(max_length=15, validators=[phone_validator], blank=True)
     address = models.TextField(blank=True, null=True)
-    gender = models.CharField(
-        max_length=2, choices=Gender.choices, default=Gender.UNSET)
+    gender = models.CharField(max_length=2, choices=Gender.choices, default=Gender.UNSET)
 
 
 class Teacher(models.Model):

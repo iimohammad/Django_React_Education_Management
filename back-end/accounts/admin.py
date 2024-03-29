@@ -112,8 +112,7 @@ class TeacherAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
 
     def department_link(self, obj):
         department_id = obj.department.id
-        department_url = f"http://127.0.0.1:8000/ITM/education/department/{
-            department_id}/change/"
+        department_url = f"http://127.0.0.1:8000/ITM/education/department/{department_id}/change/"
         return format_html('<a href="{}">{}</a>',
                            department_url, obj.department)
 
@@ -142,8 +141,7 @@ class StudentAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
 
     def major_link(self, obj):
         major_id = obj.major.id
-        major_url = f"http://127.0.0.1:8000/ITM/education/major/{
-            major_id}/change/"
+        major_url = f"http://127.0.0.1:8000/ITM/education/major/{major_id}/change/"
         return format_html('<a href="{}">{}</a>', major_url, obj.major)
 
     # user_link.short_description = "User"
@@ -169,8 +167,7 @@ class EducationalAssistantAdmin(
 
     def field_link(self, obj):
         field_id = obj.field.id
-        field_url = f"http://127.0.0.1:8000/ITM/education/major/{
-            field_id}/change/"
+        field_url = f"http://127.0.0.1:8000/ITM/education/major/{field_id}/change/"
         return format_html('<a href="{}">{}</a>', field_url, obj.field)
 
     # user_link.short_description = "User"
