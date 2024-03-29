@@ -1,8 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
+
 def year_validator(value):
-    from accounts.models import Student
 
     if value < 1900 or value > 2100:
         raise ValidationError(
