@@ -48,38 +48,6 @@ class RegisterUserApi(generics.GenericAPIView):
 
 
 
-
-def google_auth_redirect(request):
-    # Redirect to Google's OAuth2 authentication page
-    redirect_uri = settings.GOOGLE_REDIRECT_URI
-    client_id = settings.GOOGLE_CLIENT_ID
-    auth_url = f"https://accounts.google.com/o/oauth2/auth?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code&scope=email profile openid"
-    return redirect(auth_url)
-
-def google_auth_callback(request):
-    # Handle Google's OAuth2 callback
-    code = request.GET.get('code')
-    if code:
-        token_url = "https://accounts.google.com/o/oauth2/token"
-        client_id = settings.GOOGLE_CLIENT_ID
-        client_secret = settings.GOOGLE_CLIENT_SECRET
-        redirect_uri = settings.GOOGLE_REDIRECT_URI
-        data = {
-            'code': code,
-            'client_id': client_id,
-            'client_secret': client_secret,
-            'redirect_uri': redirect_uri,
-            'grant_type': 'authorization_code',
-        }
-        response = requests.post(token_url, data=data)
-        if response.status_code == 200:
-            token_data = response.json()
-            access_token = token_data.get('access_token')
-            # Use access_token to fetch user data from Google API
-            # You can then authenticate the user in Django and redirect them to the appropriate page
-            return "Authentication successful"
-    return "Authentication failed"
-
 @method_decorator(csrf_exempt, name= 'dispatch')
 class GenerateVerificationCodeView(APIView):
     serializer_class = EmailUserSerializer
@@ -90,7 +58,7 @@ class GenerateVerificationCodeView(APIView):
 
     def store_verification_code_in_redis(self, email, verification_code):
         redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
-        redis_client.setex(email, 120, verification_code)
+        redis_client.setex(email, 40, verification_code)
 
     def send_verification_code(self, email, verification_code):
         send_verification_code.delay(email, verification_code)
@@ -100,6 +68,7 @@ class GenerateVerificationCodeView(APIView):
         if serializer.is_valid():
             email = serializer.validated_data['email']
             verification_code = self.generate_verification_code()
+            print(verification_code)
             self.store_verification_code_in_redis(email, verification_code)
             self.send_verification_code(email, verification_code)
             change_password_url = reverse('change-password-action')
@@ -128,11 +97,12 @@ class PasswordResetActionView(APIView):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             code = serializer.validated_data['code']
+            print(code)
             new_password = serializer.validated_data['new_password']
             
             redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
-            stored_code = redis_client.get(code)
-            
+            stored_code = redis_client.get('mohammadbaharloo97@yahoo.com')
+            print(stored_code)
             if stored_code and stored_code.decode('utf-8') == code:
                 user = get_user_by_verification_code(code)
                 if user:
