@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from education.models import SemesterCourse, Semester, Course
+
+from education.models import Course, Semester, SemesterCourse
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -10,6 +11,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
 class SemesterCourseSerializer(serializers.ModelSerializer):
     course_name = serializers.CharField(source='course.course_name')
+
     class Meta:
         model = SemesterCourse
         fields = ['id', 'course_name']
@@ -21,5 +23,5 @@ class ShowSemestersSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Semester
-        fields = ['id', 'name', 'start_semester', 'end_semester', 'semester_type', 'Semester_courses']
-
+        fields = ['id', 'name', 'start_semester',
+                  'end_semester', 'semester_type', 'Semester_courses']

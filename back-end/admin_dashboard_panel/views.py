@@ -1,13 +1,15 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from accounts.models import Teacher, EducationalAssistant,Student
-from education.models import Department, Semester, SemesterCourse
-from accounts.serializers import TeacherSerializers,EducationalAssistantSerializer,StudentSerializer
-from education.serializers import DepartmentSerializers, SemesterCourseSerializers,SemesterSerializers
-from education.serializers import CourseSerializers
-from education.models import Course
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+
+from accounts.models import EducationalAssistant, Student, Teacher
 from accounts.permissions import IsAdmin
-from rest_framework.permissions import IsAuthenticated,IsAdminUser
+from accounts.serializers import (EducationalAssistantSerializer,
+                                  StudentSerializer, TeacherSerializers)
+from education.models import Course, Department, Semester, SemesterCourse
+from education.serializers import (CourseSerializers, DepartmentSerializers,
+                                   SemesterCourseSerializers,
+                                   SemesterSerializers)
 
 
 class TeacherViewSet(viewsets.ModelViewSet):
@@ -29,6 +31,8 @@ class EducationalAssistantViewSet(viewsets.ModelViewSet):
 
 
 StudentSerializer
+
+
 class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all()
     permission_classes = [IsAdminUser | IsAdmin]
@@ -38,6 +42,8 @@ class StudentViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 # Department
+
+
 class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all()
     permission_classes = [IsAdminUser | IsAdmin]
@@ -47,6 +53,8 @@ class DepartmentViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 # Semester
+
+
 class SemesterViewSet(viewsets.ModelViewSet):
     queryset = Semester.objects.all()
     permission_classes = [IsAdminUser | IsAdmin]
@@ -55,13 +63,16 @@ class SemesterViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-# Use in two pannels 
+# Use in two pannels
+
+
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
-    permission_classes = [IsAuthenticated, IsAdmin,IsAdminUser]
+    permission_classes = [IsAuthenticated, IsAdmin, IsAdminUser]
     serializer_class = CourseSerializers
+
 
 class SemesterCourseViewSet(viewsets.ModelViewSet):
     queryset = SemesterCourse.objects.all()
-    permission_classes = [IsAuthenticated, IsAdmin,IsAdminUser]
+    permission_classes = [IsAuthenticated, IsAdmin, IsAdminUser]
     serializer_class = SemesterCourseSerializers

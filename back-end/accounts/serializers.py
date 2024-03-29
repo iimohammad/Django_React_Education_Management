@@ -1,11 +1,14 @@
-from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
+from rest_framework import serializers
+
+from accounts.models import EducationalAssistant, Student, Teacher, User
+
 from .models import EducationalAssistant, Student, User
-from accounts.models import Teacher, EducationalAssistant,Student, User
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password = serializers.CharField(
+        write_only=True, required=True, validators=[validate_password])
     password_confirm = serializers.CharField(write_only=True, required=True)
 
     class Meta:
@@ -36,6 +39,7 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
 
+
 class TeacherSerializers(serializers.ModelSerializer):
     class Meta:
         model = Teacher
@@ -51,7 +55,7 @@ class EducationalAssistantSerializer(serializers.ModelSerializer):
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
-        fields = '__all__' 
+        fields = '__all__'
 
 
 class ProfileSerializer(serializers.ModelSerializer):

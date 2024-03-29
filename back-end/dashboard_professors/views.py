@@ -1,13 +1,15 @@
+from django.contrib.auth.models import User
 from django.shortcuts import render
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
-from education.models import Course, Semester, SemesterCourse, StudentCourse
-from accounts.permissions import IsTeacher
-from .serializers import *
-from education.serializers import StudentCourseSerializer
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.contrib.auth.models import User
+
+from accounts.permissions import IsTeacher
+from education.models import Course, Semester, SemesterCourse, StudentCourse
+from education.serializers import StudentCourseSerializer
+
+from .serializers import *
 
 
 # Show Semesters with Details
@@ -16,7 +18,8 @@ class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
     serializer_class = ShowSemestersSerializers
     queryset = Semester.objects.all()
 
-    @action(detail=True, methods=['get'], name='Show All Course of This Semester')
+    @action(detail=True, methods=['get'],
+            name='Show All Course of This Semester')
     def all_semester_courses(self, request, pk=None):
         semester = self.get_object()
         serializer = self.get_serializer(semester)
@@ -25,7 +28,8 @@ class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
         courses = SemesterCourse.objects.filter(semester=semester)
         course_serializer = SemesterCourseSerializer(courses, many=True)
 
-        return Response({'semester': serializer.data, 'courses': course_serializer.data})
+        return Response({'semester': serializer.data,
+                        'courses': course_serializer.data})
 
 
 class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -48,8 +52,8 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
             action = entry.get('action')
 
             # Fetch the student course instance
-            student_course = StudentCourse.objects.filter(semester_course=semester_course,
-                                                          student_id=student_id).first()
+            student_course = StudentCourse.objects.filter(
+                semester_course=semester_course, student_id=student_id).first()
 
             if action == 'add':
                 if student_course:
@@ -73,12 +77,14 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
                     student_course.score = score
                     student_course.save()
 
-        return Response({'message': 'Student scores updated successfully'}, status=status.HTTP_200_OK)
+        return Response(
+            {'message': 'Student scores updated successfully'}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'], name='Show Score Students')
     def score_students(self, request, pk=None):
         semester_course = self.get_object()
-        students = StudentCourse.objects.filter(semester_course=semester_course)
+        students = StudentCourse.objects.filter(
+            semester_course=semester_course)
         serializer = StudentCourseSerializer(students, many=True)
         return Response(serializer.data)
 
@@ -106,7 +112,8 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
                     student_course.score = score
                     student_course.save()
 
-            return Response({'message': 'Student scores updated successfully'}, status=status.HTTP_200_OK)
+            return Response(
+                {'message': 'Student scores updated successfully'}, status=status.HTTP_200_OK)
         else:
-            return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response({'error': 'No file uploaded'},
+                            status=status.HTTP_400_BAD_REQUEST)

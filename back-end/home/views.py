@@ -1,8 +1,10 @@
-from django.urls import reverse
-from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
-from accounts.permissions import IsAdmin, IsStudent, IsTeacher, IsEducationalAssistant
+
+from accounts.permissions import (IsAdmin, IsEducationalAssistant, IsStudent,
+                                  IsTeacher)
 
 
 def login(request):
