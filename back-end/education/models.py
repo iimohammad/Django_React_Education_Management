@@ -66,31 +66,31 @@ class Semester(models.Model):
 
 
 class SemesterUnitSelection(models.Model):
-    semester = models.OneToOneField(Semester , on_delete=models.CASCADE)
+    semester = models.OneToOneField(Semester , on_delete=models.CASCADE , related_name = "unit_selection")
     unit_selection_start = models.DateField()
     unit_selection_end = models.DateField()
 
 
 class SemesterClass(models.Model):
-    semester = models.OneToOneField(Semester , on_delete=models.CASCADE)
+    semester = models.OneToOneField(Semester , on_delete=models.CASCADE , related_name ="classes")
     classes_start = models.DateField()
     classes_end = models.DateField()
 
 
 class SemesterAddRemove(models.Model):
-    semester = models.OneToOneField(Semester , on_delete=models.CASCADE)
+    semester = models.OneToOneField(Semester , on_delete=models.CASCADE , related_name ="addremove")
     addremove_start = models.DateField()
     addremove_end = models.DateField()
 
 
 class SemesterExam(models.Model):
-    semester = models.OneToOneField(Semester , on_delete=models.CASCADE)
+    semester = models.OneToOneField(Semester , on_delete=models.CASCADE , related_name ="exams")
     exam_start = models.DateField()
     exam_end = models.DateField()
 
 
 class SemesterEmergency(models.Model):
-    semester = models.OneToOneField(Semester , on_delete=models.CASCADE)
+    semester = models.OneToOneField(Semester , on_delete=models.CASCADE , related_name ="emergency")
     emergency_remove_start = models.DateField()
     emergency_remove_end = models.DateField()
 
@@ -114,6 +114,9 @@ class SemesterCourse(models.Model):
     exam_location = models.CharField(max_length=100)
     instructor = models.ForeignKey('accounts.Teacher', on_delete=models.PROTECT)
     course_capacity = models.PositiveIntegerField()
+    @property
+    def remain_course_capacity(self):
+        return self.course_capacity - StudentCourse.objects.filter(semester_course = self).count()
 
     def __str__(self):
         return f"{self.course.course_name} - {self.semester.name}"
