@@ -99,7 +99,7 @@ class SemesterAddRemove(models.Model):
 
 class SemesterExam(models.Model):
     semester = models.OneToOneField(
-        Semester, on_delete=models.CASCADE, related_name='exam')
+        Semester, on_delete=models.CASCADE, related_name='exams')
     exam_start = models.DateField()
     exam_end = models.DateField()
 
@@ -143,10 +143,7 @@ class SemesterCourse(models.Model):
 
     @property
     def remain_course_capacity(self):
-        capacity = self.course_capacity
-        occupied_capacity = StudentCourse.objects.filter(
-            semester_course=self).count()
-        return capacity - occupied_capacity
+        return self.course_capacity - StudentCourse.objects.filter(semester_course = self).count()
 
     def __str__(self):
         return f"{self.course.course_name} - {self.semester.name}"
