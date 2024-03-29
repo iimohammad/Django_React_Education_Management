@@ -19,6 +19,7 @@ from rest_framework.reverse import reverse_lazy
 from .models import User
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from django.core.cache import cache
 
 
 class LogoutAPIView(APIView):
@@ -86,12 +87,9 @@ class GenerateVerificationCodeView(APIView):
 
     def generate_verification_code(self):
         alphabet = string.ascii_letters + string.digits
-        return ''.join(secrets.choice(alphabet) for _ in range(6))
-    print(generate_verification_code)
-
-    def store_verification_code_in_redis(self, email, verification_code):
-        redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
-        redis_client.setex(email, 120, verification_code)
+        verification_code = ''.join(secrets.choice(alphabet) for _ in range(6))
+        cache.set('code', f'{verification_code}', 3)
+        return cache.get('code')
 
     def send_verification_code(self, email, verification_code):
         send_verification_code.delay(email, verification_code)
@@ -101,9 +99,10 @@ class GenerateVerificationCodeView(APIView):
         if serializer.is_valid():
             email = serializer.validated_data['email']
             verification_code = self.generate_verification_code()
-            self.store_verification_code_in_redis(email, verification_code)
             self.send_verification_code(email, verification_code)
             change_password_url = reverse_lazy('change-password-action')
+            print(cache.get('code'))
+
 
             return Response({'message': 'Verification code sent successfully', 'change_password_url': change_password_url}, status=status.HTTP_200_OK)
         else:
@@ -111,11 +110,10 @@ class GenerateVerificationCodeView(APIView):
         
 
 def get_user_by_verification_code(code):
-        redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
-        email = redis_client.get(code)
-        if email:
+        code = cache.get('code')
+        if code:
             try:
-                user = User.objects.get(email=email.decode('utf-8'))
+                user = User.objects.get(email=code.decode('utf-8'))
                 return user
             except User.DoesNotExist:
                 return None
@@ -133,10 +131,9 @@ class PasswordResetActionView(APIView):
             code = serializer.validated_data['code']
             new_password = serializer.validated_data['new_password']
             
-            redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
-            stored_code = redis_client.get(code)
-            
-            if stored_code and stored_code.decode('utf-8') == code:
+            codes = cache.get('code')
+            print(codes)
+            if code == codes:
                 user = get_user_by_verification_code(code)
                 if user:
                     user.set_password(new_password)
