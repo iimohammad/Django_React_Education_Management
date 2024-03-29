@@ -58,7 +58,7 @@ class GenerateVerificationCodeView(APIView):
     def generate_verification_code(self):
         alphabet = string.ascii_letters + string.digits
         verification_code = ''.join(secrets.choice(alphabet) for _ in range(6))
-        cache.set('code', f'{verification_code}', 3)
+        cache.set('code', f'{verification_code}', 360)
         return cache.get('code')
 
     def send_verification_code(self, email, verification_code):
@@ -67,10 +67,11 @@ class GenerateVerificationCodeView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            email = serializer.validated_data['email']
+            email_in = serializer.validated_data['email']
             verification_code = self.generate_verification_code()
-            self.send_verification_code(email, verification_code)
-            user = User.objects.get(email= email)
+            self.send_verification_code(email_in, verification_code)
+            user = User.objects.get(email = email_in)
+            print(cache.get('code'))
             return redirect('change-password-action', user_id=user.id)
 
         else:
@@ -80,15 +81,15 @@ class GenerateVerificationCodeView(APIView):
 class PasswordResetActionView(APIView):
     serializer_class = PasswordResetActionSerializer
         
-    def post(self, request):
+    def post(self, request, user_id):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             code = serializer.validated_data['code']
-            print(code)
+            print("new")
             new_password = serializer.validated_data['new_password']
-            user_id = request.Get.get('user_id')
             user = User.objects.get(id=user_id)          
             codes = cache.get('code')
+            print("yes")
   
             if code == codes:
                 if user:
@@ -125,8 +126,7 @@ def google_auth_redirect(request):
     # Redirect to Google's OAuth2 authentication page
     redirect_uri = settings.GOOGLE_REDIRECT_URI
     client_id = settings.GOOGLE_CLIENT_ID
-    auth_url = f"https://accounts.google.com/o/oauth2/auth?client_id={
-        client_id}&redirect_uri={redirect_uri}&response_type=code&scope=email profile openid"
+    auth_url = f"https://accounts.google.com/o/oauth2/auth?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code&scope=email profile openid"
     return redirect(auth_url)
 
 
