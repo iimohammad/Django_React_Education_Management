@@ -62,8 +62,10 @@ class EmailUserSerializer(serializers.ModelSerializer):
 
 class PasswordResetActionSerializer(serializers.Serializer):
     code = serializers.CharField(max_length=6)
-    user_number = serializers.CharField(max_length=255)   
     new_password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    class Meta:
+        model = User
+        fields = ['email']
 
     def save(self):
         user = self.context['request'].user

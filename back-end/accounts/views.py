@@ -100,41 +100,26 @@ class GenerateVerificationCodeView(APIView):
             email = serializer.validated_data['email']
             verification_code = self.generate_verification_code()
             self.send_verification_code(email, verification_code)
-            change_password_url = reverse_lazy('change-password-action')
-            print(cache.get('code'))
+            user = User.objects.get(email= email)
+            return redirect('change-password-action', user_id=user.id)
 
-
-            return Response({'message': 'Verification code sent successfully', 'change_password_url': change_password_url}, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-
-def get_user_by_verification_code(code):
-        code = cache.get('code')
-        if code:
-            try:
-                user = User.objects.get(email=code.decode('utf-8'))
-                return user
-            except User.DoesNotExist:
-                return None
-        else:
-            return None
-        
+          
 
 class PasswordResetActionView(APIView):
     serializer_class = PasswordResetActionSerializer
-    
-    
+        
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             code = serializer.validated_data['code']
             new_password = serializer.validated_data['new_password']
-            
+            user_id = request.Get.get('user_id')
+            user = User.objects.get(id=user_id)          
             codes = cache.get('code')
-            print(codes)
+  
             if code == codes:
-                user = get_user_by_verification_code(code)
                 if user:
                     user.set_password(new_password)
                     user.save()
