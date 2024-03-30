@@ -2,7 +2,7 @@ from django.urls import path,include
 from rest_framework.routers import DefaultRouter
 from .views import SemesterCourseViewSet , StudentCoursesViewSet, \
                     StudentExamsViewSet, StudentProfileViewset , \
-                    SemesterRegistrationRequestAPIView
+                    SemesterRegistrationRequestAPIView, UnitSelectionRequestAPIView
 # from .views import (StudentViewSet,
 #                     TeacherViewSet,
 #                     EnrollmentRequestViewSet,
@@ -25,6 +25,7 @@ router.register('semester_courses' , SemesterCourseViewSet , basename='semesterc
 router.register('student_courses' , StudentCoursesViewSet , basename='studentcourses')
 router.register('student_exams' , StudentExamsViewSet , basename='studentexams')
 router.register('semester_registration' , SemesterRegistrationRequestAPIView , basename='semesterregistation')
+router.register('unit_selection' , UnitSelectionRequestAPIView , basename='unitselection')
 # router.register('profile' , StudentProfileViewset , basename='profile')
 
 
@@ -33,3 +34,4 @@ urlpatterns = [
     path('', include(router.urls)),
     path('profile/' , StudentProfileViewset.as_view() , name='profile')
 ]
+# handler404 = 'utils.error_views.handler404'

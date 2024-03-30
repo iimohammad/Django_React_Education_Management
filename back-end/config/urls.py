@@ -1,4 +1,8 @@
 from django.contrib import admin
+import os
+import dotenv
+dotenv.read_dotenv()
+
 from django.urls import include, path
 from drf_spectacular.views import (SpectacularAPIView, SpectacularRedocView,
                                    SpectacularSwaggerView)
@@ -8,8 +12,8 @@ from rest_framework_simplejwt.views import (TokenObtainPairView,
 from accounts.permissions import (IsAdmin, IsEducationalAssistant, IsStudent,
                                   IsTeacher)
 from accounts.views import CustomLogoutView
-from config import local_settings
 from home.views import login
+from utils.error_views import custom_404
 
 # Authentication URLs
 urlpatterns = [
@@ -25,7 +29,7 @@ urlpatterns = [
 if IsAdmin:
     urlpatterns += [
         # Admin URLs
-        path(local_settings.Admin, admin.site.urls),
+        path(os.environ.get('Admin'), admin.site.urls),
         # App URLs
         path(
             'academic_events/',
@@ -67,5 +71,7 @@ if IsEducationalAssistant():
                     ]
 
 # Debug Toolbar URLs
-if local_settings.USE_DEBUG_TOOLBAR:
+if os.environ.get('USE_DEBUG_TOOLBAR')  :
     urlpatterns.append(path("__debug__/", include("debug_toolbar.urls")))
+
+# handler404 = 'utils.error_views.custom_404'

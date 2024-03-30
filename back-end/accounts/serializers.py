@@ -3,8 +3,26 @@ from rest_framework import serializers
 
 from accounts.models import EducationalAssistant, Student, Teacher, User
 
-from .models import EducationalAssistant, Student, User
+from .models import EducationalAssistant, Student, User,AdminUser
 
+
+
+class UserProfileImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['profile_image']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get('request')
+        if request and not request.user.is_staff:
+            self.fields['profile_image'].queryset = User.objects.filter(id=request.user.id)
+
+class EditTeacherProfileSerializers(serializers.ModelSerializer):
+    class Meta: 
+        model = Teacher
+        fields = '__all__'
+        read_only_fields = ['rank']
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
@@ -46,17 +64,6 @@ class TeacherSerializers(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class EducationalAssistantSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EducationalAssistant
-        fields = '__all__'
-
-
-class StudentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Student
-        fields = '__all__' 
-
 
 class EmailUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -94,3 +101,67 @@ class PasswordResetLoginSerializer(serializers.Serializer):
         user.set_password(new_password)
         user.save()
         return user
+
+
+class AdminSerializers(serializers.Serializer):
+    class Meta:
+        model = AdminUser
+        fields = '__all__'
+
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['profile_image', 'birthday','first_name','last_name']
+
+    def update(self, instance, validated_data):
+        profile_image = validated_data.get('profile_image', instance.profile_image)
+        birthday = validated_data.get('birthday', instance.birthday)
+        
+        instance.profile_image = profile_image
+        instance.birthday = birthday
+        instance.save()
+        
+        return instance
+
+class TeacherSerializer(serializers.ModelSerializer):
+    user = UserUpdateSerializer()
+
+    class Meta:
+        model = Teacher
+        fields = ['id', 'user', 'expertise', 'rank', 'department', 'can_be_advisor']
+        read_only_fields = ['id','user','can_be_advisor','expertise', 'rank', 'department']
+
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop('user', {})
+        profile_image = user_data.get('profile_image', None)
+        birthday = user_data.get('birthday', None)
+
+        # Update user profile image and birthday
+        if profile_image is not None:
+            instance.user.profile_image = profile_image
+        if birthday is not None:
+            instance.user.birthday = birthday
+        instance.user.save()
+
+        return instance
+class StudentSerializer(serializers.ModelSerializer):
+    user = UserUpdateSerializer()
+
+    class Meta:
+        model = Student
+        fields = ['id', 'user', 'entry_semester', 'gpa', 'entry_year', 'major', 'advisor', 'military_service_status', 'year_of_study']
+
+class EducationalAssistantSerializer(serializers.ModelSerializer):
+    user = UserUpdateSerializer()
+
+    class Meta:
+        model = EducationalAssistant
+        fields = ['id', 'user', 'field']
+
+
+class UserProfileImageUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['profile_image','birthday','phone','address']
