@@ -2,6 +2,7 @@ from django.contrib import admin
 import os
 import dotenv
 dotenv.read_dotenv()
+from utils.error_views import handler404
 from django.urls import include, path
 from drf_spectacular.views import (SpectacularAPIView, SpectacularRedocView,
                                    SpectacularSwaggerView)

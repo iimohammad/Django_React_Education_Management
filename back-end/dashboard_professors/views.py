@@ -1,6 +1,4 @@
 import csv
-from django.db import IntegrityError
-from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -8,13 +6,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from accounts.models import Teacher, User
 from accounts.permissions import IsTeacher
-from education.models import Course, Semester, SemesterCourse, StudentCourse
+from education.models import Semester, SemesterCourse, StudentCourse
 from education.serializers import StudentCourseSerializer
 from .serializers import *
-from rest_framework.decorators import api_view, permission_classes
-from accounts.serializers import UserProfileImageUpdateSerializer, TeacherSerializer, UserProfileImageSerializer
+from accounts.serializers import UserProfileImageUpdateSerializer, TeacherSerializer
 from rest_framework.generics import RetrieveAPIView, UpdateAPIView
-# Show Semesters with Details
+
 class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated, IsTeacher]
     serializer_class = ShowSemestersSerializers

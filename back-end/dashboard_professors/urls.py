@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import  SemesterCourseViewSet, ShowSemestersView
 from . import views
 
+
 router = DefaultRouter()
 router.register('Semester-Show', ShowSemestersView, basename="SemesterShow")
 router.register('my-Courses-Semester', SemesterCourseViewSet,
@@ -14,3 +15,5 @@ urlpatterns = [
     path('update-profile/',views.UserProfileImageView.as_view(),name = 'update_profile')
 
 ]
+
+

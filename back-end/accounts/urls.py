@@ -21,3 +21,5 @@ urlpatterns = [
 
 
 ]
+
+# handler404 = 'utils.error_views.handler404'
