@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from education.models import SemesterClass, SemesterCourse , Semester , Department , \
+from education.models import Day, Major, Prerequisite, Requisite, SemesterClass, SemesterCourse , Semester , Department , \
                                 Course , StudentCourse
 from accounts.models import Student, Teacher , User
 from .models import SemesterRegistrationRequest , RevisionRequest , AddRemoveRequest , \
                     EnrollmentRequest , EmergencyRemovalRequest , StudentDeleteSemesterRequest , \
-                    EmploymentEducationRequest
+                    EmploymentEducationRequest, UnitSelectionRequest
 from django.utils import timezone
 
 
@@ -50,19 +50,40 @@ class SemesterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Semester
         fields = ['name' , 'classes']
+        
+    
 class CourseSerializer(serializers.ModelSerializer):
-    prerequisite = serializers.PrimaryKeyRelatedField(many=True, queryset=Course.objects.all())
-    corequisite = serializers.PrimaryKeyRelatedField(many=True, queryset=Course.objects.all())
+    prerequisites = 'PrerequisiteSerializer()'
+    required_by = 'RequisiteSerializer()'
     class Meta:
         model = Course
-        fields = ['course_name','course_code','credit_num','prerequisite','corequisite']
+        fields = ['course_name','course_code','credit_num','prerequisites','required_by']
+
+class PrerequisiteSerializer(serializers.ModelSerializer):
+    course = CourseSerializer()
+    class Meta:
+        model = Prerequisite
+        fields = ['id', 'course', 'prerequisite']
+
+class RequisiteSerializer(serializers.ModelSerializer):
+    course = CourseSerializer()
+    class Meta:
+        model = Requisite
+        fields = ['id', 'course', 'requisite']
+
+
+class ClassDaysSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Day
+        fields = ['name']
 class SemesterCourseSerializer(serializers.ModelSerializer):
     semester = SemesterSerializer()
     course = CourseSerializer()
     instructor = TeacherSerializer()
+    class_days = ClassDaysSerializer()
     class Meta:
         model = SemesterCourse
-        fields = ['semester','course','class_days','class_time',
+        fields = ['semester','course','class_days','class_time_start','class_time_end',
                   'instructor','course_capacity','remain_course_capacity']
 class StudentSerializer(serializers.ModelSerializer):
     user = UserSerializer() 
@@ -94,10 +115,15 @@ class ExamStudentCourseSerializer(serializers.ModelSerializer):
         model = StudentCourse
         fields = ['semester_course']
 
+class MajorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Major
+        fields = ['major_name','major_code', 'level', 'education_group']
 
 class ProfileStudentSerializer(serializers.ModelSerializer):
     user = UserSerializer() 
     advisor = TeacherSerializer()
+    major = MajorSerializer()
     class Meta:
         model = Student
         fields = ['user','entry_semester', 'gpa', 'entry_year'
@@ -113,11 +139,9 @@ class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
     semester = SemesterRegistrationRequestSemesterSerializer()
     class Meta:
         model = SemesterRegistrationRequest
-        fields = ['id','status', 'teacher_visited','educational_assistant_visited' ,
-                  'created_at' , 'semester','explanation']
+        fields = ['id','approval_status', 'created_at','semester']
         
-        read_only_fields = ['status', 'teacher_visited','educational_assistant_visited' ,
-                            'created_at' ,'explanation']
+        read_only_fields = ['id','approval_status', 'created_at']
     def create(self, validated_data):
         semester_data = validated_data.pop('semester')
         user = self.context['user']
@@ -141,3 +165,36 @@ class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
         semester_registration_request = SemesterRegistrationRequest.objects.create(semester=semester_instance, student = student)
 
         return semester_registration_request
+    
+class UnitSelectionRequestSerializer(serializers.ModelSerializer):
+    semester_registration_request = SemesterRegistrationRequestSerializer()
+    requested_courses = SemesterCourseSerializer(many = True)
+    class Meta:
+        model = UnitSelectionRequest
+        fields = ['id','semester_registration_request', 'approval_status',
+                    'created_at' , 'requested_courses']
+        
+        read_only_fields = ['id','semester_registration_request', 'approval_status',
+                            'created_at']
+    # def create(self, validated_data):
+    #     semester_data = validated_data.pop('semester')
+    #     user = self.context['user']
+        
+    #     try:
+    #         semester_instance = Semester.objects.get(name=semester_data['name'])
+    #         if semester_instance.classes.classes_end < timezone.now().date():
+    #             raise serializers.ValidationError("This semester ended!")
+    #     except Semester.DoesNotExist:
+    #         raise serializers.ValidationError("Invalid semester")
+        
+    #     existing_request = SemesterRegistrationRequest.objects.filter(semester=semester_instance, student__user=user).exists()
+    #     if existing_request:
+    #         raise serializers.ValidationError("A registration request for this semester already exists")
+        
+    #     try:
+    #         student = Student.objects.get(user = user)
+    #     except Semester.DoesNotExist:
+    #         raise serializers.ValidationError("Invalid student")
+        
+    #     semester_registration_request = SemesterRegistrationRequest.objects.create(semester=semester_instance, student = student)
+    #     return semester_registration_request
