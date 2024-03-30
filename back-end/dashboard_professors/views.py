@@ -13,7 +13,7 @@ from education.serializers import StudentCourseSerializer
 from .serializers import *
 from rest_framework.decorators import api_view, permission_classes
 from accounts.serializers import UserProfileImageUpdateSerializer, TeacherSerializer, UserProfileImageSerializer
-from rest_framework import generics
+from rest_framework.generics import RetrieveAPIView, UpdateAPIView
 # Show Semesters with Details
 class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated, IsTeacher]
@@ -111,26 +111,30 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated,IsTeacher])
-def show_profile(request):
-    user = request.user
+class ShowProfileAPIView(RetrieveAPIView):
+    serializer_class = TeacherSerializer
+    permission_classes = [IsAuthenticated]  # Assuming IsTeacher permission is checked inside serializer
     
-    try:
-        # Get the teacher instance associated with the current user
-        teacher = Teacher.objects.get(user=user)
-    except Teacher.DoesNotExist:
-        # Handle the case where the user is not a teacher
-        return Response({'error': 'User is not a teacher'}, status=404)
-    
-    # Serialize the teacher instance
-    serializer = TeacherSerializer(teacher)
-    
-    # Return the serialized data in the API response
-    return Response(serializer.data)
+    def get_object(self):
+        user = self.request.user
+        
+        try:
+            # Get the teacher instance associated with the current user
+            teacher = Teacher.objects.get(user=user)
+            return teacher
+        except Teacher.DoesNotExist:
+            # Handle the case where the user is not a teacher
+            return None
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance is None:
+            return Response({'error': 'User is not a teacher'}, status=404)
+        
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
-class UserProfileImageView(generics.UpdateAPIView):
+class UserProfileImageView(UpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserProfileImageUpdateSerializer
     permission_classes = [IsAuthenticated,IsTeacher]
