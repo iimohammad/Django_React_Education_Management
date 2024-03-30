@@ -75,4 +75,5 @@ class EducationalAssistant(models.Model):
 
 
 class AdminUser(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE  , unique = True)
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE  , unique = True , related_name = 'adminuser')
