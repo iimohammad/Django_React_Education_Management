@@ -54,12 +54,7 @@ LOCAL_APPS = [
     'home.apps.HomeConfig',
     'admin_dashboard_panel.apps.dashboard_panelConfig',
     'dashboard_student.apps.DashboardStudentConfig',
-<<<<<<< HEAD
-    'dashboard_student_amirabbas.apps.DashboardStudentAmirabbasConfig',
-    'dashboard_teacher.apps.DashboardTeacherConfig',
-=======
     'dashboard_professors.apps.DashboardProfessorsConfig',
->>>>>>> main
     'dashboard_educationalassistant.apps.DashboardEducationalAssistantConfig',
 
     'academic_events.apps.AcademicConfig',
