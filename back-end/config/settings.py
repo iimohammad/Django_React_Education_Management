@@ -5,13 +5,9 @@ from pathlib import Path
 
 from celery.schedules import crontab
 
-<<<<<<< HEAD
 from config import local_settings
 dotenv.load_dotenv()
 
-=======
-dotenv.read_dotenv()
->>>>>>> main
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
