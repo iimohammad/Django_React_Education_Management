@@ -1,6 +1,6 @@
 from rest_framework import viewsets , mixins
 from rest_framework import generics 
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied , NotFound
 from rest_framework.permissions import IsAuthenticated
 from .permissions import IsStudent
 from accounts.models import Student, Teacher
@@ -8,11 +8,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .serializers import ExamStudentCourseSerializer, ProfileStudentSerializer, \
                         SemesterCourseSerializer, SemesterRegistrationRequestSerializer , \
-                        StudentCourseSerializer
+                        StudentCourseSerializer, UnitSelectionRequestSerializer
 from education.models import SemesterCourse , StudentCourse
 from .models import SemesterRegistrationRequest , RevisionRequest , AddRemoveRequest , \
                     EnrollmentRequest , EmergencyRemovalRequest , StudentDeleteSemesterRequest , \
-                    EmploymentEducationRequest
+                    EmploymentEducationRequest, UnitSelectionRequest
 from .filters import SemesterCourseFilter , StudentCourseFilter, StudentExamFilter
 from .pagination import DefaultPagination
 from django.http import Http404
@@ -81,11 +81,9 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated,IsStudent]
     search_fields = ['course__course_name']
-    ordering_fields = ['class_days','instructor__user__first_name','instructor__user__last_name',
-                       'course_capacity',]
+    ordering_fields = ['instructor__user__first_name','instructor__user__last_name',
+                        'course_capacity',]
     
-
-
 class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = StudentCourseSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -137,8 +135,41 @@ class SemesterRegistrationRequestAPIView(mixins.CreateModelMixin,
             instance = self.get_object()
             
         except Http404:
-            return Http404()
-        if instance.educational_assistant_visited or instance.teacher_visited :
-            return Response({'message': 'your request has been visited and you can not delete it.'},status=status.HTTP_204_NO_CONTENT)
+            raise NotFound()
+        if instance.approval_status != 'P' :
+            return Response(
+                {'message': 'your request has been answered and you can not delete it.'}
+                , status=status.HTTP_403_FORBIDDEN)
         self.perform_destroy(instance)
-        return instance
+        return Response({'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+    
+class UnitSelectionRequestAPIView(mixins.CreateModelMixin,
+                   mixins.RetrieveModelMixin,
+                   mixins.UpdateModelMixin,
+                   mixins.DestroyModelMixin,
+                   mixins.ListModelMixin,
+                   viewsets.GenericViewSet):
+    serializer_class = UnitSelectionRequestSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated,IsStudent]
+    ordering_fields = ['created_at' , 'approval_status']
+    def get_queryset(self):
+        return UnitSelectionRequest.objects.filter \
+                (semester_registration_request__student__user = self.request.user).all()
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['user'] = self.request.user
+        return context
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            
+        except Http404:
+            raise NotFound()
+        if instance.approval_status != 'P' :
+            return Response(
+                {'message': 'your request has been answered and you can not delete it.'}
+                , status=status.HTTP_403_FORBIDDEN)
+        self.perform_destroy(instance)
+        return Response({'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
