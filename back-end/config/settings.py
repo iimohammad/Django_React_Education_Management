@@ -1,18 +1,19 @@
 import os
+import dotenv
 from datetime import timedelta
 from pathlib import Path
 
 from celery.schedules import crontab
 
 from config import local_settings
-
+dotenv.read_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = local_settings.SECRET_KEY
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
-DEBUG = local_settings.DEBUG
+DEBUG = os.environ.get('DEBUG')
 
 ALLOWED_HOSTS = local_settings.ALLOWED_HOSTS
 

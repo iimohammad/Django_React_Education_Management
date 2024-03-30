@@ -1,16 +1,18 @@
-from django.contrib.auth.models import User
+import csv
+from django.db import IntegrityError
 from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
+from rest_framework import status
+from accounts.models import Teacher, User
 from accounts.permissions import IsTeacher
 from education.models import Course, Semester, SemesterCourse, StudentCourse
 from education.serializers import StudentCourseSerializer
-
 from .serializers import *
-
+from rest_framework.decorators import api_view, permission_classes
+from accounts.serializers import EditTeacherProfileSerializers, TeacherSerializer, UserProfileImageSerializer
 
 # Show Semesters with Details
 class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
@@ -60,17 +62,6 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
                     # Update score if student course exists
                     student_course.score = score
                     student_course.save()
-                else:
-                    # Create a new student course instance
-                    StudentCourse.objects.create(
-                        semester_course=semester_course,
-                        student_id=student_id,
-                        score=score
-                    )
-            elif action == 'remove':
-                # Delete student course instance if it exists
-                if student_course:
-                    student_course.delete()
             elif action == 'change':
                 # Update score if student course exists
                 if student_course:
@@ -117,3 +108,43 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
         else:
             return Response({'error': 'No file uploaded'},
                             status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated,IsTeacher])
+def show_profile(request):
+    user = request.user
+    
+    try:
+        # Get the teacher instance associated with the current user
+        teacher = Teacher.objects.get(user=user)
+    except Teacher.DoesNotExist:
+        # Handle the case where the user is not a teacher
+        return Response({'error': 'User is not a teacher'}, status=404)
+    
+    # Serialize the teacher instance
+    serializer = TeacherSerializer(teacher)
+    
+    # Return the serialized data in the API response
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated,IsTeacher])
+def update_profile(request):
+    user = request.user
+    
+    try:
+        # Get the teacher instance associated with the current user
+        teacher = Teacher.objects.get(user=user)
+    except Teacher.DoesNotExist:
+        # Handle the case where the user is not a teacher
+        return Response({'error': 'User is not a teacher'}, status=404)
+    
+    # Update the teacher instance with the request data
+    serializer = TeacherSerializer(teacher, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=400)
