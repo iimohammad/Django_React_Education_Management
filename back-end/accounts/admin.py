@@ -1,14 +1,17 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils import timezone
-from .models import Teacher, Student, EducationalAssistant, User
-from import_export.admin import ImportExportActionModelAdmin
-from accounts.resource import *
 from django.utils.html import format_html
+from import_export.admin import ImportExportActionModelAdmin
+
+from accounts.resource import *
+
+from .models import AdminUser, EducationalAssistant, Student, Teacher, User
 
 
 class CustomUserAdmin(UserAdmin, ImportExportActionModelAdmin):
-    list_display = ('id','username', 'email', 'user_number', 'gender', 'phone', 'is_staff')
+    list_display = ('id', 'username', 'email', 'user_number',
+                    'gender', 'phone', 'is_staff')
     list_filter = ('gender', 'birthday', 'is_active', 'is_staff')
     sortable_by = ('username', 'user_number')
     list_editable = ('is_staff',)
@@ -27,7 +30,8 @@ class CustomUserAdmin(UserAdmin, ImportExportActionModelAdmin):
         (None, {'fields': ('username', 'email', 'password')}),
         ('Personal Info', {'fields': ('first_name', 'last_name', 'user_number', 'national_code',
                                       'birthday', 'profile_image', 'phone', 'address', 'gender')}),
-        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff',
+         'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
 
@@ -48,11 +52,12 @@ class CustomUserAdmin(UserAdmin, ImportExportActionModelAdmin):
         self.message_user(request, f"{deleted_count} inactive users deleted.")
     delete_inactive_users.short_description = "Delete inactive users (3 months)"
 
+
 admin.site.register(User, CustomUserAdmin)
 
 
 class TeacherAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('id','user', 'expertise', 'rank', 'department_link')
+    list_display = ('id', 'user', 'expertise', 'rank', 'department_link')
     list_filter = ('rank',)
     sortable_by = ('user',)
     list_editable = ('rank',)
@@ -66,7 +71,8 @@ class TeacherAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     list_per_page = 10
     list_max_show_all = 50
 
-    actions = ['set_rank_ins', 'set_rank_asp', 'set_rank_acp', 'set_rank_prof', 'promote_prof_rank']
+    actions = ['set_rank_ins', 'set_rank_asp',
+               'set_rank_acp', 'set_rank_prof', 'promote_prof_rank']
 
     def set_rank_ins(self, request, queryset):
         queryset.update(rank="I")
@@ -94,10 +100,11 @@ class TeacherAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
                 professor.rank = Teacher.Rank.PROFESSOR
             professor.save()
 
-        self.message_user(request, f"Selected professors promoted successfully.")
+        self.message_user(
+            request, f"Selected professors promoted successfully.")
 
     promote_prof_rank.short_description = "Promote selected professors"
-    
+
     # def user_link(self, obj):
     #     user_id = obj.user.id
     #     user_url = f"http://127.0.0.1:8000/ITM/accounts/user/{user_id}/change/"
@@ -106,16 +113,19 @@ class TeacherAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     def department_link(self, obj):
         department_id = obj.department.id
         department_url = f"http://127.0.0.1:8000/ITM/education/department/{department_id}/change/"
-        return format_html('<a href="{}">{}</a>', department_url, obj.department)
+        return format_html('<a href="{}">{}</a>',
+                           department_url, obj.department)
 
     # user_link.short_description = "User"
     department_link.short_description = "Department"
+
 
 admin.site.register(Teacher, TeacherAdmin)
 
 
 class StudentAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('id','user', 'major_link', 'entry_year', 'entry_semester', 'gpa', 'military_service_status')
+    list_display = ('id', 'user', 'major_link', 'entry_year',
+                    'entry_semester', 'gpa', 'military_service_status')
     list_filter = ('major', 'entry_year', 'military_service_status')
     sortable_by = ('user', 'entry_year', 'gpa')
     list_editable = ('military_service_status',)
@@ -137,11 +147,13 @@ class StudentAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     # user_link.short_description = "User"
     major_link.short_description = "Major"
 
+
 admin.site.register(Student, StudentAdmin)
 
 
-class EducationalAssistantAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('id','user', 'field_link')
+class EducationalAssistantAdmin(
+        ImportExportActionModelAdmin, admin.ModelAdmin):
+    list_display = ('id', 'user', 'field_link')
     list_filter = ('field',)
     sortable_by = ('user',)
     ordering = ('user',)
@@ -161,4 +173,6 @@ class EducationalAssistantAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     # user_link.short_description = "User"
     field_link.short_description = "Field"
 
+
 admin.site.register(EducationalAssistant, EducationalAssistantAdmin)
+admin.site.register(AdminUser)

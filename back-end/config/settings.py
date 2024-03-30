@@ -1,9 +1,14 @@
-from pathlib import Path
 import os
-from config import local_settings
-from celery.schedules import crontab
 from datetime import timedelta
+<<<<<<< HEAD
 
+=======
+from pathlib import Path
+
+from celery.schedules import crontab
+
+from config import local_settings
+>>>>>>> main
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,10 +43,10 @@ THIRD_PARTY_APPS = [
     'drf_spectacular_sidecar',
     'graphene_django',
     'import_export',
-    
-    
+
+
 ]
-        
+
 
 LOCAL_APPS = [
     "accounts.apps.AccountsConfig",
@@ -49,8 +54,12 @@ LOCAL_APPS = [
     'home.apps.HomeConfig',
     'admin_dashboard_panel.apps.dashboard_panelConfig',
     'dashboard_student.apps.DashboardStudentConfig',
+<<<<<<< HEAD
     'dashboard_student_amirabbas.apps.DashboardStudentAmirabbasConfig',
     'dashboard_teacher.apps.DashboardTeacherConfig',
+=======
+    'dashboard_professors.apps.DashboardProfessorsConfig',
+>>>>>>> main
     'dashboard_educationalassistant.apps.DashboardEducationalAssistantConfig',
 
     'academic_events.apps.AcademicConfig',
@@ -68,7 +77,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
+
 ]
 if local_settings.USE_DEBUG_TOOLBAR:
     MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
@@ -159,7 +168,7 @@ if DEBUG:
             'rest_framework.authentication.SessionAuthentication'
         )
     }
-    
+
 else:
     REST_FRAMEWORK = {
         'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -174,11 +183,10 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'a project for managing universicty',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
-    'SWAGGER_UI_DIST': 'SIDECAR',  
+    'SWAGGER_UI_DIST': 'SIDECAR',
     'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
     'REDOC_DIST': 'SIDECAR',
 }
-
 
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -190,14 +198,14 @@ EMAIL_PORT = local_settings.Email_Configuration['EMAIL_PORT']
 EMAIL_HOST_USER = local_settings.Email_Configuration['EMAIL_HOST_USER']
 EMAIL_HOST_PASSWORD = local_settings.Email_Configuration['EMAIL_HOST_PASSWORD']
 EMAIL_USE_TLS = local_settings.Email_Configuration['EMAIL_USE_TLS']
-DEFAULT_FROM_EMAIL = 'mohammadbaharloo96@gmail.com'
+DEFAULT_FROM_EMAIL = 'shojaie.payman32@gmail.com'
 
 GRAPHENE = {
-  'SCHEMA': 'graphql_api.schema.schema'
+    'SCHEMA': 'graphql_api.schema.schema'
 }
 
 
-# Loging 
+# Loging
 
 LOGGING = {
     'version': 1,
@@ -219,12 +227,30 @@ GOOGLE_CLIENT_SECRET = local_settings.GOOGLE_CLIENT_SECRET
 GOOGLE_REDIRECT_URI = local_settings.GOOGLE_REDIRECT_URI
 
 
-
-CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# CELERY_BROKER_URL = 'amqp://localhost'
 
 CELERY_BEAT_SCHEDULE = {
     'send-new-year-email': {
         'task': 'tasks.send_new_year_email',
-        'schedule': crontab(day_of_month=1, month_of_year=1, hour=0, minute=0),  
+        'schedule': crontab(day_of_month=1, month_of_year=1, hour=0, minute=0),
     },
 }
+
+# redis configurations
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',  # Adjust host and port if necessary
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+REDIS_DB = 0
+
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'

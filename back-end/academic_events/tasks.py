@@ -1,14 +1,17 @@
 from __future__ import absolute_import, unicode_literals
-from datetime import datetime, timedelta
-from celery import shared_task
-from django.core.mail import send_mail
-from django.conf import settings
-from celery.schedules import crontab
+
 import datetime
+
+from celery import shared_task
+from celery.schedules import crontab
+from django.conf import settings
+from django.core.mail import send_mail
+
 
 @shared_task
 def send_email_task(subject, message, recipient):
     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [recipient])
+
 
 @shared_task
 def send_new_year_email(recipient):

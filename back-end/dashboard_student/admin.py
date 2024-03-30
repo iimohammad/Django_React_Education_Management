@@ -1,6 +1,6 @@
 from django.contrib import admin
-from dashboard_student.models import *
 
+from dashboard_student.models import *
 
 admin.site.register(SemesterRegistrationRequest)
 admin.site.register(AddRemoveRequest)
@@ -15,29 +15,38 @@ class RevisionRequestAdmin(admin.ModelAdmin):
     list_per_page = 10
     list_max_show_all = 50
 
+
 admin.site.register(RevisionRequest, RevisionRequestAdmin)
 
 
 class EmergencyRemovalRequestAdmin(admin.ModelAdmin):
-    list_display = ('course', 'student_explanation', 'educational_assistant_explanation')
-    search_fields = ('student_explanation', 'educational_assistant_explanation')
+    list_display = ('course', 'student_explanation',
+                    'educational_assistant_explanation')
+    search_fields = ('student_explanation',
+                     'educational_assistant_explanation')
     search_help_text = "Search in: Student Explanation, Educational Assistant Explanation"
     save_as = True
     list_per_page = 10
     list_max_show_all = 50
+
 
 admin.site.register(EmergencyRemovalRequest, EmergencyRemovalRequestAdmin)
 
 
 class StudentDeleteSemesterRequestAdmin(admin.ModelAdmin):
-    list_display = ('semester', 'student_explanations', 'result', 'educational_assistant_explanation')
-    search_fields = ('student_explanations', 'educational_assistant_explanation')
+    list_display = ('semester_registration_request', 'teacher_approval_status',
+                    'educational_assistant_approval_status', 'created_at', 
+                    'student_explanations', 'educational_assistant_explanation')
+    search_fields = ('student_explanations',
+                     'educational_assistant_explanation')
     search_help_text = "Search in: Student Explanation, Educational Assistant Explanation"
     save_as = True
     list_per_page = 10
     list_max_show_all = 50
 
-admin.site.register(StudentDeleteSemesterRequest, StudentDeleteSemesterRequestAdmin)
+
+admin.site.register(StudentDeleteSemesterRequest,
+                    StudentDeleteSemesterRequestAdmin)
 
 
 class EnrollmentRequestAdmin(admin.ModelAdmin):
@@ -48,5 +57,6 @@ class EnrollmentRequestAdmin(admin.ModelAdmin):
     save_as = True
     list_per_page = 10
     list_max_show_all = 50
+
 
 admin.site.register(EnrollmentRequest, EnrollmentRequestAdmin)
