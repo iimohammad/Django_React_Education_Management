@@ -161,3 +161,4 @@ cython_debug/
 config/local_settings.py
 *.jpg
 *.png
+.env
