@@ -1,4 +1,7 @@
 from django.contrib import admin
+import os
+import dotenv
+dotenv.read_dotenv()
 from django.urls import include, path
 from drf_spectacular.views import (SpectacularAPIView, SpectacularRedocView,
                                    SpectacularSwaggerView)
@@ -67,5 +70,5 @@ if IsEducationalAssistant():
                     ]
 
 # Debug Toolbar URLs
-if local_settings.USE_DEBUG_TOOLBAR:
+if os.environ.get('USE_DEBUG_TOOLBAR')  :
     urlpatterns.append(path("__debug__/", include("debug_toolbar.urls")))
