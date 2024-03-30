@@ -28,7 +28,7 @@ class Teacher(models.Model):
         ASSOCIATE_PROF = 'ACP', 'Associate Professor'
         PROFESSOR = 'P', 'Professor'
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE , unique = True)
     expertise = models.CharField(max_length=255)
     rank = models.CharField(
         max_length=3, choices=Rank.choices, default=Rank.INSTRUCTOR)
@@ -41,14 +41,19 @@ class Teacher(models.Model):
 
 
 class Student(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    MILITARY_CHOICES = [
+        ('EP', 'Education Pardon'),#معافیت تحصیلی
+        ('P', 'Passed'),#گزرانده
+        ('E', 'Exempted'),#معاف
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE , unique = True)
     entry_semester = models.CharField(max_length=100)
-    gpa = models.DecimalField(max_digits=4, decimal_places=2)
+    gpa = models.DecimalField(max_digits=4, decimal_places=2 , null =True , blank = True)
     entry_year = models.CharField(max_length=4)
     major = models.ForeignKey('education.Major', on_delete=models.PROTECT)
     advisor = models.ForeignKey(
         'Teacher', on_delete=models.SET_NULL, null=True)
-    military_service_status = models.CharField(max_length=100)
+    military_service_status = models.CharField(max_length=2, choices=MILITARY_CHOICES, default='EP')
     year_of_study = models.PositiveSmallIntegerField()
 
     def __str__(self) -> str:
@@ -59,7 +64,7 @@ class Student(models.Model):
 
 
 class EducationalAssistant(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE , unique = True)
     field = models.ForeignKey(Major, on_delete=models.PROTECT)
 
     def __str__(self) -> str:
@@ -70,4 +75,4 @@ class EducationalAssistant(models.Model):
 
 
 class AdminUser(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE  , unique = True)

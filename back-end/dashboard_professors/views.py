@@ -1,18 +1,17 @@
-from django.contrib.auth.models import User
-from django.shortcuts import render
+import csv
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
+from rest_framework import status
+from accounts.models import Teacher, User
 from accounts.permissions import IsTeacher
-from education.models import Course, Semester, SemesterCourse, StudentCourse
+from education.models import Semester, SemesterCourse, StudentCourse
 from education.serializers import StudentCourseSerializer
-
 from .serializers import *
+from accounts.serializers import UserProfileImageUpdateSerializer, TeacherSerializer
+from rest_framework.generics import RetrieveAPIView, UpdateAPIView
 
-
-# Show Semesters with Details
 class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated, IsTeacher]
     serializer_class = ShowSemestersSerializers
@@ -60,17 +59,6 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
                     # Update score if student course exists
                     student_course.score = score
                     student_course.save()
-                else:
-                    # Create a new student course instance
-                    StudentCourse.objects.create(
-                        semester_course=semester_course,
-                        student_id=student_id,
-                        score=score
-                    )
-            elif action == 'remove':
-                # Delete student course instance if it exists
-                if student_course:
-                    student_course.delete()
             elif action == 'change':
                 # Update score if student course exists
                 if student_course:
@@ -117,3 +105,44 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
         else:
             return Response({'error': 'No file uploaded'},
                             status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class ShowProfileAPIView(RetrieveAPIView):
+    serializer_class = TeacherSerializer
+    permission_classes = [IsAuthenticated]  # Assuming IsTeacher permission is checked inside serializer
+    
+    def get_object(self):
+        user = self.request.user
+        
+        try:
+            # Get the teacher instance associated with the current user
+            teacher = Teacher.objects.get(user=user)
+            return teacher
+        except Teacher.DoesNotExist:
+            # Handle the case where the user is not a teacher
+            return None
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance is None:
+            return Response({'error': 'User is not a teacher'}, status=404)
+        
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+class UserProfileImageView(UpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserProfileImageUpdateSerializer
+    permission_classes = [IsAuthenticated,IsTeacher]
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)

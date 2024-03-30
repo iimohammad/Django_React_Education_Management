@@ -33,3 +33,4 @@ urlpatterns = [
     path('', include(router.urls)),
     path('profile/' , StudentProfileViewset.as_view() , name='profile')
 ]
+# handler404 = 'utils.error_views.handler404'

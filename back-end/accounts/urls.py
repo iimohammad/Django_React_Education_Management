@@ -5,7 +5,9 @@ from .views import LogoutAPIView, RegisterUserApi, GenerateVerificationCodeView,
 from django.views.generic.base import RedirectView
 from rest_framework.authtoken.views import ObtainAuthToken, obtain_auth_token
 
-from .views import (LogoutAPIView, RegisterUserApi, google_auth_callback,google_auth_redirect)
+from .views import (LogoutAPIView, 
+                    RegisterUserApi,
+                    )
 
 from .views import LogoutAPIView, RegisterUserApi, GenerateVerificationCodeView, PasswordResetActionView, ChangePasswordLoginView
 
@@ -19,3 +21,5 @@ urlpatterns = [
 
 
 ]
+
+# handler404 = 'utils.error_views.handler404'
