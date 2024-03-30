@@ -1,14 +1,10 @@
 import os
 from datetime import timedelta
-<<<<<<< HEAD
-
-=======
 from pathlib import Path
 
 from celery.schedules import crontab
 
 from config import local_settings
->>>>>>> main
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
