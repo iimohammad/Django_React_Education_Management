@@ -5,18 +5,22 @@ from pathlib import Path
 
 from celery.schedules import crontab
 
+<<<<<<< HEAD
 from config import local_settings
 dotenv.load_dotenv()
 
+=======
+dotenv.read_dotenv()
+>>>>>>> main
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
-DEBUG = os.environ.get('DEBUG')
+DEBUG = os.environ.get('DEBUG') == 'True'
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 
-ALLOWED_HOSTS = local_settings.ALLOWED_HOSTS
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
@@ -72,7 +76,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
 ]
-if local_settings.USE_DEBUG_TOOLBAR:
+
+if os.environ.get('USE_DEBUG_TOOLBAR'):
     MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
     INSTALLED_APPS.append("debug_toolbar")
 
@@ -185,13 +190,13 @@ SPECTACULAR_SETTINGS = {
 CORS_ORIGIN_ALLOW_ALL = True
 
 # # Email Configurations
-EMAIL_BACKEND = local_settings.Email_Configuration['EMAIL_BACKEND']
-EMAIL_HOST = local_settings.Email_Configuration['EMAIL_HOST']
-EMAIL_PORT = local_settings.Email_Configuration['EMAIL_PORT']
-EMAIL_HOST_USER = local_settings.Email_Configuration['EMAIL_HOST_USER']
-EMAIL_HOST_PASSWORD = local_settings.Email_Configuration['EMAIL_HOST_PASSWORD']
-EMAIL_USE_TLS = local_settings.Email_Configuration['EMAIL_USE_TLS']
-DEFAULT_FROM_EMAIL = 'shojaie.payman32@gmail.com'
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND')
+EMAIL_HOST = os.environ.get('EMAIL_HOST')
+EMAIL_PORT = os.environ.get('EMAIL_PORT')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
 
 GRAPHENE = {
     'SCHEMA': 'graphql_api.schema.schema'
@@ -213,11 +218,6 @@ LOGGING = {
         'level': 'WARNING',
     },
 }
-
-
-GOOGLE_CLIENT_ID = local_settings.GOOGLE_CLIENT_ID
-GOOGLE_CLIENT_SECRET = local_settings.GOOGLE_CLIENT_SECRET
-GOOGLE_REDIRECT_URI = local_settings.GOOGLE_REDIRECT_URI
 
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'

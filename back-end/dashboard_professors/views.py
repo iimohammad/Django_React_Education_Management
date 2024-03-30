@@ -1,6 +1,4 @@
 import csv
-from django.db import IntegrityError
-from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -8,13 +6,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from accounts.models import Teacher, User
 from accounts.permissions import IsTeacher
-from education.models import Course, Semester, SemesterCourse, StudentCourse
+from education.models import Semester, SemesterCourse, StudentCourse
 from education.serializers import StudentCourseSerializer
 from .serializers import *
-from rest_framework.decorators import api_view, permission_classes
-from accounts.serializers import EditTeacherProfileSerializers, TeacherSerializer, UserProfileImageSerializer
+from accounts.serializers import UserProfileImageUpdateSerializer, TeacherSerializer
+from rest_framework.generics import RetrieveAPIView, UpdateAPIView
 
-# Show Semesters with Details
 class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated, IsTeacher]
     serializer_class = ShowSemestersSerializers
@@ -111,40 +108,41 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated,IsTeacher])
-def show_profile(request):
-    user = request.user
+class ShowProfileAPIView(RetrieveAPIView):
+    serializer_class = TeacherSerializer
+    permission_classes = [IsAuthenticated]  # Assuming IsTeacher permission is checked inside serializer
     
-    try:
-        # Get the teacher instance associated with the current user
-        teacher = Teacher.objects.get(user=user)
-    except Teacher.DoesNotExist:
-        # Handle the case where the user is not a teacher
-        return Response({'error': 'User is not a teacher'}, status=404)
-    
-    # Serialize the teacher instance
-    serializer = TeacherSerializer(teacher)
-    
-    # Return the serialized data in the API response
-    return Response(serializer.data)
+    def get_object(self):
+        user = self.request.user
+        
+        try:
+            # Get the teacher instance associated with the current user
+            teacher = Teacher.objects.get(user=user)
+            return teacher
+        except Teacher.DoesNotExist:
+            # Handle the case where the user is not a teacher
+            return None
 
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated,IsTeacher])
-def update_profile(request):
-    user = request.user
-    
-    try:
-        # Get the teacher instance associated with the current user
-        teacher = Teacher.objects.get(user=user)
-    except Teacher.DoesNotExist:
-        # Handle the case where the user is not a teacher
-        return Response({'error': 'User is not a teacher'}, status=404)
-    
-    # Update the teacher instance with the request data
-    serializer = TeacherSerializer(teacher, data=request.data)
-    if serializer.is_valid():
-        serializer.save()
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance is None:
+            return Response({'error': 'User is not a teacher'}, status=404)
+        
+        serializer = self.get_serializer(instance)
         return Response(serializer.data)
-    return Response(serializer.errors, status=400)
+
+class UserProfileImageView(UpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserProfileImageUpdateSerializer
+    permission_classes = [IsAuthenticated,IsTeacher]
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
