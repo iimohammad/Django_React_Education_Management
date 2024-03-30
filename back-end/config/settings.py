@@ -155,10 +155,10 @@ if DEBUG:
         'DEFAULT_AUTHENTICATION_CLASSES': (
             'rest_framework_simplejwt.authentication.JWTAuthentication',
             'rest_framework.authentication.TokenAuthentication',
-            'rest_framework.authentication.SessionAuthentication'
-        )
+            'rest_framework.authentication.SessionAuthentication',
+        ),
+        'EXCEPTION_HANDLER': 'utils.exceptions.custom_exception_handler'  
     }
-
 else:
     REST_FRAMEWORK = {
         'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -166,6 +166,7 @@ else:
             'rest_framework.authentication.TokenAuthentication'
         )
     }
+
 REST_FRAMEWORK['DEFAULT_SCHEMA_CLASS'] = 'drf_spectacular.openapi.AutoSchema'
 
 SPECTACULAR_SETTINGS = {

@@ -2,7 +2,7 @@ from django.contrib import admin
 import os
 import dotenv
 dotenv.read_dotenv()
-from utils.error_views import handler404
+
 from django.urls import include, path
 from drf_spectacular.views import (SpectacularAPIView, SpectacularRedocView,
                                    SpectacularSwaggerView)
@@ -13,6 +13,7 @@ from accounts.permissions import (IsAdmin, IsEducationalAssistant, IsStudent,
                                   IsTeacher)
 from accounts.views import CustomLogoutView
 from home.views import login
+from utils.error_views import custom_404
 
 # Authentication URLs
 urlpatterns = [
@@ -72,3 +73,5 @@ if IsEducationalAssistant():
 # Debug Toolbar URLs
 if os.environ.get('USE_DEBUG_TOOLBAR')  :
     urlpatterns.append(path("__debug__/", include("debug_toolbar.urls")))
+
+# handler404 = 'utils.error_views.custom_404'

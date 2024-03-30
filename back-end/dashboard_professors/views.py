@@ -4,14 +4,15 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from accounts.models import Teacher, User
+from accounts.models import Student, Teacher, User
 from accounts.permissions import IsTeacher
 from education.models import Semester, SemesterCourse, StudentCourse
 from education.serializers import StudentCourseSerializer
 from .serializers import *
-from accounts.serializers import UserProfileImageUpdateSerializer, TeacherSerializer
+from accounts.serializers import StudentSerializer, UserProfileImageUpdateSerializer, TeacherSerializer
 from rest_framework.generics import RetrieveAPIView, UpdateAPIView
-
+from rest_framework import generics
+from rest_framework.mixins import ListModelMixin
 class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated, IsTeacher]
     serializer_class = ShowSemestersSerializers
@@ -146,3 +147,27 @@ class UserProfileImageView(UpdateAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
+    
+class ShowMyStudentsVeiw(generics.GenericAPIView, ListModelMixin):
+    serializer_class = StudentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+    
+    def get_queryset(self):
+        if isinstance(self.request.user, User):
+            user_id = self.request.user
+        else:
+            user_id = self.request.user.id
+            
+        return Student.objects.filter(advisor__user=user_id)
+    
+
+
+
+class UnitSelectionRequestShows(generics.ListCreateAPIView):
+    # serializer_class = 
+    pass
+    # @action(name="Accept")
+    # @action(name = "Reject")
