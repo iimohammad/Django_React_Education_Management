@@ -1,6 +1,4 @@
-SECRET_KEY = ''
-
-DEBUG = True
+SECRET_KEY = '4v&(r8*_t%=!-+k1#us&c6!pp^juy(^7i@!by*2%5=zx1f_(tk'
 
 ALLOWED_HOSTS = []
 
