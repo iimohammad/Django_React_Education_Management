@@ -5,7 +5,6 @@ from pathlib import Path
 
 from celery.schedules import crontab
 
-from config import local_settings
 dotenv.read_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -211,11 +210,6 @@ LOGGING = {
         'level': 'WARNING',
     },
 }
-
-
-GOOGLE_CLIENT_ID = local_settings.GOOGLE_CLIENT_ID
-GOOGLE_CLIENT_SECRET = local_settings.GOOGLE_CLIENT_SECRET
-GOOGLE_REDIRECT_URI = local_settings.GOOGLE_REDIRECT_URI
 
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'

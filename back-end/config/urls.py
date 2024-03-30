@@ -11,7 +11,6 @@ from rest_framework_simplejwt.views import (TokenObtainPairView,
 from accounts.permissions import (IsAdmin, IsEducationalAssistant, IsStudent,
                                   IsTeacher)
 from accounts.views import CustomLogoutView
-from config import local_settings
 from home.views import login
 
 # Authentication URLs
@@ -28,7 +27,7 @@ urlpatterns = [
 if IsAdmin:
     urlpatterns += [
         # Admin URLs
-        path(local_settings.Admin, admin.site.urls),
+        path(os.environ.get('Admin'), admin.site.urls),
         # App URLs
         path(
             'academic_events/',

@@ -12,8 +12,8 @@ from education.models import Course, Semester, SemesterCourse, StudentCourse
 from education.serializers import StudentCourseSerializer
 from .serializers import *
 from rest_framework.decorators import api_view, permission_classes
-from accounts.serializers import EditTeacherProfileSerializers, TeacherSerializer, UserProfileImageSerializer
-
+from accounts.serializers import UserProfileImageUpdateSerializer, TeacherSerializer, UserProfileImageSerializer
+from rest_framework import generics
 # Show Semesters with Details
 class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated, IsTeacher]
@@ -130,21 +130,18 @@ def show_profile(request):
     return Response(serializer.data)
 
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated,IsTeacher])
-def update_profile(request):
-    user = request.user
-    
-    try:
-        # Get the teacher instance associated with the current user
-        teacher = Teacher.objects.get(user=user)
-    except Teacher.DoesNotExist:
-        # Handle the case where the user is not a teacher
-        return Response({'error': 'User is not a teacher'}, status=404)
-    
-    # Update the teacher instance with the request data
-    serializer = TeacherSerializer(teacher, data=request.data)
-    if serializer.is_valid():
-        serializer.save()
+class UserProfileImageView(generics.UpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserProfileImageUpdateSerializer
+    permission_classes = [IsAuthenticated,IsTeacher]
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
         return Response(serializer.data)
-    return Response(serializer.errors, status=400)

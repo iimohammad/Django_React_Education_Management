@@ -113,7 +113,7 @@ class AdminSerializers(serializers.Serializer):
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['profile_image', 'birthday']
+        fields = ['profile_image', 'birthday','first_name','last_name']
 
     def update(self, instance, validated_data):
         profile_image = validated_data.get('profile_image', instance.profile_image)
@@ -161,4 +161,7 @@ class EducationalAssistantSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'field']
 
 
-
+class UserProfileImageUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['profile_image','birthday','phone','address']
