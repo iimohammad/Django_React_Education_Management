@@ -6,11 +6,28 @@ from rest_framework.response import Response
 
 from accounts.models import Student, Teacher, EducationalAssistant
 from education.models import Course, SemesterCourse, Major
+from dashboard_student.models import EmergencyRemovalRequest, StudentDeleteSemesterRequest, EmploymentEducationRequest
 
-from .filters import StudentFilter, TeacherFilter, CourseFilter, SemesterCourseFilter
+from .filters import (
+                        StudentFilter,
+                        TeacherFilter,
+                        CourseFilter,
+                        SemesterCourseFilter,
+                        EmergencyRemovalRequestFilter,
+                        StudentDeleteSemesterRequestFilter,
+                        EmploymentEducationRequestFilter,
+                     )
 from .pagination import DefaultPagination
 from .permissions import IsEducationalAssistant
-from .serializers import StudentSerializer, TeacherSerializer, CourseSerializer, SemesterCourseSerializer
+from .serializers import (
+                            StudentSerializer,
+                            TeacherSerializer,
+                            CourseSerializer,
+                            SemesterCourseSerializer,
+                            EmergencyRemovalRequestSerializer,
+                            StudentDeleteSemesterRequestSerializer,
+                            EmploymentEducationRequestSerializer,
+                         )
 
 
 class StudentViewSet(viewsets.ReadOnlyModelViewSet):
@@ -127,3 +144,139 @@ class SemesterCourseViewSet(viewsets.ModelViewSet):
                                 status=status.HTTP_403_FORBIDDEN)
         except Course.DoesNotExist:
             return Response({'detail': 'Invalid course ID provided.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class EmergencyRemovalRequestViewSet(viewsets.ModelViewSet):
+    serializer_class = EmergencyRemovalRequestSerializer
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = EmergencyRemovalRequestFilter
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated, IsEducationalAssistant]
+    ordering_fields = ['created_at']
+
+    def get_queryset(self):
+        educational_assistant = self.request.user.educationalassistant
+
+        queryset = EmergencyRemovalRequest.objects.filter(
+            approval_status = 'P',
+            student__major=educational_assistant.field
+        )
+
+        return queryset
+
+    def update(self, request, *args, **kwargs):
+        """
+        Custom update method that executes after a successful PUT request.
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        updated_instance = serializer.save()
+
+        # Perform additional actions here (e.g., send notifications, log changes, etc.)
+        # ...
+
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Disallow POST requests.
+        """
+        return Response({"detail": "POST requests are not allowed."}, status=405)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Disallow DELETE requests.
+        """
+        return Response({"detail": "DELETE requests are not allowed."}, status=405)
+
+
+class StudentDeleteSemesterRequestViewSet(viewsets.ModelViewSet):
+    serializer_class = StudentDeleteSemesterRequestSerializer
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = StudentDeleteSemesterRequestFilter
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated, IsEducationalAssistant]
+    ordering_fields = ['created_at']
+
+    def get_queryset(self):
+        educational_assistant = self.request.user.educationalassistant
+
+        queryset = StudentDeleteSemesterRequest.objects.filter(
+            teacher_approval_status = 'A',
+            educational_assistant_approval_status = 'P',
+            semester_registration_request__student__major=educational_assistant.field
+        )
+
+        return queryset
+
+    def update(self, request, *args, **kwargs):
+        """
+        Custom update method that executes after a successful PUT request.
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        updated_instance = serializer.save()
+
+        # Perform additional actions here (e.g., send notifications, log changes, etc.)
+        # ...
+
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Disallow POST requests.
+        """
+        return Response({"detail": "POST requests are not allowed."}, status=405)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Disallow DELETE requests.
+        """
+        return Response({"detail": "DELETE requests are not allowed."}, status=405)
+
+
+class EmploymentEducationRequestViewSet(viewsets.ModelViewSet):
+    serializer_class = EmploymentEducationRequestSerializer
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = EmploymentEducationRequestFilter
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated, IsEducationalAssistant]
+    ordering_fields = ['created_at']
+
+    def get_queryset(self):
+        educational_assistant = self.request.user.educationalassistant
+
+        queryset = EmploymentEducationRequest.objects.filter(
+            approval_status = 'P',
+            student__major = educational_assistant.field
+        )
+
+        return queryset
+
+    def update(self, request, *args, **kwargs):
+        """
+        Custom update method that executes after a successful PUT request.
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        updated_instance = serializer.save()
+
+        # Perform additional actions here (e.g., send notifications, log changes, etc.)
+        # ...
+
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Disallow POST requests.
+        """
+        return Response({"detail": "POST requests are not allowed."}, status=405)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Disallow DELETE requests.
+        """
+        return Response({"detail": "DELETE requests are not allowed."}, status=405)

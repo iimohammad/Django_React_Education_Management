@@ -2,6 +2,11 @@ from django_filters.rest_framework import FilterSet, CharFilter
 
 from accounts.models import Student, Teacher
 from education.models import Course, SemesterCourse
+from dashboard_student.models import (
+    EmergencyRemovalRequest,
+    StudentDeleteSemesterRequest,
+    EmploymentEducationRequest,
+)
 
 
 class StudentFilter(FilterSet):
@@ -59,4 +64,39 @@ class SemesterCourseFilter(FilterSet):
             'course_capacity': ['exact', 'gte', 'lte'],
             'corse_reserve_capasity': ['gte'],
             'class_days': ['exact'],
+        }
+
+
+class EmergencyRemovalRequestFilter(FilterSet):
+    class Meta:
+        model = EmergencyRemovalRequest
+        fields = {
+            'student__user__first_name': ['contains'],
+            'student__user__last_name': ['contains'],
+            'created_at': ['gte', 'lte'],
+            'course__semester_course__course__course_name': ['contains'],
+            'student_explanation': ['contains'],
+        }
+
+
+class StudentDeleteSemesterRequestFilter(FilterSet):
+    class Meta:
+        model = StudentDeleteSemesterRequest
+        fields = {
+            'semester_registration_request__student__user__first_name': ['contains'],
+            'semester_registration_request__student__user__last_name': ['contains'],
+            'semester_registration_request__semester__name': ['contains'],
+            'created_at': ['gte', 'lte'],
+            'student_explanations': ['contains'],
+            'educational_assistant_explanation': ['contains'],
+        }
+
+
+class EmploymentEducationRequestFilter(FilterSet):
+    class Meta:
+        model = EmploymentEducationRequest
+        fields = {
+            'student__user__first_name': ['contains'],
+            'student__user__last_name': ['contains'],
+            'created_at': ['gte', 'lte'],
         }

@@ -13,6 +13,11 @@ from education.models import (
                     SemesterExam,
                     SemesterEmergency,
                     )
+from dashboard_student.models import (
+    EmergencyRemovalRequest,
+    StudentDeleteSemesterRequest,
+    EmploymentEducationRequest,
+)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -154,3 +159,24 @@ class SemesterCourseSerializer(serializers.ModelSerializer):
     def get_class_days(self, obj):
         
         return [day.name for day in obj.class_days.all()]
+
+
+class EmergencyRemovalRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmergencyRemovalRequest
+        fields = ['student', 'approval_status', 'created_at',
+                  'course', 'student_explanation', 'educational_assistant_explanation']
+
+
+class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentDeleteSemesterRequest
+        fields = ['semester_registration_request', 'teacher_approval_status',
+                  'educational_assistant_approval_status', 'created_at',
+                  'student_explanations', 'educational_assistant_explanation']
+
+
+class EmploymentEducationRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmploymentEducationRequest
+        fields = ['student', 'approval_status', 'created_at']
