@@ -1,10 +1,16 @@
 from rest_framework import serializers
 
-from accounts.models import Student, Teacher, User
+from accounts.models import Student, Teacher, User, EducationalAssistant
 from education.models import Department, Major
 
 
 class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(read_only = True)
+    first_name = serializers.CharField(read_only = True)
+    last_name = serializers.CharField(read_only = True)
+    user_number = serializers.CharField(read_only = True)
+    birthday = serializers.CharField(read_only = True)
+    gender = serializers.CharField(read_only = True)
     class Meta:
         model = User
         fields = [
@@ -62,3 +68,14 @@ class TeacherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Teacher
         fields = ['user', 'expertise', 'rank', 'department']
+
+
+class EducationalAssistantSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    field = MajorSerializer(read_only = True)
+    class Meta:
+        model = EducationalAssistant
+        fields = ['user', 'field']
+    
+    
+    

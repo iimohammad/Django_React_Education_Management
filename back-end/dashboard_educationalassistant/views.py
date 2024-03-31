@@ -1,14 +1,21 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, viewsets
+from rest_framework import generics, viewsets, views
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 
-from accounts.models import Student, Teacher
+from accounts.models import Student, Teacher, EducationalAssistant
 
 from .filters import StudentFilter, TeacherFilter
 from .pagination import DefaultPagination
 from .permissions import IsEducationalAssistant
-from .serializers import StudentSerializer, TeacherSerializer
+from .serializers import StudentSerializer, TeacherSerializer, EducationalAssistantSerializer
+from accounts.serializers import UserProfileImageUpdateSerializer
+from rest_framework.response import Response
+from rest_framework import views, status
+
+
+
+
 
 
 class StudentViewSet(viewsets.ReadOnlyModelViewSet):
@@ -45,3 +52,12 @@ class TeacherApiView(generics.RetrieveAPIView):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
+
+
+class EducationalAssistantChangeProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = EducationalAssistantSerializer
+    permission_classes = [IsAuthenticated, IsEducationalAssistant]
+
+    def get_object(self):
+        return EducationalAssistant.objects.filter(user = self.request.user)
+
