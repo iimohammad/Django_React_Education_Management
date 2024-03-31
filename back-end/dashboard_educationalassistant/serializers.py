@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from accounts.models import Student, Teacher, User, EducationalAssistant
-from education.models import Department, Major
+from education.models import Department, Major, StudentCourse
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -76,6 +76,37 @@ class EducationalAssistantSerializer(serializers.ModelSerializer):
     class Meta:
         model = EducationalAssistant
         fields = ['user', 'field']
+
+
+class StudentCoursePassSerializer(serializers.ModelSerializer):
+    semester_course = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StudentCourse
+        fields = ['semester_course']
+
+    def get_semester_course(self, obj):
+        if obj.status == 'R' and obj.score != '':
+            return obj.semester_course
+        else:
+            return None
+
+
+class StudentCourseTermSerializer(serializers.ModelSerializer):
+    semester_course = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StudentCourse
+        fields = ['semester_course']
+
+    def get_semester_course(self, obj):
+        if obj.status == 'R' and obj.score == '':
+            return obj.semester_course
+        else:
+            return None
+
+
+
     
     
     
