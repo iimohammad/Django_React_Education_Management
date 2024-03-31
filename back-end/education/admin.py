@@ -1,4 +1,4 @@
-from calendar import Day
+# from calendar import Day
 from django.contrib import admin
 from django.utils.html import format_html
 from import_export.admin import ImportExportActionModelAdmin
@@ -112,8 +112,8 @@ class MajorAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
 
     def department_link(self, obj):
         department_id = obj.department.id
-        department_url = f"http://127.0.0.1:8000/ITM/education/department/{
-            department_id}/change/"
+        department_url = f"http://127.0.0.1:8000/ITM/education/department/ \
+            {department_id}/change/"
         return format_html('<a href="{}">{}</a>',
                            department_url, obj.department)
 

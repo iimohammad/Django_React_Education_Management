@@ -44,8 +44,8 @@ def google_auth_redirect(request):
     # Redirect to Google's OAuth2 authentication page
     redirect_uri = settings.GOOGLE_REDIRECT_URI
     client_id = settings.GOOGLE_CLIENT_ID
-    auth_url = f"https://accounts.google.com/o/oauth2/auth?client_id={
-        client_id}&redirect_uri={redirect_uri}&response_type=code&scope=email profile openid"
+    auth_url = f"https://accounts.google.com/o/oauth2/auth?client_id= \
+        {client_id}&redirect_uri={redirect_uri}&response_type=code&scope=email profile openid"
     return redirect(auth_url)
 
 
