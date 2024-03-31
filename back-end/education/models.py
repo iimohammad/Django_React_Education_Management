@@ -174,9 +174,9 @@ class StudentCourse(models.Model):
             return True
         return False
 
-    def __str__(self):
-        return f"{
-            self.semester_course.course.course_name} - {self.semester_course.semester.name}"
+    # def __str__(self):
+    #     return f"{
+    #         self.semester_course.course.course_name} - {self.semester_course.semester.name}"
     class Meta:
         unique_together = [["student", "semester_course"]]
 
