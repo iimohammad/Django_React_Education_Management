@@ -11,7 +11,8 @@ APPROVAL_CHOICES = [
     ]
 class SemesterRegistrationRequest(models.Model):
     student = models.ForeignKey(Student, on_delete=models.PROTECT)
-    approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
+    approval_status = models.CharField(
+        max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
     semester = models.ForeignKey(Semester , on_delete = models.PROTECT)
     
