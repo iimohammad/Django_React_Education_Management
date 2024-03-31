@@ -14,13 +14,25 @@ class SemesterRegistrationRequest(models.Model):
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
     semester = models.ForeignKey(Semester , on_delete = models.PROTECT)
-    
+    modified_courses = models.ManyToManyField(SemesterCourse, related_name='modified_courses')
+    reason_text = models.TextField(blank=False)
+
 class UniversityAddRemoveRequest(models.Model):
     student = models.ForeignKey(Student, on_delete=models.PROTECT)
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add=True)
+    semester = models.ForeignKey(Semester, on_delete=models.PROTECT)
     added_universities = models.ManyToManyField(Semester, related_name='added_universities')
     removed_universities = models.ManyToManyField(Semester, related_name='removed_universities')
+
+class RevisionRequest(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.PROTECT)
+    approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
+    created_at = models.DateTimeField(auto_now_add = True)
+    course = models.ForeignKey(StudentCourse, on_delete=models.CASCADE)
+    text = models.TextField()
+    answer = models.TextField()
+
 
 class EnrollmentRequest(models.Model):
     student = models.ForeignKey(Student, on_delete=models.PROTECT)
@@ -36,12 +48,6 @@ class RemoveDuplicateRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     removed_duplicates = models.ManyToManyField(StudentCourse, related_name='removed_duplicates')
 
-class UnitSelectionRequest(models.Model):
-    semester_registration_request = models.OneToOneField(
-        SemesterRegistrationRequest , on_delete=models.CASCADE)
-    approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
-    created_at = models.DateTimeField(auto_now_add = True)
-    requested_courses = models.ManyToManyField(SemesterCourse, verbose_name='Requested_courses')
 
 
 class CourseModificationRequest(models.Model):
