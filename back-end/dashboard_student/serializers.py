@@ -237,11 +237,8 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         else:
             message_wrong_semester = None
             message_no_capacity = None
-            if len(wrong_semester)!=0:
-                message_wrong_semester = f"this courses belong to another semester: {
-                    SemesterCourseSerializer(courses,many = True).data}"
+            if len(wrong_semester)!=0:message_wrong_semester = f"this courses belong to another semester: {SemesterCourseSerializer(courses,many = True).data}"
             if len(no_capacity)!=0:
-                message_no_capacity = f"this courses have no capacity: {
-                    SemesterCourseSerializer(courses,many = True).data}"
+                message_no_capacity = f"this courses have no capacity: {SemesterCourseSerializer(courses,many = True).data}"
             
             raise serializers.ValidationError(message_wrong_semester+message_no_capacity)
