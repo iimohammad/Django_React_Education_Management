@@ -34,8 +34,9 @@ admin.site.register(EmergencyRemovalRequest, EmergencyRemovalRequestAdmin)
 
 
 class StudentDeleteSemesterRequestAdmin(admin.ModelAdmin):
-    list_display = ('semester', 'student_explanations',
-                    'result', 'educational_assistant_explanation')
+    list_display = ('semester_registration_request', 'teacher_approval_status',
+                    'educational_assistant_approval_status', 'created_at', 
+                    'student_explanations', 'educational_assistant_explanation')
     search_fields = ('student_explanations',
                      'educational_assistant_explanation')
     search_help_text = "Search in: Student Explanation, Educational Assistant Explanation"

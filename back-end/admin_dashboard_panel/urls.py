@@ -1,6 +1,5 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-
 from accounts.permissions import IsAdmin
 
 from .views import (CourseViewSet, DepartmentViewSet,

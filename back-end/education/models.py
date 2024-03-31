@@ -99,7 +99,7 @@ class SemesterAddRemove(models.Model):
 
 class SemesterExam(models.Model):
     semester = models.OneToOneField(
-        Semester, on_delete=models.CASCADE, related_name='exam')
+        Semester, on_delete=models.CASCADE, related_name='exams')
     exam_start = models.DateField()
     exam_end = models.DateField()
 
@@ -143,10 +143,7 @@ class SemesterCourse(models.Model):
 
     @property
     def remain_course_capacity(self):
-        capacity = self.course_capacity
-        occupied_capacity = StudentCourse.objects.filter(
-            semester_course=self).count()
-        return capacity - occupied_capacity
+        return self.course_capacity - StudentCourse.objects.filter(semester_course = self).count()
 
     def __str__(self):
         return f"{self.course.course_name} - {self.semester.name}"
@@ -165,7 +162,7 @@ class StudentCourse(models.Model):
 
     student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE)
     semester_course = models.ForeignKey(
-        SemesterCourse, on_delete=models.PROTECT, unique=True)
+        SemesterCourse, on_delete=models.PROTECT)
     status = models.CharField(
         max_length=1, choices=STATUS_CHOICES, default=REGISTERED)
     score = models.DecimalField(
@@ -178,5 +175,8 @@ class StudentCourse(models.Model):
         return False
 
     def __str__(self):
-        return f" \
-            {self.semester_course.course.course_name} - {self.semester_course.semester.name}"
+        return f"{
+            self.semester_course.course.course_name} - {self.semester_course.semester.name}"
+    class Meta:
+        unique_together = [["student", "semester_course"]]
+
