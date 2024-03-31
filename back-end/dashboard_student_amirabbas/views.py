@@ -9,7 +9,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 
 from .serializers import ExamStudentCourseSerializer, SemesterCourseSerializer,\
                         SemesterRegistrationRequestSerializer ,StudentCourseSerializer,\
-                        UniversityAddRemoveRequestSerializerSerializer
+                        UniversityAddRemoveRequestSerializerSerializer , RevisionRequestSerializer
                                                 
 from education.models import SemesterCourse , StudentCourse
 from .models import SemesterRegistrationRequest , RevisionRequest , AddRemoveRequest , \
@@ -138,5 +138,32 @@ class UniversityAddRemoveRequestAPIView(mixins.CreateModelMixin,
             return Response({'message': 'Your request has been answered and you cannot delete it.'},
                             status=status.HTTP_403_FORBIDDEN)
 
+        self.perform_destroy(instance)
+        return Response({'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+    
+
+class RevisionRequestAPIView(mixins.CreateModelMixin,
+                   mixins.RetrieveModelMixin,
+                   mixins.DestroyModelMixin,
+                   mixins.ListModelMixin,
+                   viewsets.GenericViewSet):
+    serializer_class = RevisionRequestSerializer
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated,IsStudent]
+    ordering_fields = ['created_at']
+    def get_queryset(self):
+        return RevisionRequest.objects.filter \
+                            (student__user = self.request.user).all()
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['user'] = self.request.user
+        return context
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.approval_status != 'P' :
+            return Response(
+                {'message': 'your request has been answered and you can not delete it.'}
+                , status=status.HTTP_403_FORBIDDEN)
         self.perform_destroy(instance)
         return Response({'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)

@@ -22,8 +22,8 @@ class UniversityAddRemoveRequest(models.Model):
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add=True)
     semester = models.ForeignKey(Semester, on_delete=models.PROTECT)
-    added_universities = models.ManyToManyField(Semester, related_name='added_universities')
-    removed_universities = models.ManyToManyField(Semester, related_name='removed_universities')
+    added_universities = models.ManyToManyField(StudentCourse, related_name='added_universities')
+    removed_universities = models.ManyToManyField(StudentCourse, related_name='removed_universities')
 
 class RevisionRequest(models.Model):
     student = models.ForeignKey(Student, on_delete=models.PROTECT)

@@ -85,7 +85,11 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = ['user', 'entry_semester', 'gpa', 'entry_year'
                   , 'advisor', 'military_service_status', 'year_of_study','major']
         
-
+class StudentCourseSerializer(serializers.ModelSerializer):
+    semester_course = SemesterCourseSerializer()
+    class Meta:
+        model = StudentCourse
+        fields = ['semester_course','status','score']
 
 class ExamSemesterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -198,3 +202,46 @@ class UniversityAddRemoveRequestSerializer(serializers.ModelSerializer):
 
 
 
+class RevisionRequestSerializer(serializers.ModelSerializer):
+    course = StudentCourseSerializer()
+    class Meta:
+        model = RevisionRequest
+        fields = ['id', 'course' ,'approval_status',
+                    'created_at' , 'text', 'answer']
+        
+        read_only_fields = ['id','course' ,'approval_status',
+                    'created_at' , 'answer' ]
+    
+    def get_fields(self):
+        fields = super().get_fields()
+
+        if self.context.get('request') and self.context['request'].method == 'POST':
+            fields['course'] = serializers.IntegerField()
+            
+        return fields
+    
+    def create(self, validated_data):
+        student_course_pk = validated_data.get('course')
+        user = self.context['user']
+        try:
+            student = Student.objects.get(user = user)
+        except:
+            raise serializers.ValidationError("Invalid student")
+        
+        try:
+            course = StudentCourse.objects.get(pk = student_course_pk , student = student)
+        except Exception:
+            raise serializers.ValidationError("Invalid course")
+
+        existing_request = RevisionRequest.objects.filter(
+                course=course, student=student ,approval_status = 'P').first()
+        
+        if existing_request!=None:
+            raise serializers.ValidationError("A registration request for this semester already exists")
+
+        
+        validated_data['course'] = course
+        revision_request = RevisionRequest.objects.create(
+            student = student , course = course , text = validated_data['text'])
+        
+        return revision_request
