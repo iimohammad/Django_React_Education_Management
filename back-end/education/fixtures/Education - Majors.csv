@@ -1,0 +1,6 @@
+department_id,id,major_name,major_code,number_of_credits,level,education_group
+2,5,Quantum Mechanics,2065,38,P,Science
+3,4,Manufacturing Engineering,2019,36,M,Engineering
+1,3,Networks & Security,2007,32,M,Engineering
+1,2,Software Engineering,1003,146,B,Engineering
+1,1,Data Science,2012,32,M,Engineering

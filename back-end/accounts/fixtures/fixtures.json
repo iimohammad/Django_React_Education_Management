@@ -9,7 +9,7 @@
           "email": "user1@example.com",
           "user_number":"123456",
           "national_code":"1234567",
-          "birthday":"2020-10-10",
+          "birthday":"2000-10-10",
           "phone": "09370222989",
           "address": "70 Elm St, Town",
           "gender": "MF",
@@ -73,11 +73,10 @@
         "fields": {
             "user":"1",
             "entry_semester":"Fall",
-            "gpa":"15",
             "entry_year":"2020",
             "major":"0",
             "advisor":"0",
-            "military_service_status":"asdasd",
+            "military_service_status":"Passed",
             "year_of_study":"2"
         }
       },
@@ -87,7 +86,6 @@
         "fields": {
             "user":"2",
             "entry_semester":"Fall",
-            "gpa":"17",
             "entry_year":"2021",
             "major":"0",
             "advisor":"0",
@@ -101,20 +99,30 @@
         "fields": {
             "course_name":"programming1",
             "course_code":"1",
+            "major":"0",
             "department":"0",
-            "credit_num":"3",
-            "prerequisite":""
-
+            "credit_num":"3"
+        }
+      },
+      {
+        "model": "education.Course",
+        "pk": 1,
+        "fields": {
+            "course_name":"data structure",
+            "course_code":"2",
+            "major":"0",
+            "department":"0",
+            "credit_num":"3"
         }
       },
       {
         "model": "education.Semester",
         "pk": 0,
         "fields": {
-            "name":"20201",
-            "start_semester":"2020-05-10",
-            "end_semester":"2020-07-10",
-            "semester_type":"F"
+            "name":"20241",
+            "start_semester":"2024-03-01",
+            "end_semester":"2024-07-10",
+            "semester_type":"W"
         }
       },
       {
@@ -122,8 +130,8 @@
         "pk": 0,
         "fields": {
             "semester":"0",
-            "unit_selection_start":"2020-05-10",
-            "unit_selection_end":"2020-07-10"
+            "unit_selection_start":"2024-03-01",
+            "unit_selection_end":"2024-03-30"
         }
       },
       {
@@ -131,8 +139,8 @@
         "pk": 0,
         "fields": {
             "semester":"0",
-            "classes_start":"2020-05-10",
-            "classes_end":"2020-07-10"
+            "classes_start":"2024-04-01",
+            "classes_end":"2024-06-30"
         }
       },
       {
@@ -140,8 +148,8 @@
         "pk": 0,
         "fields": {
             "semester":"0",
-            "addremove_start":"2020-05-10",
-            "addremove_end":"2020-07-10"
+            "addremove_start":"2024-04-1",
+            "addremove_end":"2024-04-10"
         }
       },
       {
@@ -149,8 +157,8 @@
         "pk": 0,
         "fields": {
             "semester":"0",
-            "exam_start":"2020-05-10",
-            "exam_end":"2020-07-10"
+            "exam_start":"2024-07-01",
+            "exam_end":"2024-07-10"
         }
       },
       {
@@ -158,8 +166,57 @@
         "pk": 0,
         "fields": {
             "semester":"0",
-            "emergency_remove_start":"2020-05-10",
-            "emergency_remove_end":"2020-07-10"
+            "emergency_remove_start":"2024-04-11",
+            "emergency_remove_end":"2024-06-30"
+        }
+      },
+      {
+        "model": "education.Day",
+        "pk": 0,
+        "fields": {
+            "name":"saturday"
+        }
+      },
+      {
+        "model": "education.Day",
+        "pk": 1,
+        "fields": {
+            "name":"sunday"
+        }
+      },
+      {
+        "model": "education.Day",
+        "pk": 2,
+        "fields": {
+            "name":"monday"
+        }
+      },
+      {
+        "model": "education.Day",
+        "pk": 3,
+        "fields": {
+            "name":"tuesday"
+        }
+      },
+      {
+        "model": "education.Day",
+        "pk": 4,
+        "fields": {
+            "name":"wednesday"
+        }
+      },
+      {
+        "model": "education.Day",
+        "pk": 5,
+        "fields": {
+            "name":"thursday"
+        }
+      },
+      {
+        "model": "education.Day",
+        "pk": 6,
+        "fields": {
+            "name":"friday"
         }
       },
       {
@@ -168,9 +225,23 @@
         "fields": {
             "semester":"0",
             "course":"0",
-            "class_days":"monday",
-            "class_time":"10:00",
-            "exam_datetime":"2020-08-01 11:00",
+            "class_time_start":"10:00",
+            "class_time_end":"11:00",
+            "exam_datetime":"2024-07-02 11:00",
+            "exam_location":"dfgdfgdfgdfgfdg",
+            "instructor":"0",
+            "course_capacity":"10"
+        }
+      },
+      {
+        "model": "education.SemesterCourse",
+        "pk": 1,
+        "fields": {
+            "semester":"0",
+            "course":"1",
+            "class_time_start":"15:00",
+            "class_time_end":"16:00",
+            "exam_datetime":"2024-07-01 11:00",
             "exam_location":"dfgdfgdfgdfgfdg",
             "instructor":"0",
             "course_capacity":"10"
@@ -182,8 +253,16 @@
         "fields": {
             "student":"0",
             "semester_course":"0",
-            "status":"Registered",
-            "score":"15"
+            "status":"Registered"
+        }
+      },
+      {
+        "model": "education.StudentCourse",
+        "pk": 0,
+        "fields": {
+            "student":"0",
+            "semester_course":"1",
+            "status":"Registered"
         }
       },
       {
@@ -196,5 +275,4 @@
             "score":"10"
         }
       }
-
     ]
