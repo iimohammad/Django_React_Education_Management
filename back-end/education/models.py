@@ -150,14 +150,18 @@ class SemesterCourse(models.Model):
 
 
 class StudentCourse(models.Model):
+    FINALREGISTERED = 'F'
     REGISTERED = 'R'
     PENDING = 'P'
     WITHDRAWN = 'W'
+    DELETED = 'D'
 
     STATUS_CHOICES = [
+        (FINALREGISTERED , 'FinalRegistered'),
         (REGISTERED, 'Registered'),
         (PENDING, 'Pending'),
         (WITHDRAWN, 'Withdrawn'),
+        (DELETED, 'Deleted'),
     ]
 
     student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE)
@@ -175,7 +179,12 @@ class StudentCourse(models.Model):
         return False
 
     def __str__(self):
-        return f"{ self.semester_course.course.course_name} - {self.semester_course.semester.name}"
+        return f"{self.semester_course.course.course_name} \
+        - {self.semester_course.semester.name}"
+      
     class Meta:
         unique_together = [["student", "semester_course"]]
 
+    def __str__(self):
+        return f"{self.student.user.first_name} {self.student.user.last_name} - \
+        {self.semester_course.semester.name}"
