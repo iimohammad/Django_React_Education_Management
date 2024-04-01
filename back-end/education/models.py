@@ -184,3 +184,6 @@ class StudentCourse(models.Model):
     class Meta:
         unique_together = [["student", "semester_course"]]
 
+    def __str__(self):
+        return f"{self.student.user.first_name} {self.student.user.last_name} - \
+        {self.semester_course.semester.name}"

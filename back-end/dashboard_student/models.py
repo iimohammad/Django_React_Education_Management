@@ -14,7 +14,13 @@ class SemesterRegistrationRequest(models.Model):
     approval_status = models.CharField(
         max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
-    semester = models.ForeignKey(Semester , on_delete = models.SET_NULL , null=True)
+
+    semester = models.ForeignKey(Semester , on_delete = models.PROTECT)
+
+    def __str__(self):
+        return f"{self.student.user.first_name} {self.student.user.last_name} - \
+            {self.semester.name}"
+
     
 
 class UnitSelectionRequest(models.Model):
@@ -52,6 +58,10 @@ class EmergencyRemovalRequest(models.Model):
     student_explanation = models.TextField()
     educational_assistant_explanation = models.TextField()
 
+    def __str__(self):
+        return f"{self.student.user.first_name} {self.student.user.last_name} - \
+        {self.course.semester_course.semester.name}"
+
 
 class StudentDeleteSemesterRequest(models.Model):
     semester_registration_request = models.ForeignKey(
@@ -61,6 +71,11 @@ class StudentDeleteSemesterRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add = True)
     student_explanations = models.TextField()
     educational_assistant_explanation = models.TextField()
+
+    def __str__(self):
+        return f"{self.semester_registration_request.student.user.first_name} \
+                {self.semester_registration_request.student.user.last_name} - \
+                        {self.semester_registration_request.semester.name}"
 
 
 class EnrollmentRequest(models.Model):
@@ -75,3 +90,6 @@ class EmploymentEducationRequest(models.Model):
     student = models.ForeignKey(Student, on_delete=models.PROTECT)
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
+
+    def __str__(self) -> str:
+        return f"{self.student.user.first_name} {self.student.user.last_name}"
