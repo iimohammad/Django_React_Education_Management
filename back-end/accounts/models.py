@@ -1,10 +1,10 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-
+import logging
 from education.models import Major
 
 from .validators import phone_validator
-
+logger = logging.getLogger(__name__)
 
 class User(AbstractUser):
     class Gender(models.TextChoices):
@@ -19,6 +19,15 @@ class User(AbstractUser):
     phone = models.CharField(max_length=15, validators=[phone_validator], blank=True)
     address = models.TextField(blank=True, null=True)
     gender = models.CharField(max_length=2, choices=Gender.choices, default=Gender.UNSET)
+
+
+    def save(self, *args, **kwargs):
+        logger.debug('DEBUG: Saving instance of Account: %s', self.username)
+        logger.info('INFO: Saving instance of Account: %s', self.username)
+        logger.warning('WARNING: Saving instance of Account: %s', self.username)
+        logger.error('ERROR: Saving instance of Account: %s', self.username)
+        logger.critical('CRITICAL: Saving instance of Account: %s', self.username)
+        super().save(*args, **kwargs)
 
 
 class Teacher(models.Model):

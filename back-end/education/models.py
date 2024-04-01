@@ -150,14 +150,18 @@ class SemesterCourse(models.Model):
 
 
 class StudentCourse(models.Model):
+    FINALREGISTERED = 'F'
     REGISTERED = 'R'
     PENDING = 'P'
     WITHDRAWN = 'W'
+    DELETED = 'D'
 
     STATUS_CHOICES = [
+        (FINALREGISTERED , 'FinalRegistered'),
         (REGISTERED, 'Registered'),
         (PENDING, 'Pending'),
         (WITHDRAWN, 'Withdrawn'),
+        (DELETED, 'Deleted'),
     ]
 
     student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE)

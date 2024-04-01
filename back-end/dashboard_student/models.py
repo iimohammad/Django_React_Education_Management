@@ -14,24 +14,26 @@ class SemesterRegistrationRequest(models.Model):
     approval_status = models.CharField(
         max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
+
     semester = models.ForeignKey(Semester , on_delete = models.PROTECT)
 
     def __str__(self):
         return f"{self.student.user.first_name} {self.student.user.last_name} - \
             {self.semester.name}"
+
     
 
 class UnitSelectionRequest(models.Model):
     semester_registration_request = models.OneToOneField(
-        SemesterRegistrationRequest , on_delete=models.CASCADE)
+        SemesterRegistrationRequest , on_delete=models.PROTECT)
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
-    requested_courses = models.ManyToManyField(SemesterCourse, verbose_name='Requested_courses')
+    requested_courses = models.ManyToManyField(SemesterCourse, verbose_name='Requested_courses' )
 
 
 class AddRemoveRequest(models.Model):
     semester_registration_request = models.ForeignKey(
-        SemesterRegistrationRequest , on_delete=models.CASCADE)
+        SemesterRegistrationRequest , on_delete=models.PROTECT)
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
     removed_courses = models.ManyToManyField(StudentCourse, related_name='removed_courses')
@@ -42,7 +44,7 @@ class RevisionRequest(models.Model):
     student = models.ForeignKey(Student, on_delete=models.PROTECT)
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
-    course = models.ForeignKey(StudentCourse, on_delete=models.CASCADE)
+    course = models.ForeignKey(StudentCourse, on_delete=models.PROTECT)
     text = models.TextField()
     answer = models.TextField()
 
@@ -51,7 +53,8 @@ class EmergencyRemovalRequest(models.Model):
     student = models.ForeignKey(Student, on_delete=models.PROTECT)
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
-    course = models.ForeignKey(StudentCourse, on_delete=models.SET_NULL, null=True)
+    course = models.ForeignKey(StudentCourse, on_delete=models.SET_NULL , null =True)
+
     student_explanation = models.TextField()
     educational_assistant_explanation = models.TextField()
 
@@ -79,7 +82,7 @@ class EnrollmentRequest(models.Model):
     student = models.ForeignKey(Student, on_delete=models.PROTECT)
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
-    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+    teacher = models.ForeignKey(Teacher, on_delete=models.PROTECT)
     reason_text= models.TextField(blank=False)
 
 
