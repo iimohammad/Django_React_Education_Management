@@ -31,7 +31,7 @@ urlpatterns = [
     path('EditProfile/', EducationalAssistantChangeProfileView.as_view(), name= 'AssistantProfile'),
     path('student/{pk/me}/pass-courses-report/', CoursPass.as_view()),
     path('student/{pk/me}/term-courses/', TermCours.as_view()),
-    path('assistant/{pk,me}/courses/{c-pk}/prof-approved/'),
-    path('assistant/{pk,me}/courses/{c-pk}/prof-approved/{pk}/'),
-    path('assistant/{pk,me}/courses/{c-pk}/prof-approved/{pk}/')
+    # path('assistant/{pk,me}/courses/{c-pk}/prof-approved/'),
+    # path('assistant/{pk,me}/courses/{c-pk}/prof-approved/{pk}/'),
+    # path('assistant/{pk,me}/courses/{c-pk}/prof-approved/{pk}/')
 ]

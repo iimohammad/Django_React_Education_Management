@@ -99,7 +99,7 @@ class EducationalAssistantChangeProfileView(generics.RetrieveUpdateAPIView):
         return EducationalAssistant.objects.filter(user = self.request.user)
     
 
-class CoursPass(views.APIview):
+class CoursPass(views.APIView):
     permission_classes = [IsAuthenticated,]
     def get(self, request, format=None):
         if hasattr(request.user, 'Teacher'):
