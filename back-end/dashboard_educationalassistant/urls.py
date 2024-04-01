@@ -6,6 +6,7 @@ router = DefaultRouter()
 
 router.register("students", StudentViewSet, basename="students")
 router.register("teachers", TeacherViewSet, basename="teachers")
+router.register('education-assistant-approved', EducationAssistantApprovedViewSet, basename='educationassistantapproved')
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -13,7 +14,4 @@ urlpatterns = [
     path('EditProfile/', EducationalAssistantChangeProfileView.as_view(), name= 'AssistantProfile'),
     path('student/<int:student_id>/pass-courses-report/', AcceptedStudentCourses.as_view()),
     path('student/<int:student_id>/term-courses/', StudentCoursesInProgress.as_view()),
-    path('assistant/<int:assistant_id>/courses/<int:course_id>/prof-approved/'),
-    path('assistant/<int:assistant_id>/courses/<int:course_id>/prof-approved/{pk}/'),
-    path('assistant/<int:assistant_id>/courses/<int:course_id>/prof-approved/{pk}/')
 ]
