@@ -78,35 +78,10 @@ class EducationalAssistantSerializer(serializers.ModelSerializer):
         fields = ['user', 'field']
 
 
-class StudentCoursePassSerializer(serializers.ModelSerializer):
-    semester_course = serializers.SerializerMethodField()
+class StudentCourseSerializer(serializers.ModelSerializer):
+    course_name = serializers.CharField(source='semester_course.course.course_name')
+    semester_name = serializers.CharField(source='semester_course.semester.name')
 
     class Meta:
         model = StudentCourse
-        fields = ['semester_course']
-
-    def get_semester_course(self, obj):
-        if obj.status == 'R' and obj.score != '':
-            return obj.semester_course
-        else:
-            return None
-
-
-class StudentCourseTermSerializer(serializers.ModelSerializer):
-    semester_course = serializers.SerializerMethodField()
-
-    class Meta:
-        model = StudentCourse
-        fields = ['semester_course']
-
-    def get_semester_course(self, obj):
-        if obj.status == 'R' and obj.score == '':
-            return obj.semester_course
-        else:
-            return None
-
-
-
-    
-    
-    
+        fields = ['course_name', 'semester_name', 'status', 'score', 'is_pass']

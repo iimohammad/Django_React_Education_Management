@@ -4,14 +4,16 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import Student, Teacher, EducationalAssistant
-
+from education.models import StudentCourse
 from .filters import StudentFilter, TeacherFilter
 from .pagination import DefaultPagination
 from .permissions import IsEducationalAssistant
-from .serializers import StudentSerializer, TeacherSerializer, EducationalAssistantSerializer, StudentCoursePassSerializer
+from .serializers import StudentSerializer, TeacherSerializer, EducationalAssistantSerializer, StudentCourseSerializer
 from accounts.serializers import UserProfileImageUpdateSerializer
 from rest_framework.response import Response
 from rest_framework import views, status
+from django.db.models import Q
+from django.core.exceptions import ValidationError
 
 
 
@@ -60,38 +62,84 @@ class EducationalAssistantChangeProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return EducationalAssistant.objects.filter(user = self.request.user)
-    
 
-class CoursPass(views.APIview):
-    permission_classes = [IsAuthenticated,]
-    def get(self, request, format=None):
-        if hasattr(request.user, 'Teacher'):
-            Advisor = Teacher.objects.get(id= request.user.teacher.id)
-            students_of_teacher = Student.objects.filter(advisor=Advisor)
-            serializer = StudentCoursePassSerializer(students_of_teacher, many=True)
-            return Response(serializer.data)
-        elif hasattr(request.user, 'Student'):
-            Students = Student.objects.get(id= request.user.student.id)
-            serializer = StudentCoursePassSerializer(Students, many=True)
-            return Response(serializer.data)
-        elif hasattr(request.user, 'EducationalAssistant'):
-            department = EducationalAssistant.objects.get(department)
-        elif hasattr(request.user, 'AdminUser'):
-            pass
 
-class TermCours(views.APIView):
+class StudentCoursesInProgress(generics.ListAPIView):
+    serializer_class = StudentCourseSerializer
     permission_classes = [IsAuthenticated,]
-    def get(self, request, format=None):
-        if hasattr(request.user, 'Teacher'):
-            Advisor = Teacher.objects.get(id= request.user.teacher.id)
-            students_of_teacher = Student.objects.filter(advisor=Advisor)
-            serializer = StudentCoursePassSerializer(students_of_teacher, many=True)
-            return Response(serializer.data)
-        elif hasattr(request.user, 'Student'):
-            Students = Student.objects.get(id= request.user.student.id)
-            serializer = StudentCoursePassSerializer(Students, many=True)
-            return Response(serializer.data)
-        elif hasattr(request.user, 'EducationalAssistant'):
-            department = EducationalAssistant.objects.get(department)
-        elif hasattr(request.user, 'AdminUser'):
-            pass
+    def get_queryset(self):
+        student_id = self.kwargs['student_id']
+        user = self.request.user
+        if int(student_id) == user.student.id:            
+            return StudentCourse.objects.filter(Q(student=student_id), Q(status='R'), Q(score__isnull=True) | Q(score__exact=''))
+
+        elif hasattr(user, 'teacher'):
+            students_with_advisor = Student.objects.filter(advisor=user.teacher)
+            try:
+                student_with_specific_id = students_with_advisor.get(id=student_id)
+            except Student.DoesNotExist:
+                raise ValidationError()
+            return StudentCourse.objects.filter(Q(student=student_id), Q(status='R'), Q(score__isnull=True) | Q(score__exact=''))
+        
+        elif hasattr(user, 'educationalassistant') :
+            student = Student.objects.get(id=student_id)  
+            department_of_student = student.major.department
+            if department_of_student == user.educationalassistant.field.department:
+                return StudentCourse.objects.filter(Q(student=student_id), Q(status='R'), Q(score__isnull=True) | Q(score__exact=''))
+            else:
+                raise ValidationError()
+        
+        elif hasattr(user, 'adminuser'):
+            return StudentCourse.objects.filter(Q(student=student_id), Q(status='R'), Q(score__isnull=True) | Q(score__exact=''))
+        
+        else:
+                raise ValidationError()
+
+
+class AcceptedStudentCourses(generics.ListAPIView):
+    serializer_class = StudentCourseSerializer
+    permission_classes = [IsAuthenticated,]
+
+    def get_queryset(self):
+        student_id = self.kwargs['student_id']
+        user = self.request.user
+        if int(student_id) == user.student.id:            
+            return StudentCourse.objects.filter(student=user.student, is_pass=True)        
+
+        elif hasattr(user, 'teacher'):
+            students_with_advisor = Student.objects.filter(advisor=user.teacher)
+            try:
+                student_with_specific_id = students_with_advisor.get(id=student_id)
+            except Student.DoesNotExist:
+                raise ValidationError()
+            return StudentCourse.objects.filter(student=user.student, is_pass=True)        
+        
+        elif hasattr(user, 'educationalassistant') :
+            student = Student.objects.get(id=student_id)  
+            department_of_student = student.major.department
+            if department_of_student == user.educationalassistant.field.department:
+                return StudentCourse.objects.filter(student=user.student, is_pass=True)        
+            else:
+                raise ValidationError()
+        
+        elif hasattr(user, 'adminuser'):
+            return StudentCourse.objects.filter(student=user.student, is_pass=True)        
+        else:
+                raise ValidationError()
+
+
+
+
+class List_prof_approved():
+    pass
+
+
+class detail_prof_approved():
+    pass
+
+
+class prof_approved():
+    pass
+
+
+
