@@ -48,13 +48,14 @@ class EmergencyRemovalRequest(models.Model):
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
     course = models.ForeignKey(StudentCourse, on_delete=models.SET_NULL , null =True)
+
     student_explanation = models.TextField()
     educational_assistant_explanation = models.TextField()
 
 
 class StudentDeleteSemesterRequest(models.Model):
     semester_registration_request = models.ForeignKey(
-        SemesterRegistrationRequest , on_delete=models.CASCADE)
+        SemesterRegistrationRequest , on_delete=models.SET_NULL, null=True)
     teacher_approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     educational_assistant_approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
