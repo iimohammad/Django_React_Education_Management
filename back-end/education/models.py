@@ -19,7 +19,7 @@ class Major(models.Model):
 
     major_name = models.CharField(max_length=30)
     major_code = models.PositiveSmallIntegerField()
-    department = models.ForeignKey(Department, on_delete=models.CASCADE)
+    department = models.ForeignKey(Department, on_delete=models.PROTECT)
     number_of_credits = models.PositiveIntegerField()
     level = models.CharField(
         max_length=1, choices=Level.choices, default=Level.BACHELOR)
@@ -30,12 +30,27 @@ class Major(models.Model):
 
 
 class Course(models.Model):
+    COURSE_TYPES = [
+        ('L', 'Laboratory'),
+        ('R', 'Research'),
+        ('I', 'Internship'),
+        ('A', 'Activity '),
+        ('G', 'General'),
+        ('B', 'Basic'),
+    ]
+    AVAILABLITY_TYPES = [
+        ('A', 'Available'),
+        ('D', 'Deleted'),
+    ]
     course_name = models.CharField(max_length=40)
     course_code = models.PositiveSmallIntegerField()
     department = models.ForeignKey(Department, on_delete=models.PROTECT)
-    major = models.ForeignKey(Major, on_delete=models.CASCADE)
+    major = models.ForeignKey(Major, on_delete=models.PROTECT)
     credit_num = models.PositiveSmallIntegerField()
-
+    course_type = models.CharField(
+        max_length=1, choices=COURSE_TYPES)
+    availablity = models.CharField(
+        max_length=1, choices=AVAILABLITY_TYPES)
     def __str__(self):
         return self.course_name
 
@@ -129,13 +144,12 @@ class Day(models.Model):
 
 class SemesterCourse(models.Model):
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
-    # course = models.ForeignKey(Course, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     class_days = models.ManyToManyField(Day)
     class_time_start = models.TimeField()
     class_time_end = models.TimeField()
-    exam_datetime = models.DateTimeField()
-    exam_location = models.CharField(max_length=100)
+    exam_datetime = models.DateTimeField(null=True , blank = True)
+    exam_location = models.CharField(max_length=100 , null=True , blank = True)
     instructor = models.ForeignKey(
         'accounts.Teacher', on_delete=models.PROTECT)
     course_capacity = models.PositiveSmallIntegerField()
@@ -143,7 +157,8 @@ class SemesterCourse(models.Model):
 
     @property
     def remain_course_capacity(self):
-        return self.course_capacity - StudentCourse.objects.filter(semester_course = self).count()
+        return self.course_capacity - StudentCourse.objects.filter(
+            semester_course = self).count()
 
     def __str__(self):
         return f"{self.course.course_name} - {self.semester.name}"
@@ -164,7 +179,7 @@ class StudentCourse(models.Model):
         (DELETED, 'Deleted'),
     ]
 
-    student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE)
+    student = models.ForeignKey('accounts.Student', on_delete=models.PROTECT)
     semester_course = models.ForeignKey(
         SemesterCourse, on_delete=models.PROTECT)
     status = models.CharField(
