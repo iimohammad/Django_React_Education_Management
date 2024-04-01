@@ -159,10 +159,10 @@ if DEBUG:
         'DEFAULT_AUTHENTICATION_CLASSES': (
             'rest_framework_simplejwt.authentication.JWTAuthentication',
             'rest_framework.authentication.TokenAuthentication',
-            'rest_framework.authentication.SessionAuthentication'
-        )
+            'rest_framework.authentication.SessionAuthentication',
+        ),
+        'EXCEPTION_HANDLER': 'utils.exceptions.custom_exception_handler'  
     }
-
 else:
     REST_FRAMEWORK = {
         'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -170,6 +170,7 @@ else:
             'rest_framework.authentication.TokenAuthentication'
         )
     }
+
 REST_FRAMEWORK['DEFAULT_SCHEMA_CLASS'] = 'drf_spectacular.openapi.AutoSchema'
 
 SPECTACULAR_SETTINGS = {
@@ -243,3 +244,34 @@ REDIS_DB = 0
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'common': {
+            'format': '%(asctime)s - %(levelname)s - %(message)s'
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'accounts.log'),
+            'formatter': 'common',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'accounts': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
