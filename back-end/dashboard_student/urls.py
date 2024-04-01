@@ -1,7 +1,7 @@
 from django.urls import path,include
 from rest_framework.routers import DefaultRouter
 from .views import EmergencyRemovalRequestAPIView, EmploymentEducationRequestApiView, EnrollmentRequestApiView, RevisionRequestAPIView, SemesterCourseViewSet , StudentCoursesViewSet, StudentDeleteSemesterRequestAPIView, \
-                    StudentExamsViewSet, StudentProfileViewset , \
+                    StudentExamsViewSet, StudentPassedCoursesViewSet, StudentProfileViewset , \
                     SemesterRegistrationRequestAPIView, UnitSelectionRequestAPIView
 # from .views import (StudentViewSet,
 #                     TeacherViewSet,
@@ -23,6 +23,8 @@ router = DefaultRouter()
 
 router.register('semester_courses' , SemesterCourseViewSet , basename='semestercourse')
 router.register('student_courses' , StudentCoursesViewSet , basename='studentcourses')
+router.register('passed_courses' , StudentPassedCoursesViewSet , 
+                basename='studentpassescourses')
 router.register('student_exams' , StudentExamsViewSet , basename='studentexams')
 router.register('semester_registration' , SemesterRegistrationRequestAPIView , 
                 basename='semesterregistation')

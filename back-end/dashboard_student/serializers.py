@@ -346,7 +346,6 @@ class RevisionRequestSerializer(serializers.ModelSerializer):
             student = student , course = course , text = validated_data['text'])
         
         return revision_request
-    
 class EmergencyRemovalRequestSerializer(serializers.ModelSerializer):
     course = StudentCourseSerializer()
     class Meta:
