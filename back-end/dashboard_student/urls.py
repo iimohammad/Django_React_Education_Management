@@ -1,6 +1,6 @@
 from django.urls import path,include
 from rest_framework.routers import DefaultRouter
-from .views import EmergencyRemovalRequestAPIView, RevisionRequestAPIView, SemesterCourseViewSet , StudentCoursesViewSet, StudentDeleteSemesterRequestAPIView, \
+from .views import EmergencyRemovalRequestAPIView, EmploymentEducationRequestApiView, EnrollmentRequestApiView, RevisionRequestAPIView, SemesterCourseViewSet , StudentCoursesViewSet, StudentDeleteSemesterRequestAPIView, \
                     StudentExamsViewSet, StudentProfileViewset , \
                     SemesterRegistrationRequestAPIView, UnitSelectionRequestAPIView
 # from .views import (StudentViewSet,
@@ -24,13 +24,18 @@ router = DefaultRouter()
 router.register('semester_courses' , SemesterCourseViewSet , basename='semestercourse')
 router.register('student_courses' , StudentCoursesViewSet , basename='studentcourses')
 router.register('student_exams' , StudentExamsViewSet , basename='studentexams')
-router.register('semester_registration' , SemesterRegistrationRequestAPIView , basename='semesterregistation')
+router.register('semester_registration' , SemesterRegistrationRequestAPIView , 
+                basename='semesterregistation')
 router.register('unit_selection' , UnitSelectionRequestAPIView , basename='unitselection')
 router.register('revision_request' , RevisionRequestAPIView , basename='revisionrequest')
 router.register('emergency_remove_request' , EmergencyRemovalRequestAPIView , 
                 basename='emergencyremoverequest')
 router.register('delete_semester_request' , StudentDeleteSemesterRequestAPIView , 
                 basename='deletesemesterrequest')
+router.register('enrollment_request' , EnrollmentRequestApiView , 
+                basename='enrollmentrequest')
+router.register('employment_education_request' , EmploymentEducationRequestApiView , 
+                basename='employmenteducationrequest')
 # router.register('profile' , StudentProfileViewset , basename='profile')
 
 
