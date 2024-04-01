@@ -2,9 +2,9 @@ from rest_framework import serializers
 from education.models import SemesterClass, SemesterCourse , Semester , Department , \
                                 Course , StudentCourse
 from accounts.models import Student, Teacher , User
-from .models import SemesterRegistrationRequest , RevisionRequest , AddRemoveRequest , \
+from .models import SemesterRegistrationRequest , RevisionRequest , \
                     EnrollmentRequest , EmergencyRemovalRequest , StudentDeleteSemesterRequest , \
-                    EmploymentEducationRequest
+                    EmploymentEducationRequest , UniversityAddRemoveRequest
 from django.utils import timezone
 
 
@@ -141,3 +141,107 @@ class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
         semester_registration_request = SemesterRegistrationRequest.objects.create(semester=semester_instance, student = student)
 
         return semester_registration_request
+    
+class AddRemoveRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentCourse
+        fields = ['name']
+
+class AddRemoveRequestSerializer(serializers.ModelSerializer):
+    StudentCourse = AddRemoveRequestSerializer()
+    class Meta:
+        model = UniversityAddRemoveRequest
+        fields = ['id', 'student', 'approval_status', 'created_at', 'semester', 'added_universities', 'removed_universities']
+        read_only_fields = ['id', 'approval_status', 'created_at']
+
+    def create(self, validated_data):
+        user = self.context['request'].user  # دریافت کاربری که درخواست را ارسال کرده است
+        semester = validated_data.get('semester')
+        added_universities = validated_data.get('added_universities', [])
+        removed_universities = validated_data.get('removed_universities', [])
+
+        try:
+            # Check the end date of the semester  
+
+            if semester.end_date < timezone.now().date():
+                raise serializers.ValidationError("This semester has ended!")
+
+            # Checking the account settlement before starting to delete and add 
+
+            if semester.start_date < timezone.now().date():
+                raise serializers.ValidationError("Financial clearance must be completed before add/remove")
+            
+            # Checking that deletion and addition are done after selecting the unit   
+
+            if semester.unit_selection_end < timezone.now().date():
+                raise serializers.ValidationError("Add/remove must be done after unit selection")
+
+            # Checking the number of units
+            
+            total_units = sum(course.units for course in added_universities)
+            if total_units > 6:
+                raise serializers.ValidationError("Maximum 6 units can be added")
+
+            # Check repeated lessons   
+               
+            course_codes = [course.code for course in added_universities]
+            if len(set(course_codes)) != len(course_codes):
+                raise serializers.ValidationError("Duplicate courses are not allowed")
+
+            # Create request
+          
+            request = UniversityAddRemoveRequest.objects.create(student=user, **validated_data)
+            return request
+
+        except serializers.ValidationError as e:
+            raise e
+        except Exception as e:
+            raise serializers.ValidationError("An error occurred while processing your request. Please try again later.")
+        
+
+
+
+
+class RevisionRequestSerializer(serializers.ModelSerializer):
+    course = StudentCourseSerializer()
+    class Meta:
+        model = RevisionRequest
+        fields = ['id', 'course' ,'approval_status',
+                    'created_at' , 'text', 'answer']
+        
+        read_only_fields = ['id','course' ,'approval_status',
+                    'created_at' , 'answer' ]
+    
+    def get_fields(self):
+        fields = super().get_fields()
+
+        if self.context.get('request') and self.context['request'].method == 'POST':
+            fields['course'] = serializers.IntegerField()
+            
+        return fields
+    
+    def create(self, validated_data):
+        student_course_pk = validated_data.get('course')
+        user = self.context['user']
+        try:
+            student = Student.objects.get(user = user)
+        except:
+            raise serializers.ValidationError("Invalid student")
+        
+        try:
+            course = StudentCourse.objects.get(pk = student_course_pk , student = student)
+        except Exception:
+            raise serializers.ValidationError("Invalid course")
+
+        existing_request = RevisionRequest.objects.filter(
+                course=course, student=student ,approval_status = 'P').first()
+        
+        if existing_request!=None:
+            raise serializers.ValidationError("A registration request for this semester already exists")
+
+        
+        validated_data['course'] = course
+        revision_request = RevisionRequest.objects.create(
+            student = student , course = course , text = validated_data['text'])
+        
+        return revision_request
