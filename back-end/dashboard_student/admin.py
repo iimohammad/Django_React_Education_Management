@@ -18,19 +18,19 @@ class RevisionRequestAdmin(admin.ModelAdmin):
 
 admin.site.register(RevisionRequest, RevisionRequestAdmin)
 
-class AddRemoveRequestAdmin(admin.ModelAdmin):
-    list_display = ('semester', 'approval_status',
-                    'student', 'created_at', 
-                    'added_universities', 'removed_universities ')
-    search_fields = (' added_universities',
-                     'removed_universities ')
-    search_help_text = "Search in: Student Explanation, Educational Assistant Explanation"
-    save_as = True
-    list_per_page = 10
-    list_max_show_all = 50
+# class AddRemoveRequestAdmin(admin.ModelAdmin):
+#     list_display = ('semester', 'approval_status',
+#                     'student', 'created_at', 
+#                     'added_universities', 'removed_universities ')
+#     search_fields = (' added_universities',
+#                      'removed_universities ')
+#     search_help_text = "Search in: Student Explanation, Educational Assistant Explanation"
+#     save_as = True
+#     list_per_page = 10
+#     list_max_show_all = 50
 
 
-admin.site.register(AddRemoveRequest,AddRemoveRequestAdmin)
+# admin.site.register(AddRemoveRequest,AddRemoveRequestAdmin)
 
 
 

@@ -3,12 +3,10 @@ from education.models import Day, Major, Prerequisite, Requisite, SemesterClass,
                                 Course , StudentCourse
 from accounts.models import Student, Teacher , User
 from .models import SemesterRegistrationRequest , RevisionRequest , \
-                    EnrollmentRequest , EmergencyRemovalRequest , StudentDeleteSemesterRequest , \
-<<<<<<< HEAD
-                    EmploymentEducationRequest , UniversityAddRemoveRequest
-=======
+                    EnrollmentRequest , EmergencyRemovalRequest , StudentDeleteSemesterRequest ,\
+                    EmploymentEducationRequest , AddRemoveRequest,\
                     EmploymentEducationRequest, UnitSelectionRequest
->>>>>>> 53050bb1abc082ee851f380311fbbf022733a20e
+
 from django.utils import timezone
 from rest_framework.exceptions import NotFound
 
@@ -171,7 +169,6 @@ class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
         semester_registration_request = SemesterRegistrationRequest.objects.create(semester=semester_instance, student = student)
 
         return semester_registration_request
-<<<<<<< HEAD
     
 class AddRemoveRequestSerializer(serializers.ModelSerializer):
     class Meta:
@@ -181,7 +178,7 @@ class AddRemoveRequestSerializer(serializers.ModelSerializer):
 class AddRemoveRequestSerializer(serializers.ModelSerializer):
     StudentCourse = AddRemoveRequestSerializer()
     class Meta:
-        model = UniversityAddRemoveRequest
+        model = AddRemoveRequest
         fields = ['id', 'student', 'approval_status', 'created_at', 'semester', 'added_universities', 'removed_universities']
         read_only_fields = ['id', 'approval_status', 'created_at']
 
@@ -221,7 +218,7 @@ class AddRemoveRequestSerializer(serializers.ModelSerializer):
 
             # Create request
           
-            request = UniversityAddRemoveRequest.objects.create(student=user, **validated_data)
+            request = AddRemoveRequest.objects.create(student=user, **validated_data)
             return request
 
         except serializers.ValidationError as e:
@@ -229,9 +226,6 @@ class AddRemoveRequestSerializer(serializers.ModelSerializer):
         except Exception as e:
             raise serializers.ValidationError("An error occurred while processing your request. Please try again later.")
         
-
-
-=======
 
 class UnitSelectionSemesterRegistrationRequestSerializer(serializers.ModelSerializer):
     class Meta:
@@ -368,7 +362,7 @@ class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
                 student_explanations = validated_data.get('student_explanations')
                 )
         return student_delete_semester_request
->>>>>>> 53050bb1abc082ee851f380311fbbf022733a20e
+
 
 
 class RevisionRequestSerializer(serializers.ModelSerializer):
@@ -414,8 +408,6 @@ class RevisionRequestSerializer(serializers.ModelSerializer):
             student = student , course = course , text = validated_data['text'])
         
         return revision_request
-<<<<<<< HEAD
-=======
     
 class EmergencyRemovalRequestSerializer(serializers.ModelSerializer):
     course = StudentCourseSerializer()
@@ -469,4 +461,3 @@ class EmergencyRemovalRequestSerializer(serializers.ModelSerializer):
             student_explanation = validated_data['student_explanation'])
         
         return emergency_removal_request
->>>>>>> 53050bb1abc082ee851f380311fbbf022733a20e

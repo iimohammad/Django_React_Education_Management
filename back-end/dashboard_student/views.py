@@ -8,19 +8,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .serializers import EmergencyRemovalRequestSerializer, ExamStudentCourseSerializer, ProfileStudentSerializer, RevisionRequestSerializer, \
                         SemesterCourseSerializer, SemesterRegistrationRequestSerializer , \
-<<<<<<< HEAD
-                        StudentCourseSerializer , RevisionRequestSerializer , AddRemoveRequestSerializer
-from education.models import SemesterCourse , StudentCourse
-from .models import SemesterRegistrationRequest , RevisionRequest , AddRemoveRequest , \
-                    EnrollmentRequest , EmergencyRemovalRequest , StudentDeleteSemesterRequest , \
-                    EmploymentEducationRequest 
-=======
                         StudentCourseSerializer, StudentDeleteSemesterRequestSerializer, UnitSelectionRequestSerializer
 from education.models import SemesterCourse , StudentCourse
 from .models import SemesterRegistrationRequest , RevisionRequest , AddRemoveRequest , \
                     EnrollmentRequest , EmergencyRemovalRequest , StudentDeleteSemesterRequest , \
                     EmploymentEducationRequest, UnitSelectionRequest
->>>>>>> 53050bb1abc082ee851f380311fbbf022733a20e
 from .filters import SemesterCourseFilter , StudentCourseFilter, StudentExamFilter
 from .pagination import DefaultPagination
 from django.http import Http404
@@ -150,60 +142,6 @@ class SemesterRegistrationRequestAPIView(mixins.CreateModelMixin,
                 {'message': 'your request has been answered and you can not delete it.'}
                 , status=status.HTTP_403_FORBIDDEN)
         self.perform_destroy(instance)
-<<<<<<< HEAD
-        return instance
-    
-class AddRemoveRequestAPIView(mixins.CreateModelMixin,
-                                       mixins.DestroyModelMixin,
-                                       viewsets.GenericViewSet):
-    serializer_class = SemesterRegistrationRequestSerializer
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    permission_classes = [IsAuthenticated,IsStudent]
-    search_fields = ['created_at']  
-    ordering_fields = ['created_at', 'approval_status']
-
-    def get_queryset(self):
-        return AddRemoveRequestSerializer.objects.filter(student__user=self.request.user)
-
-    def perform_create(self, serializer):
-
-        # بررسی اجازه انجام درخواست بر اساس نکات ارائه شده
-        semester = serializer.validated_data.get('semester')
-        added_universities = serializer.validated_data.get('added_universities', [])
-        removed_universities = serializer.validated_data.get('removed_universities', [])
-
-        # بررسی تسویه مالی
-        if semester.start_date < timezone.now().date():
-            raise PermissionDenied("Financial clearance must be completed before add/remove")
-
-        # بررسی انجام درخواست بعد از انتخاب واحد
-        if semester.unit_selection_end > timezone.now().date():
-            raise PermissionDenied("Add/remove must be done after unit selection")
-
-        # بررسی سقف واحدهای اضافه/حذف
-        total_units = sum(course.units for course in added_universities)
-        if total_units > 6:
-            raise PermissionDenied("Maximum 6 units can be added")
-
-        # بررسی بازه زمانی مورد نظر
-        if not (semester.start_date < timezone.now().date() < semester.end_date):
-            raise PermissionDenied("The request should be made within the specified time frame")
-
-        # ایجاد درخواست
-        serializer.save(student=self.request.user)
-
-    def destroy(self, request, *args, **kwargs):
-        try:
-            instance = self.get_object()
-        except Http404:
-            raise Http404()
-
-        if instance.approval_status != 'P':
-            return Response({'message': 'Your request has been answered and you cannot delete it.'},
-                            status=status.HTTP_403_FORBIDDEN)
-
-=======
         return Response({'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
     
 class UnitSelectionRequestAPIView(mixins.CreateModelMixin,
@@ -257,15 +195,9 @@ class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
             return Response(
                 {'message': 'your request has been answered and you can not delete it.'}
                 , status=status.HTTP_403_FORBIDDEN)
->>>>>>> 53050bb1abc082ee851f380311fbbf022733a20e
         self.perform_destroy(instance)
         return Response({'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
     
-
-<<<<<<< HEAD
-=======
-    
->>>>>>> 53050bb1abc082ee851f380311fbbf022733a20e
 class RevisionRequestAPIView(mixins.CreateModelMixin,
                    mixins.RetrieveModelMixin,
                    mixins.DestroyModelMixin,
@@ -290,8 +222,6 @@ class RevisionRequestAPIView(mixins.CreateModelMixin,
                 {'message': 'your request has been answered and you can not delete it.'}
                 , status=status.HTTP_403_FORBIDDEN)
         self.perform_destroy(instance)
-<<<<<<< HEAD
-=======
         return Response({'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
     
 class EmergencyRemovalRequestAPIView(mixins.CreateModelMixin,
@@ -318,5 +248,4 @@ class EmergencyRemovalRequestAPIView(mixins.CreateModelMixin,
                 {'message': 'your request has been answered and you can not delete it.'}
                 , status=status.HTTP_403_FORBIDDEN)
         self.perform_destroy(instance)
->>>>>>> 53050bb1abc082ee851f380311fbbf022733a20e
         return Response({'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)

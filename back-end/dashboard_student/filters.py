@@ -30,11 +30,11 @@ class StudentExamFilter(FilterSet):
             'semester_course__course__course_name': ['contains'],
             'semester_course__semester__name': ['contains'],
         }
-
-class UniversityAddRemoveRequestFilter(FilterSet):
-    class Meta:
-        model = SemesterCourse
-        fields = {
-            'semester_course__course__course_name': ['contains'],
-            'semester_course__semester__name': ['contains'],
-        }
+# 
+# class AddRemoveRequestFilter(FilterSet):
+#     class Meta:
+#         model = SemesterCourse
+#         fields = {
+#             'semester_course__course__course_name': ['contains'],
+#             'semester_course__semester__name': ['contains'],
+#         }

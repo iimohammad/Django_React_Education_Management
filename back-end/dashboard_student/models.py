@@ -91,7 +91,6 @@ class EmploymentEducationRequest(models.Model):
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
 
-<<<<<<< HEAD
 
 class RemoveDuplicateRequest(models.Model):
     semester_registration_request = models.ForeignKey(
@@ -109,7 +108,3 @@ class CourseModificationRequest(models.Model):
     semester = models.ForeignKey(Semester, on_delete=models.PROTECT)
     modified_courses = models.ManyToManyField(SemesterCourse, related_name='modified_courses')
     reason_text = models.TextField(blank=False)
-=======
-    def __str__(self) -> str:
-        return f"{self.student.user.first_name} {self.student.user.last_name}"
->>>>>>> 53050bb1abc082ee851f380311fbbf022733a20e
