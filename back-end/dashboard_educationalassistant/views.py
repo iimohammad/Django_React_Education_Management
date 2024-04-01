@@ -111,7 +111,7 @@ class AcceptedStudentCourses(generics.ListAPIView):
             try:
                 student_with_specific_id = students_with_advisor.get(id=student_id)
             except Student.DoesNotExist:
-                raise ValidationError()
+                raise ValidationError("You don't have access.")
             return StudentCourse.objects.filter(student=user.student, is_pass=True)        
         
         elif hasattr(user, 'educationalassistant') :
@@ -120,12 +120,12 @@ class AcceptedStudentCourses(generics.ListAPIView):
             if department_of_student == user.educationalassistant.field.department:
                 return StudentCourse.objects.filter(student=user.student, is_pass=True)        
             else:
-                raise ValidationError()
+                raise ValidationError("You don't have access.")
         
         elif hasattr(user, 'adminuser'):
             return StudentCourse.objects.filter(student=user.student, is_pass=True)        
         else:
-                raise ValidationError()
+                raise ValidationError("You don't have access.")
 
 
 
