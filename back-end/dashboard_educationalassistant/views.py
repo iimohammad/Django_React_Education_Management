@@ -1,5 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, viewsets, status
+from rest_framework import generics, viewsets, status, views
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -19,6 +19,13 @@ from .filters import (
                      )
 from .pagination import DefaultPagination
 from .permissions import IsEducationalAssistant
+from .serializers import StudentSerializer, TeacherSerializer, EducationalAssistantSerializer, StudentCoursePassSerializer
+from accounts.serializers import UserProfileImageUpdateSerializer
+from rest_framework.response import Response
+from rest_framework import views, status
+
+
+
 from .serializers import (
                             StudentSerializer,
                             TeacherSerializer,
@@ -83,6 +90,48 @@ class TeacherApiView(generics.RetrieveAPIView):
     serializer_class = TeacherSerializer
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
 
+
+class EducationalAssistantChangeProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = EducationalAssistantSerializer
+    permission_classes = [IsAuthenticated, IsEducationalAssistant]
+
+    def get_object(self):
+        return EducationalAssistant.objects.filter(user = self.request.user)
+    
+
+class CoursPass(views.APIview):
+    permission_classes = [IsAuthenticated,]
+    def get(self, request, format=None):
+        if hasattr(request.user, 'Teacher'):
+            Advisor = Teacher.objects.get(id= request.user.teacher.id)
+            students_of_teacher = Student.objects.filter(advisor=Advisor)
+            serializer = StudentCoursePassSerializer(students_of_teacher, many=True)
+            return Response(serializer.data)
+        elif hasattr(request.user, 'Student'):
+            Students = Student.objects.get(id= request.user.student.id)
+            serializer = StudentCoursePassSerializer(Students, many=True)
+            return Response(serializer.data)
+        elif hasattr(request.user, 'EducationalAssistant'):
+            department = EducationalAssistant.objects.get(department)
+        elif hasattr(request.user, 'AdminUser'):
+            pass
+
+class TermCours(views.APIView):
+    permission_classes = [IsAuthenticated,]
+    def get(self, request, format=None):
+        if hasattr(request.user, 'Teacher'):
+            Advisor = Teacher.objects.get(id= request.user.teacher.id)
+            students_of_teacher = Student.objects.filter(advisor=Advisor)
+            serializer = StudentCoursePassSerializer(students_of_teacher, many=True)
+            return Response(serializer.data)
+        elif hasattr(request.user, 'Student'):
+            Students = Student.objects.get(id= request.user.student.id)
+            serializer = StudentCoursePassSerializer(Students, many=True)
+            return Response(serializer.data)
+        elif hasattr(request.user, 'EducationalAssistant'):
+            department = EducationalAssistant.objects.get(department)
+        elif hasattr(request.user, 'AdminUser'):
+            pass
 
 class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseSerializer
