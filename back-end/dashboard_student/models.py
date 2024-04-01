@@ -21,8 +21,6 @@ class SemesterRegistrationRequest(models.Model):
         return f"{self.student.user.first_name} {self.student.user.last_name} - \
             {self.semester.name}"
 
-    
-
 class UnitSelectionRequest(models.Model):
     semester_registration_request = models.OneToOneField(
         SemesterRegistrationRequest , on_delete=models.PROTECT)
@@ -39,7 +37,6 @@ class AddRemoveRequest(models.Model):
     removed_courses = models.ManyToManyField(StudentCourse, related_name='removed_courses')
     added_courses = models.ManyToManyField(SemesterCourse, related_name='added_courses')
 
-
 class RevisionRequest(models.Model):
     student = models.ForeignKey(Student, on_delete=models.PROTECT)
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
@@ -53,8 +50,7 @@ class EmergencyRemovalRequest(models.Model):
     student = models.ForeignKey(Student, on_delete=models.PROTECT)
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
-    course = models.ForeignKey(StudentCourse, on_delete=models.SET_NULL, null=True)
- 
+    course = models.ForeignKey(StudentCourse, on_delete=models.PROTECT, null=True)
     student_explanation = models.TextField()
     educational_assistant_explanation = models.TextField()
 
@@ -65,9 +61,11 @@ class EmergencyRemovalRequest(models.Model):
 
 class StudentDeleteSemesterRequest(models.Model):
     semester_registration_request = models.ForeignKey(
-        SemesterRegistrationRequest , on_delete=models.SET_NULL, null=True)
-    teacher_approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
-    educational_assistant_approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
+        SemesterRegistrationRequest , on_delete=models.PROTECT, null=True)
+    teacher_approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, 
+                                               default='P')
+    educational_assistant_approval_status = models.CharField(max_length=1, 
+                                            choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
     student_explanations = models.TextField()
     educational_assistant_explanation = models.TextField()
