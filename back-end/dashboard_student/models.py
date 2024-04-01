@@ -53,8 +53,8 @@ class EmergencyRemovalRequest(models.Model):
     student = models.ForeignKey(Student, on_delete=models.PROTECT)
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
-    course = models.ForeignKey(StudentCourse, on_delete=models.SET_NULL , null =True)
-
+    course = models.ForeignKey(StudentCourse, on_delete=models.SET_NULL, null=True)
+ 
     student_explanation = models.TextField()
     educational_assistant_explanation = models.TextField()
 

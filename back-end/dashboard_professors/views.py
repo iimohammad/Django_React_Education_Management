@@ -13,6 +13,8 @@ from accounts.serializers import StudentSerializer, UserProfileImageUpdateSerial
 from rest_framework.generics import RetrieveAPIView, UpdateAPIView
 from rest_framework import generics
 from rest_framework.mixins import ListModelMixin
+
+
 class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated, IsTeacher]
     serializer_class = ShowSemestersSerializers
@@ -29,7 +31,7 @@ class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
         course_serializer = SemesterCourseSerializer(courses, many=True)
 
         return Response({'semester': serializer.data,
-                        'courses': course_serializer.data})
+                         'courses': course_serializer.data})
 
 
 class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -108,14 +110,13 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class ShowProfileAPIView(RetrieveAPIView):
     serializer_class = TeacherSerializer
     permission_classes = [IsAuthenticated]  # Assuming IsTeacher permission is checked inside serializer
-    
+
     def get_object(self):
         user = self.request.user
-        
+
         try:
             # Get the teacher instance associated with the current user
             teacher = Teacher.objects.get(user=user)
@@ -128,14 +129,15 @@ class ShowProfileAPIView(RetrieveAPIView):
         instance = self.get_object()
         if instance is None:
             return Response({'error': 'User is not a teacher'}, status=404)
-        
+
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
 
 class UserProfileImageView(UpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserProfileImageUpdateSerializer
-    permission_classes = [IsAuthenticated,IsTeacher]
+    permission_classes = [IsAuthenticated, IsTeacher]
 
     def get_object(self):
         return self.request.user
@@ -147,23 +149,22 @@ class UserProfileImageView(UpdateAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
-    
+
+
 class ShowMyStudentsVeiw(generics.GenericAPIView, ListModelMixin):
     serializer_class = StudentSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
-    
+
     def get_queryset(self):
         if isinstance(self.request.user, User):
             user_id = self.request.user
         else:
             user_id = self.request.user.id
-            
-        return Student.objects.filter(advisor__user=user_id)
-    
 
+        return Student.objects.filter(advisor__user=user_id)
 
 
 class UnitSelectionRequestShows(generics.ListCreateAPIView):

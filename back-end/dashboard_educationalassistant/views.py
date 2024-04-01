@@ -9,32 +9,31 @@ from education.models import Course, SemesterCourse, Major
 from dashboard_student.models import EmergencyRemovalRequest, StudentDeleteSemesterRequest, EmploymentEducationRequest
 
 from .filters import (
-                        StudentFilter,
-                        TeacherFilter,
-                        CourseFilter,
-                        SemesterCourseFilter,
-                        EmergencyRemovalRequestFilter,
-                        StudentDeleteSemesterRequestFilter,
-                        EmploymentEducationRequestFilter,
-                     )
+    StudentFilter,
+    TeacherFilter,
+    CourseFilter,
+    SemesterCourseFilter,
+    EmergencyRemovalRequestFilter,
+    StudentDeleteSemesterRequestFilter,
+    EmploymentEducationRequestFilter,
+)
 from .pagination import DefaultPagination
 from .permissions import IsEducationalAssistant
-from .serializers import StudentSerializer, TeacherSerializer, EducationalAssistantSerializer, StudentCoursePassSerializer
+from .serializers import StudentSerializer, TeacherSerializer, EducationalAssistantSerializer, \
+    StudentCoursePassSerializer
 from accounts.serializers import UserProfileImageUpdateSerializer
 from rest_framework.response import Response
 from rest_framework import views, status
 
-
-
 from .serializers import (
-                            StudentSerializer,
-                            TeacherSerializer,
-                            CourseSerializer,
-                            SemesterCourseSerializer,
-                            EmergencyRemovalRequestSerializer,
-                            StudentDeleteSemesterRequestSerializer,
-                            EmploymentEducationRequestSerializer,
-                         )
+    StudentSerializer,
+    TeacherSerializer,
+    CourseSerializer,
+    SemesterCourseSerializer,
+    EmergencyRemovalRequestSerializer,
+    StudentDeleteSemesterRequestSerializer,
+    EmploymentEducationRequestSerializer,
+)
 
 
 class StudentViewSet(viewsets.ReadOnlyModelViewSet):
@@ -96,19 +95,19 @@ class EducationalAssistantChangeProfileView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
 
     def get_object(self):
-        return EducationalAssistant.objects.filter(user = self.request.user)
-    
+        return EducationalAssistant.objects.filter(user=self.request.user)
+
 
 class CoursPass(views.APIView):
     permission_classes = [IsAuthenticated,]
     def get(self, request, format=None):
         if hasattr(request.user, 'Teacher'):
-            Advisor = Teacher.objects.get(id= request.user.teacher.id)
+            Advisor = Teacher.objects.get(id=request.user.teacher.id)
             students_of_teacher = Student.objects.filter(advisor=Advisor)
             serializer = StudentCoursePassSerializer(students_of_teacher, many=True)
             return Response(serializer.data)
         elif hasattr(request.user, 'Student'):
-            Students = Student.objects.get(id= request.user.student.id)
+            Students = Student.objects.get(id=request.user.student.id)
             serializer = StudentCoursePassSerializer(Students, many=True)
             return Response(serializer.data)
         elif hasattr(request.user, 'EducationalAssistant'):
@@ -116,22 +115,25 @@ class CoursPass(views.APIView):
         elif hasattr(request.user, 'AdminUser'):
             pass
 
+
 class TermCours(views.APIView):
-    permission_classes = [IsAuthenticated,]
+    permission_classes = [IsAuthenticated, ]
+
     def get(self, request, format=None):
         if hasattr(request.user, 'Teacher'):
-            Advisor = Teacher.objects.get(id= request.user.teacher.id)
+            Advisor = Teacher.objects.get(id=request.user.teacher.id)
             students_of_teacher = Student.objects.filter(advisor=Advisor)
             serializer = StudentCoursePassSerializer(students_of_teacher, many=True)
             return Response(serializer.data)
         elif hasattr(request.user, 'Student'):
-            Students = Student.objects.get(id= request.user.student.id)
+            Students = Student.objects.get(id=request.user.student.id)
             serializer = StudentCoursePassSerializer(Students, many=True)
             return Response(serializer.data)
         elif hasattr(request.user, 'EducationalAssistant'):
             department = EducationalAssistant.objects.get(department)
         elif hasattr(request.user, 'AdminUser'):
             pass
+
 
 class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseSerializer
@@ -151,7 +153,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         )
 
         return queryset
-    
+
     def create(self, request, *args, **kwargs):
         educational_assistant = request.user.educationalassistant
         semester_data = request.data
@@ -167,7 +169,7 @@ class CourseViewSet(viewsets.ModelViewSet):
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
                 return Response({'detail':
-                    'You can only create courses relevant to your department and major.'},
+                                     'You can only create courses relevant to your department and major.'},
                                 status=status.HTTP_403_FORBIDDEN)
         except Major.DoesNotExist:
             return Response({'detail': 'Invalid major ID provided.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -191,7 +193,7 @@ class SemesterCourseViewSet(viewsets.ModelViewSet):
         )
 
         return queryset
-    
+
     def create(self, request, *args, **kwargs):
         educational_assistant = request.user.educationalassistant
         semester_data = request.data
@@ -207,7 +209,7 @@ class SemesterCourseViewSet(viewsets.ModelViewSet):
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
                 return Response({'detail':
-                    'You can only create semester courses relevant to your department and major.'},
+                                     'You can only create semester courses relevant to your department and major.'},
                                 status=status.HTTP_403_FORBIDDEN)
         except Course.DoesNotExist:
             return Response({'detail': 'Invalid course ID provided.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -225,7 +227,7 @@ class EmergencyRemovalRequestViewSet(viewsets.ModelViewSet):
         educational_assistant = self.request.user.educationalassistant
 
         queryset = EmergencyRemovalRequest.objects.filter(
-            approval_status = 'P',
+            approval_status='P',
             student__major=educational_assistant.field
         )
 
@@ -256,8 +258,8 @@ class StudentDeleteSemesterRequestViewSet(viewsets.ModelViewSet):
         educational_assistant = self.request.user.educationalassistant
 
         queryset = StudentDeleteSemesterRequest.objects.filter(
-            teacher_approval_status = 'A',
-            educational_assistant_approval_status = 'P',
+            teacher_approval_status='A',
+            educational_assistant_approval_status='P',
             semester_registration_request__student__major=educational_assistant.field
         )
 
@@ -288,8 +290,8 @@ class EmploymentEducationRequestViewSet(viewsets.ModelViewSet):
         educational_assistant = self.request.user.educationalassistant
 
         queryset = EmploymentEducationRequest.objects.filter(
-            approval_status = 'P',
-            student__major = educational_assistant.field
+            approval_status='P',
+            student__major=educational_assistant.field
         )
 
         return queryset
