@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from accounts.models import Student, Teacher, User, EducationalAssistant
-from education.models import Department, Major, StudentCourse
+from education.models import Department, Major, StudentCourse, SemesterCourse
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -85,3 +85,10 @@ class StudentCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentCourse
         fields = ['course_name', 'semester_name', 'status', 'score', 'is_pass']
+
+class SemesterCourseSerializer(serializers.ModelSerializer):
+    course_name = serializers.CharField(source='course.course_name')
+
+    class Meta:
+        model = SemesterCourse
+        fields = ['id', 'course_name', 'score']
