@@ -42,6 +42,15 @@ class StudentViewSet(viewsets.ReadOnlyModelViewSet):
                      ]
     ordering_fields = ['entry_semester']
 
+    def get_queryset(self):
+        educational_assistant = self.request.user.educationalassistant
+
+        queryset = Student.objects.filter(
+            major=educational_assistant.field
+        )
+
+        return queryset
+
 
 class StudentApiView(generics.RetrieveAPIView):
     queryset = Student.objects.all()
@@ -58,6 +67,15 @@ class TeacherViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
     search_fields = ['title', 'description']
     ordering_fields = ['entry_semester']
+
+    def get_queryset(self):
+        educational_assistant = self.request.user.educationalassistant
+
+        queryset = Teacher.objects.filter(
+            department=educational_assistant.field.department
+        )
+
+        return queryset
 
 
 class TeacherApiView(generics.RetrieveAPIView):
@@ -164,20 +182,6 @@ class EmergencyRemovalRequestViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    def update(self, request, *args, **kwargs):
-        """
-        Custom update method that executes after a successful PUT request.
-        """
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        updated_instance = serializer.save()
-
-        # Perform additional actions here (e.g., send notifications, log changes, etc.)
-        # ...
-
-        return Response(serializer.data)
-
     def create(self, request, *args, **kwargs):
         """
         Disallow POST requests.
@@ -210,20 +214,6 @@ class StudentDeleteSemesterRequestViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    def update(self, request, *args, **kwargs):
-        """
-        Custom update method that executes after a successful PUT request.
-        """
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        updated_instance = serializer.save()
-
-        # Perform additional actions here (e.g., send notifications, log changes, etc.)
-        # ...
-
-        return Response(serializer.data)
-
     def create(self, request, *args, **kwargs):
         """
         Disallow POST requests.
@@ -254,20 +244,6 @@ class EmploymentEducationRequestViewSet(viewsets.ModelViewSet):
         )
 
         return queryset
-
-    def update(self, request, *args, **kwargs):
-        """
-        Custom update method that executes after a successful PUT request.
-        """
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        updated_instance = serializer.save()
-
-        # Perform additional actions here (e.g., send notifications, log changes, etc.)
-        # ...
-
-        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         """
