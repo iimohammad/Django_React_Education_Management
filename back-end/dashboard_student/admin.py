@@ -33,8 +33,6 @@ admin.site.register(RevisionRequest, RevisionRequestAdmin)
 # admin.site.register(AddRemoveRequest,AddRemoveRequestAdmin)
 
 
-
-
 class EmergencyRemovalRequestAdmin(admin.ModelAdmin):
     list_display = ('course', 'student_explanation',
                     'educational_assistant_explanation')
@@ -73,5 +71,6 @@ class EnrollmentRequestAdmin(admin.ModelAdmin):
     save_as = True
     list_per_page = 10
     list_max_show_all = 50
+
 
 admin.site.register(EnrollmentRequest, EnrollmentRequestAdmin)
