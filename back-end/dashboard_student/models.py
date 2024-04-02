@@ -16,6 +16,9 @@ class SemesterRegistrationRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add = True)
 
     semester = models.ForeignKey(Semester , on_delete = models.PROTECT)
+    requested_courses = models.ManyToManyField(
+        SemesterCourse, verbose_name='Requested_courses' , 
+        blank=True)
 
     def __str__(self):
         return f"{self.student.user.first_name} {self.student.user.last_name} - \
@@ -26,7 +29,9 @@ class UnitSelectionRequest(models.Model):
         SemesterRegistrationRequest , on_delete=models.PROTECT)
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
-    requested_courses = models.ManyToManyField(SemesterCourse, verbose_name='Requested_courses' )
+    requested_courses = models.ManyToManyField(
+        SemesterCourse, verbose_name='Requested_courses',
+        blank=True)
 
 
 class AddRemoveRequest(models.Model):
