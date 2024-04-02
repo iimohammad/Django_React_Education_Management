@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from dashboard_student.models import AddRemoveRequest, EmergencyRemovalRequest, EnrollmentRequest, RevisionRequest, SemesterRegistrationRequest, StudentDeleteSemesterRequest
 from education.models import Course, Semester, SemesterCourse
-from dashboard_student import (
+from dashboard_student.models import (
     UnitSelectionRequest,
     )
 
