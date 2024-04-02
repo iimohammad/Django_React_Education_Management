@@ -1,0 +1,11 @@
+id,password,username,first_name,last_name,email,is_staff,user_number,national_code,birthday,phone,address,gender
+2,pbkdf2_sha256$600000$ZS1ySRm9XEFvyVPEjCGBQ8$DI4Oi4PUllv8Gbo5ReUgHuPw1ozxbUdwaYgwRJJExt0=,ArmanFar,Arman,Farahani,armanam@gmail.com,1,12,343874532,6/9/2012,9043453453,"Tehran, South Dibaji St.",M
+3,pbkdf2_sha256$600000$hsuntZOP8INXgGezGxepqO$cFPA5Q8/FWPQPJQpKfsUvxi06xy0nEyQlBvgRJZQJJg=,HamidFar,Hamid,Farahani,hamidraf1341@yahoo.com,1,8,165241557,7/23/1964,9120978797,"Tehran, South Dibaji St.",M
+4,pbkdf2_sha256$600000$CVJQf3fXZDxejsjEmw6EsP$161IKtwOcxjiRNw2rE0tMPN+m7x0/xfbf7O8p0P0DBs=,AkbarPad,Akbar,Padisar,akpadis33@hotmail.com,0,5,140650344,3/10/1961,9121234567,"Tehran, Farmanieh, Andarzgoo St.",M
+5,pbkdf2_sha256$600000$RjEHdBGg6IcjwoKcG4YEr8$eySO78PdpbNj9UEerVQjJmBXDIQgd+Eyfbt+ng9awZc=,AdelFer,Adel,Ferdosipoor,Adelefrosipur@yahoo.com,0,22,12132341,10/28/1979,9121962751,"Tehran, Ajoudanieh",M
+6,pbkdf2_sha256$600000$yKupeJG05kISdyDGaT9jlp$macpgD7oafqfq3jHF36LAPnENOH9P80STDds9ZpklIw=,AsalParMan,Asal,Parvizmanesh,AsalPM12@yahoo.com,0,64,511413879,6/10/1998,9211333965,"Tehran, Gisha",F
+7,pbkdf2_sha256$600000$hGbmPutEI5P3rjopqSQHZX$rG061v/YR7KVRKyHdDaUfIZ6zUAXHMAZTy/OHcrsyFs=,MitraHok,Mitra,Hokmabadi,MitraHokm@hotmail.com,0,57,925545164,12/19/1995,9337412334,"Tehran, Sa'adat Abad",F
+8,pbkdf2_sha256$600000$E8dwzPrn1TPmS1a8Glgq5l$IWO+feDoWL+QDaqr0fIsPngxWFIMQg9pw0NJV/ZKlhU=,NeginAmr,Negin,Amrollahi,n3ginrollahi@gmail.com,0,30,140659656,7/28/2001,9120119451,"Tehran, Sa'adat Abad",F
+9,pbkdf2_sha256$600000$izVvqfs2tZtyoQCaxXud8V$0XZlodUaIhFjwoC3Ly0HgjjofEqGUyrZK6CcHQML9Ns=,AhmadKas,Ahmad,Kasraei,AhmadaKs12@yahoo.com,0,11,1023286745,11/1/1982,9043744345,"Karaj, Azimieh",M
+10,pbkdf2_sha256$600000$sXOabwsbgcp5WYw3v7WJzv$GxnG+XaBtmNXcuv56qR5VXwpmmNPM/qehD8vEs2zVoc=,AliDaei,Ali,Daei,aliali13@gmail.com,0,78,34257112,7/5/1978,9121111111,"Tehran, Elahieh",M
+11,pbkdf2_sha256$600000$gjFftqJM5Be94ybcEQ2tyM$YnRgFfHhMUo7dtHVTWSVx4nGW6B4751MIs6PzUJCyeI=,MohaAzim,Mohammad,Azimi,mohammadazimi@gmail.com,0,26,65129876,3/11/1999,9213301321,"Rasht, Kheir Abad",M
