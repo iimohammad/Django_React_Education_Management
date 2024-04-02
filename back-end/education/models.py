@@ -81,7 +81,7 @@ class Semester(models.Model):
         Winter = 'W', 'Winter'
         Summer = 'S', 'Summer'
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100 , unique = True)
     start_semester = models.DateField()
     end_semester = models.DateField()
     semester_type = models.CharField(
