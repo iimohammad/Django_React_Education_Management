@@ -6,15 +6,72 @@ from rest_framework.response import Response
 from rest_framework import status
 from accounts.models import Student, Teacher, User
 from accounts.permissions import IsTeacher
+from dashboard_student.models import AddRemoveRequest, EmergencyRemovalRequest, EnrollmentRequest, RevisionRequest, SemesterRegistrationRequest, StudentDeleteSemesterRequest, UnitSelectionRequest
 from education.models import Semester, SemesterCourse, StudentCourse
 from education.serializers import StudentCourseSerializer
-from .serializers import *
+from .serializers import (
+    AddRemoveRequestViewSerializers,
+    EmergencyRemovalRequestSerializers,
+    EnrollmentRequestSerializers,
+    RevisionRequestSerializers,
+    SemesterCourseSerializer,
+    SemesterRegistrationRequestSerializers,
+    ShowSemestersSerializers,
+    StudentDeleteSemesterRequestSerializers,
+    UnitSelectionRequestSerializers,
+)
 from accounts.serializers import StudentSerializer, UserProfileImageUpdateSerializer, TeacherSerializer
 from rest_framework.generics import RetrieveAPIView, UpdateAPIView
 from rest_framework import generics
 from rest_framework.mixins import ListModelMixin
 
 
+
+
+# General Tasks
+class ShowProfileAPIView(RetrieveAPIView):
+    serializer_class = TeacherSerializer
+    permission_classes = [IsAuthenticated]  # Assuming IsTeacher permission is checked inside serializer
+
+    def get_object(self):
+        user = self.request.user
+
+        try:
+            # Get the teacher instance associated with the current user
+            teacher = Teacher.objects.get(user=user)
+            return teacher
+        except Teacher.DoesNotExist:
+            # Handle the case where the user is not a teacher
+            return None
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance is None:
+            return Response({'error': 'User is not a teacher'}, status=404)
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+
+class UserProfileImageView(UpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserProfileImageUpdateSerializer
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+
+
+# Tasks of Teachers 
 class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated, IsTeacher]
     serializer_class = ShowSemestersSerializers
@@ -110,50 +167,23 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
-class ShowProfileAPIView(RetrieveAPIView):
-    serializer_class = TeacherSerializer
-    permission_classes = [IsAuthenticated]  # Assuming IsTeacher permission is checked inside serializer
 
-    def get_object(self):
-        user = self.request.user
-
-        try:
-            # Get the teacher instance associated with the current user
-            teacher = Teacher.objects.get(user=user)
-            return teacher
-        except Teacher.DoesNotExist:
-            # Handle the case where the user is not a teacher
-            return None
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if instance is None:
-            return Response({'error': 'User is not a teacher'}, status=404)
-
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+# Evaluate Students
 
 
-class UserProfileImageView(UpdateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserProfileImageUpdateSerializer
-    permission_classes = [IsAuthenticated, IsTeacher]
-
-    def get_object(self):
-        return self.request.user
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data)
 
 
+
+
+class RevisionRequestView(generics.UpdateAPIView):
+    permission_classes = [IsAuthenticated,IsTeacher]
+    serializer_class = RevisionRequestSerializers
+    queryset = RevisionRequest.objects.all()
+
+# Adviser Tasks APIs
 class ShowMyStudentsVeiw(generics.GenericAPIView, ListModelMixin):
     serializer_class = StudentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated,IsTeacher]
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -167,8 +197,35 @@ class ShowMyStudentsVeiw(generics.GenericAPIView, ListModelMixin):
         return Student.objects.filter(advisor__user=user_id)
 
 
-class UnitSelectionRequestShows(generics.ListCreateAPIView):
-    # serializer_class = 
-    pass
-    # @action(name="Accept")
-    # @action(name = "Reject")
+class UnitSelectionRequestView(generics.UpdateAPIView):
+    permission_classes = [IsTeacher,IsAuthenticated]
+    serializer_class = UnitSelectionRequestSerializers
+    queryset = UnitSelectionRequest.objects.all()
+
+
+class SemesterRegistrationRequestView(generics.UpdateAPIView):
+    permission_classes = [IsTeacher,IsAuthenticated]
+    serializer_class = SemesterRegistrationRequestSerializers
+    queryset = SemesterRegistrationRequest.objects.all()
+
+
+class AddRemoveRequestView(generics.UpdateAPIView):
+    permission_classes = [IsTeacher,IsAuthenticated]
+    serializer_class = AddRemoveRequestViewSerializers
+    queryset = AddRemoveRequest.objects.all()
+
+
+class EmergencyRemovalRequestView(generics.UpdateAPIView):
+    permission_classes = [IsTeacher,IsAuthenticated]
+    queryset = EmergencyRemovalRequest.objects.all()
+    serializer_class = EmergencyRemovalRequestSerializers
+
+class StudentDeleteSemesterRequestView(generics.UpdateAPIView):
+    permission_classes = [IsTeacher,IsAuthenticated]
+    queryset = StudentDeleteSemesterRequest.objects.all()
+    serializer_class = StudentDeleteSemesterRequestSerializers
+
+class EnrollmentRequestView(generics.UpdateAPIView):
+    permission_classes = [IsTeacher,IsAuthenticated]
+    queryset = EnrollmentRequest.objects.all()
+    serializer_class = EnrollmentRequestSerializers

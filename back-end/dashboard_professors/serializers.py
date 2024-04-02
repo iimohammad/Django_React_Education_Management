@@ -1,7 +1,10 @@
 from rest_framework import serializers
 
+from dashboard_student.models import AddRemoveRequest, EmergencyRemovalRequest, EnrollmentRequest, RevisionRequest, SemesterRegistrationRequest, StudentDeleteSemesterRequest
 from education.models import Course, Semester, SemesterCourse
-
+from dashboard_student import (
+    UnitSelectionRequest,
+    )
 
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,3 +28,44 @@ class ShowSemestersSerializers(serializers.ModelSerializer):
         model = Semester
         fields = ['id', 'name', 'start_semester',
                   'end_semester', 'semester_type', 'Semester_courses']
+
+
+class UnitSelectionRequestSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = UnitSelectionRequest
+        fields = '__all__'
+
+
+class SemesterRegistrationRequestSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = SemesterRegistrationRequest
+        fields = '__all__'
+
+
+class AddRemoveRequestViewSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = AddRemoveRequest
+        fields = '__all__'
+
+class EmergencyRemovalRequestSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = EmergencyRemovalRequest
+        fields = '__all__'
+
+
+class StudentDeleteSemesterRequestSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = StudentDeleteSemesterRequest
+        fields = '__all__'
+
+
+class EnrollmentRequestSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = EnrollmentRequest
+        fields = '__all__'
+
+
+class RevisionRequestSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = RevisionRequest
+        fields = '__all__'
