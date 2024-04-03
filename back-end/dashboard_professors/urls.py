@@ -1,6 +1,18 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from .views import  SemesterCourseViewSet, ShowMyStudentsVeiw, ShowSemestersView
+from .views import  (
+    AddRemoveRequestView,
+    EmergencyRemovalRequestView,
+    EnrollmentRequestView,
+    SemesterCourseViewSet,
+    SemesterRegistrationRequestView,
+    ShowMyStudentsVeiw, ShowSemestersView,
+    StudentDeleteSemesterRequestView,
+    UnitSelectionRequestView,
+    ShowProfileAPIView,
+    UserProfileImageView,
+
+)
 from . import views
 
 router = DefaultRouter()
@@ -10,16 +22,16 @@ router.register('TeacherRole/my-Courses-Semester', SemesterCourseViewSet,
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('show-profile/', views.ShowProfileAPIView.as_view(), name='show_profile'),
-    path('update-profile/',views.UserProfileImageView.as_view(),name = 'update_profile'),
-    path('AdvisorRole/ShowMyStudents/',ShowMyStudentsVeiw.as_view(),name = 'ShowMyStudents')
-    path('AdvisorRole/UnitSelectionRequest/',UnitSelectionRequestView.as_view(),name = 'UnitSelectionRequest')
+    path('show-profile/', ShowProfileAPIView.as_view(), name='show_profile'),
+    path('update-profile/',UserProfileImageView.as_view(),name = 'update_profile'),
+    path('AdvisorRole/ShowMyStudents/',ShowMyStudentsVeiw.as_view(),name = 'ShowMyStudents'),
+    path('AdvisorRole/UnitSelectionRequest/',UnitSelectionRequestView.as_view(),name = 'UnitSelectionRequest'),
 
-    path('AdvisorRole/SemesterRegistrationRequest/',SemesterRegistrationRequestView.as_view(),name = 'SemesterRegistrationRequest')
-    path('AdvisorRole/AddRemoveRequest/',AddRemoveRequestView.as_view(),name = 'AddRemoveRequest')
-    path('AdvisorRole/EmergencyRemovalRequest/',EmergencyRemovalRequestView.as_view(),name = 'EmergencyRemovalRequest')
-    path('AdvisorRole/StudentDeleteSemesterRequest/',StudentDeleteSemesterRequestView.as_view(),name = 'StudentDeleteSemesterRequest')
-    path('AdvisorRole/EnrollmentRequestView/',EnrollmentRequestView.as_view(),name = 'EnrollmentRequestView')
+    path('AdvisorRole/SemesterRegistrationRequest/',SemesterRegistrationRequestView.as_view(),name = 'SemesterRegistrationRequest'),
+    path('AdvisorRole/AddRemoveRequest/',AddRemoveRequestView.as_view(),name = 'AddRemoveRequest'),
+    path('AdvisorRole/EmergencyRemovalRequest/',EmergencyRemovalRequestView.as_view(),name = 'EmergencyRemovalRequest'),
+    path('AdvisorRole/StudentDeleteSemesterRequest/',StudentDeleteSemesterRequestView.as_view(),name = 'StudentDeleteSemesterRequest'),
+    path('AdvisorRole/EnrollmentRequestView/',EnrollmentRequestView.as_view(),name = 'EnrollmentRequestView'),
 
 ]
 
