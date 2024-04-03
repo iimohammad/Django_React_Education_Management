@@ -1,7 +1,7 @@
 from django.contrib import admin
 import os
 import dotenv
-dotenv.load_dotenv()
+dotenv.read_dotenv()
 
 from django.urls import include, path
 from drf_spectacular.views import (SpectacularAPIView, SpectacularRedocView,
