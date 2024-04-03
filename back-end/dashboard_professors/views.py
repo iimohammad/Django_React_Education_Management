@@ -5,19 +5,93 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from accounts.models import Student, Teacher, User
+from .pagination import DefaultPagination
 from accounts.permissions import IsTeacher
+from dashboard_professors.queryset import get_student_queryset
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+from dashboard_student.models import (
+    AddRemoveRequest,
+    EmergencyRemovalRequest,
+    EnrollmentRequest,
+    RevisionRequest,
+    SemesterRegistrationRequest,
+    StudentDeleteSemesterRequest,
+    UnitSelectionRequest
+)
 from education.models import Semester, SemesterCourse, StudentCourse
 from education.serializers import StudentCourseSerializer
-from .serializers import *
-from accounts.serializers import StudentSerializer, UserProfileImageUpdateSerializer, TeacherSerializer
+from .serializers import (
+    AddRemoveRequestViewSerializers,
+    EmergencyRemovalRequestSerializers,
+    EnrollmentRequestSerializers,
+    RevisionRequestSerializers,
+    SemesterCourseSerializer,
+    SemesterRegistrationRequestSerializers,
+    ShowSemestersSerializers,
+    StudentDeleteSemesterRequestSerializers,
+    UnitSelectionRequestSerializers,
+)
+from accounts.serializers import (
+    StudentSerializer,
+    UserProfileImageUpdateSerializer,
+    TeacherSerializer
+)
 from rest_framework.generics import RetrieveAPIView, UpdateAPIView
 from rest_framework import generics
 from rest_framework.mixins import ListModelMixin
 
 
+# General Tasks
+class ShowProfileAPIView(RetrieveAPIView):
+    serializer_class = TeacherSerializer
+    permission_classes = [IsAuthenticated]  # Assuming IsTeacher permission is checked inside serializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    def get_object(self):
+        user = self.request.user
+
+        try:
+            # Get the teacher instance associated with the current user
+            teacher = Teacher.objects.get(user=user)
+            return teacher
+        except Teacher.DoesNotExist:
+            # Handle the case where the user is not a teacher
+            return None
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance is None:
+            return Response({'error': 'User is not a teacher'}, status=404)
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+
+class UserProfileImageView(UpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserProfileImageUpdateSerializer
+    permission_classes = [IsAuthenticated, IsTeacher]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+
+# Tasks of Teachers
 class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated, IsTeacher]
     serializer_class = ShowSemestersSerializers
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
     queryset = Semester.objects.all()
 
     @action(detail=True, methods=['get'],
@@ -34,9 +108,12 @@ class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
                          'courses': course_serializer.data})
 
 
+# Evaluate Students
 class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated, IsTeacher]
     serializer_class = SemesterCourseSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
 
     def get_queryset(self):
         teacher = self.request.user.teacher
@@ -110,65 +187,100 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
-class ShowProfileAPIView(RetrieveAPIView):
-    serializer_class = TeacherSerializer
-    permission_classes = [IsAuthenticated]  # Assuming IsTeacher permission is checked inside serializer
-
-    def get_object(self):
-        user = self.request.user
-
-        try:
-            # Get the teacher instance associated with the current user
-            teacher = Teacher.objects.get(user=user)
-            return teacher
-        except Teacher.DoesNotExist:
-            # Handle the case where the user is not a teacher
-            return None
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if instance is None:
-            return Response({'error': 'User is not a teacher'}, status=404)
-
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
-
-class UserProfileImageView(UpdateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserProfileImageUpdateSerializer
+class RevisionRequestView(generics.UpdateAPIView):
     permission_classes = [IsAuthenticated, IsTeacher]
-
-    def get_object(self):
-        return self.request.user
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data)
+    serializer_class = RevisionRequestSerializers
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    def get_queryset(self):
+        teacher = self.request.user.teacher
+        queryset = SemesterCourse.objects.filter(instructor=teacher)
+        return queryset
 
 
+# Adviser Tasks APIs
 class ShowMyStudentsVeiw(generics.GenericAPIView, ListModelMixin):
     serializer_class = StudentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsTeacher]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return get_student_queryset(self.request)
+
+
+class UnitSelectionRequestView(generics.UpdateAPIView):
+    permission_classes = [IsTeacher, IsAuthenticated]
+    serializer_class = UnitSelectionRequestSerializers
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
     def get_queryset(self):
-        if isinstance(self.request.user, User):
-            user_id = self.request.user
-        else:
-            user_id = self.request.user.id
-
-        return Student.objects.filter(advisor__user=user_id)
+        return get_student_queryset(self.request)
 
 
-class UnitSelectionRequestShows(generics.ListCreateAPIView):
-    # serializer_class = 
-    pass
-    # @action(name="Accept")
-    # @action(name = "Reject")
+class SemesterRegistrationRequestView(generics.UpdateAPIView):
+    permission_classes = [IsTeacher, IsAuthenticated]
+    serializer_class = SemesterRegistrationRequestSerializers
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return get_student_queryset(self.request)
+
+
+class AddRemoveRequestView(generics.UpdateAPIView):
+    permission_classes = [IsTeacher, IsAuthenticated]
+    serializer_class = AddRemoveRequestViewSerializers
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return get_student_queryset(self.request)
+
+
+class EmergencyRemovalRequestView(generics.UpdateAPIView):
+    permission_classes = [IsTeacher, IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return get_student_queryset(self.request)
+
+
+class StudentDeleteSemesterRequestView(generics.UpdateAPIView):
+    permission_classes = [IsTeacher, IsAuthenticated]
+    serializer_class = StudentDeleteSemesterRequestSerializers
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return get_student_queryset(self.request)
+
+
+class EnrollmentRequestView(generics.UpdateAPIView):
+    permission_classes = [IsTeacher, IsAuthenticated]
+    serializer_class = EnrollmentRequestSerializers
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return get_student_queryset(self.request)

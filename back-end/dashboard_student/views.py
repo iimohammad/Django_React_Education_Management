@@ -2,20 +2,21 @@ from rest_framework import viewsets, mixins
 from rest_framework import generics
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
-from .permissions import IsStudent
+from .permissions import IsStudent , HavePermosionForUnitSelectionForLastSemester
 from accounts.models import Student
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .serializers import EmergencyRemovalRequestSerializer, EmploymentEducationRequestSerializer, EnrollmentRequestSerializer, ExamStudentCourseSerializer, ProfileStudentSerializer, RevisionRequestSerializer, \
-                        SemesterCourseSerializer, SemesterRegistrationRequestSerializer , \
+                        SemesterCourseSerializer, SemesterRegistrationRequestSerializer, SemesterSerializer , \
                         StudentCourseSerializer, StudentDeleteSemesterRequestSerializer, UnitSelectionRequestSerializer
-from education.models import SemesterCourse , StudentCourse
+from education.models import SemesterCourse , StudentCourse , Semester
 from .models import SemesterRegistrationRequest , RevisionRequest , AddRemoveRequest , \
                     EnrollmentRequest , EmergencyRemovalRequest , StudentDeleteSemesterRequest , \
                     EmploymentEducationRequest, UnitSelectionRequest
 from .filters import SemesterCourseFilter , StudentCourseFilter, StudentExamFilter
 from .pagination import DefaultPagination
+from django_filters.rest_framework import DjangoFilterBackend
 from django.http import Http404
+from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -97,6 +98,19 @@ class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return StudentCourse.objects.filter(student__user=self.request.user).all()
+    
+class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = StudentCourseSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = StudentCourseFilter
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated, IsStudent]
+    search_fields = ['semester_course__course__course_name']
+    ordering_fields = ['entry_semester']
+
+    def get_queryset(self):
+        return StudentCourse.objects.filter(student__user=self.request.user
+                                            ).exclude(score__isnull=True).all()
 
 
 class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -118,7 +132,6 @@ class StudentProfileViewset(generics.RetrieveAPIView):
 
     def get_object(self):
         return Student.objects.filter(user=self.request.user).first()
-
 
 class SemesterRegistrationRequestAPIView(mixins.CreateModelMixin,
                                          mixins.RetrieveModelMixin,
@@ -144,14 +157,19 @@ class SemesterRegistrationRequestAPIView(mixins.CreateModelMixin,
     def destroy(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
-
         except Http404:
-            raise NotFound()
+            return Response({'detail': 'Object Not found.'}, status=status.HTTP_404_NOT_FOUND)
         if instance.approval_status != 'P':
             return Response(
                 {'message': 'your request has been answered and you can not delete it.'}
                 , status=status.HTTP_403_FORBIDDEN)
-        self.perform_destroy(instance)
+        if UnitSelectionRequest.objects.filter(
+            semester_registration_request = instance).first()!= None:
+            return Response(
+                {'message': 'you have unit selection for this request.'}
+            )
+        
+        instance.delete()
         return Response({'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
     
 class UnitSelectionRequestAPIView(mixins.CreateModelMixin,
@@ -163,7 +181,9 @@ class UnitSelectionRequestAPIView(mixins.CreateModelMixin,
     serializer_class = UnitSelectionRequestSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
-    permission_classes = [IsAuthenticated, IsStudent]
+    permission_classes = [IsAuthenticated, IsStudent , 
+                          HavePermosionForUnitSelectionForLastSemester,
+                          ]
     ordering_fields = ['created_at', 'approval_status']
 
     def get_queryset(self):
