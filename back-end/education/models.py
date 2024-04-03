@@ -1,5 +1,6 @@
 from django.db import models
-
+from django.db.models.signals import post_migrate
+from django.dispatch import receiver
 
 class Department(models.Model):
     department_name = models.CharField(max_length=40)
@@ -125,7 +126,9 @@ class SemesterEmergency(models.Model):
     emergency_remove_start = models.DateField()
     emergency_remove_end = models.DateField()
 
-
+def create_week_days(sender, **kwargs):
+        for day, _ in Day.DAY_CHOICES:
+            Day.objects.get_or_create(name=day)
 class Day(models.Model):
     DAY_CHOICES = [
         ('saturday', 'Saturday'),
@@ -139,9 +142,11 @@ class Day(models.Model):
     name = models.CharField(max_length=20, choices=DAY_CHOICES, unique=True)
 
     def __str__(self):
-        return self.name
-
-
+        return str(self.name)
+    
+    @receiver(post_migrate)
+    def on_migrate(sender, **kwargs):
+        create_week_days(sender, **kwargs)
 class SemesterCourse(models.Model):
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
