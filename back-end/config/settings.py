@@ -5,7 +5,9 @@ from pathlib import Path
 
 from celery.schedules import crontab
 
-dotenv.read_dotenv()
+from config import local_settings
+dotenv.load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -52,7 +54,9 @@ LOCAL_APPS = [
     'dashboard_student.apps.DashboardStudentConfig',
     'dashboard_professors.apps.DashboardProfessorsConfig',
     'dashboard_educationalassistant.apps.DashboardEducationalAssistantConfig',
+
     'academic_events.apps.AcademicConfig',
+
 ]
 
 INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
