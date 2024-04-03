@@ -19,6 +19,7 @@ class SemesterRegistrationRequest(models.Model):
     requested_courses = models.ManyToManyField(
         SemesterCourse, verbose_name='Requested_courses' , 
         blank=True)
+    student_comment_for_requested_courses = models.TextField(null=True , blank = True)
 
     def __str__(self):
         return f"{self.student.user.first_name} {self.student.user.last_name} - \
@@ -96,3 +97,4 @@ class EmploymentEducationRequest(models.Model):
     need_for = models.TextField()
     def __str__(self) -> str:
         return f"{self.student.user.first_name} {self.student.user.last_name}"
+    
