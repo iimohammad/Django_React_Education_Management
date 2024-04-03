@@ -12,7 +12,8 @@ from rest_framework.views import APIView
 from django.shortcuts import redirect
 from django.http import HttpResponseBadRequest
 from rest_framework.authtoken.models import Token
-from .serializers import RegisterSerializer, UserProfileImageSerializer, UserSerializer, EmailUserSerializer, PasswordResetActionSerializer, PasswordResetLoginSerializer
+from .serializers import RegisterSerializer, UserProfileImageSerializer, UserSerializer, EmailUserSerializer, \
+    PasswordResetActionSerializer, PasswordResetLoginSerializer
 from django.conf import settings
 import requests
 import string
@@ -51,7 +52,8 @@ class RegisterUserApi(generics.GenericAPIView):
         return Response({"user": UserSerializer(
             user, context=self.get_serializer_context()).data, "token": token.key})
 
-@method_decorator(csrf_exempt, name= 'dispatch')
+
+@method_decorator(csrf_exempt, name='dispatch')
 class GenerateVerificationCodeView(APIView):
     serializer_class = EmailUserSerializer
 
@@ -70,24 +72,24 @@ class GenerateVerificationCodeView(APIView):
             email_in = serializer.validated_data['email']
             verification_code = self.generate_verification_code()
             self.send_verification_code(email_in, verification_code)
-            user = User.objects.get(email = email_in)
+            user = User.objects.get(email=email_in)
             return redirect('change-password-action', user_id=user.id)
 
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-          
+
 
 class PasswordResetActionView(APIView):
     serializer_class = PasswordResetActionSerializer
-        
+
     def post(self, request, user_id):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             code = serializer.validated_data['code']
             new_password = serializer.validated_data['new_password']
-            user = User.objects.get(id=user_id)          
+            user = User.objects.get(id=user_id)
             codes = cache.get('code')
-  
+
             if code == codes:
                 if user:
                     user.set_password(new_password)
@@ -99,10 +101,11 @@ class PasswordResetActionView(APIView):
                 return Response({'message': 'Invalid verification code'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+
 
 class ChangePasswordLoginView(APIView):
     permission_classes = (IsAuthenticated,)
+
     def post(self, request):
         serializer = PasswordResetLoginSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
@@ -129,5 +132,5 @@ class UserProfileImageViewSet(viewsets.ModelViewSet):
         return User.objects.filter(id=self.request.user.id)
 
     def perform_update(self, serializer):
-        user_instance = self.get_object() 
+        user_instance = self.get_object()
         serializer.save(instance=user_instance)

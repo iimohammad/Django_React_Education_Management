@@ -3,8 +3,10 @@ from django.db import models
 import logging
 from education.models import Major
 
-from .validators import phone_validator
+from .validators import phone_validator , validate_national_code
+
 logger = logging.getLogger(__name__)
+
 
 class User(AbstractUser):
     class Gender(models.TextChoices):
@@ -13,13 +15,13 @@ class User(AbstractUser):
         UNSET = 'MF', 'Unset'
 
     user_number = models.CharField(max_length=255, blank=True)
-    national_code = models.CharField(max_length=10, blank=True)
+    national_code = models.CharField(max_length=10, blank=True , 
+                                    validators = [validate_national_code])
     birthday = models.DateField(null=True, blank=True)
     profile_image = models.ImageField(upload_to='accounts/profile_images/', null=True, blank=True)
     phone = models.CharField(max_length=15, validators=[phone_validator], blank=True)
     address = models.TextField(blank=True, null=True)
     gender = models.CharField(max_length=2, choices=Gender.choices, default=Gender.UNSET)
-
 
     def save(self, *args, **kwargs):
         logger.debug('DEBUG: Saving instance of Account: %s', self.username)
@@ -37,7 +39,7 @@ class Teacher(models.Model):
         ASSOCIATE_PROF = 'ACP', 'Associate Professor'
         PROFESSOR = 'P', 'Professor'
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE , unique = True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     expertise = models.CharField(max_length=255)
     rank = models.CharField(
         max_length=3, choices=Rank.choices, default=Rank.INSTRUCTOR)
@@ -51,13 +53,13 @@ class Teacher(models.Model):
 
 class Student(models.Model):
     MILITARY_CHOICES = [
-        ('EP', 'Education Pardon'),#معافیت تحصیلی
-        ('P', 'Passed'),#گزرانده
-        ('E', 'Exempted'),#معاف
+        ('EP', 'Education Pardon'),  # معافیت تحصیلی
+        ('P', 'Passed'),  # گزرانده
+        ('E', 'Exempted'),  # معاف
     ]
-    user = models.OneToOneField(User, on_delete=models.CASCADE , unique = True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     entry_semester = models.CharField(max_length=100)
-    gpa = models.DecimalField(max_digits=4, decimal_places=2 , null =True , blank = True)
+    gpa = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
     entry_year = models.CharField(max_length=4)
     major = models.ForeignKey('education.Major', on_delete=models.PROTECT)
     advisor = models.ForeignKey(
@@ -73,7 +75,7 @@ class Student(models.Model):
 
 
 class EducationalAssistant(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE , unique = True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     field = models.ForeignKey(Major, on_delete=models.PROTECT)
 
     def __str__(self) -> str:
@@ -85,4 +87,4 @@ class EducationalAssistant(models.Model):
 
 class AdminUser(models.Model):
     user = models.OneToOneField(
-        User, on_delete=models.CASCADE  , unique = True , related_name = 'adminuser')
+        User, on_delete=models.CASCADE, unique=True, related_name='adminuser')

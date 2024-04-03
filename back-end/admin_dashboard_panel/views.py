@@ -30,9 +30,6 @@ class EducationalAssistantViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-StudentSerializer
-
-
 class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all()
     permission_classes = [IsAdminUser | IsAdmin]
@@ -40,6 +37,7 @@ class StudentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
 
 # Department
 
@@ -52,6 +50,7 @@ class DepartmentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+
 # Semester
 
 
@@ -62,6 +61,7 @@ class SemesterViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
 
 # Use in two pannels
 

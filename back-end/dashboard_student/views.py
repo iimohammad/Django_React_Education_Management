@@ -266,7 +266,8 @@ class RevisionRequestAPIView(mixins.CreateModelMixin,
         self.perform_destroy(instance)
         return Response({'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
     
-class EmergencyRemovalRequestAPIView (mixins.CreateModelMixin,
+
+class EmergencyRemovalRequestAPIView(mixins.CreateModelMixin,
                                      mixins.RetrieveModelMixin,
                                      mixins.DestroyModelMixin,
                                      mixins.ListModelMixin,

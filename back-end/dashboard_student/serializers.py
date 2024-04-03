@@ -138,26 +138,33 @@ class SemesterRegistrationRequestSemesterSerializer(serializers.ModelSerializer)
     class Meta:
         model = Semester
         fields = ['name']
+        read_only_fields = ['name']
 
 class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
     semester = SemesterRegistrationRequestSemesterSerializer()
+    requested_courses = SemesterCourseSerializer(many = True)
     class Meta:
         model = SemesterRegistrationRequest
-        fields = ['id','approval_status', 'created_at','semester']
+        fields = ['id','approval_status', 'created_at','semester','requested_courses']
+        read_only_fields = ['id','approval_status', 'created_at' , 'semester']
         
-        read_only_fields = ['id','approval_status', 'created_at']
     def create(self, validated_data):
-        semester_data = validated_data.pop('semester')
         user = self.context['user']
-        
         try:
-            semester_instance = Semester.objects.get(name=semester_data['name'])
+            semester_instance = Semester.objects.order_by(
+                '-start_semester').first()
             if semester_instance.classes.classes_end < timezone.now().date():
                 raise serializers.ValidationError("This semester ended!")
         except Semester.DoesNotExist:
             raise serializers.ValidationError("Invalid semester")
         
-        existing_request = SemesterRegistrationRequest.objects.filter(semester=semester_instance, student__user=user).exists()
+        available_semester = Semester.objects.order_by('-start_semester').first()
+        
+        if semester_instance!=available_semester:
+            raise serializers.ValidationError("Invalid semester")
+        
+        existing_request = SemesterRegistrationRequest.objects.filter(
+            semester=semester_instance, student__user=user).exists()
         if existing_request:
             raise serializers.ValidationError("A registration request for this semester already exists")
         
@@ -166,7 +173,8 @@ class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
         except Semester.DoesNotExist:
             raise serializers.ValidationError("Invalid student")
         
-        semester_registration_request = SemesterRegistrationRequest.objects.create(semester=semester_instance, student = student)
+        semester_registration_request = SemesterRegistrationRequest.objects.create(
+            semester=semester_instance, student = student)
 
         return semester_registration_request
     
@@ -204,7 +212,7 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Invalid student")
         
         existing_request = UnitSelectionRequest.objects.filter(
-            semester_registration_request=SemesterRegistrationRequest, 
+            semester_registration_request=semester_registration_request, 
             semester_registration_request__student__user=user).exists()
         if existing_request:
             raise serializers.ValidationError(
@@ -346,7 +354,6 @@ class RevisionRequestSerializer(serializers.ModelSerializer):
             student = student , course = course , text = validated_data['text'])
         
         return revision_request
-    
 
 class EmergencyRemovalRequestSerializer(serializers.ModelSerializer):
     course = StudentCourseSerializer()
@@ -484,9 +491,7 @@ class EmploymentEducationRequestSerializer(serializers.ModelSerializer):
         
         return enrollment_request
 
-
-
-    
+      
 class AddRemoveRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentCourse
@@ -543,3 +548,32 @@ class AddRemoveRequestSerializer(serializers.ModelSerializer):
         except Exception as e:
             raise serializers.ValidationError("An error occurred while processing your request. Please try again later.")
         
+    
+class EmploymentEducationRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmploymentEducationRequest
+        fields = ['id','approval_status','created_at','need_for']
+        
+        read_only_fields = ['id' ,'approval_status','created_at']
+        
+    def create(self, validated_data):
+        user = self.context['user']
+        try:
+            student = Student.objects.get(user = user)
+        except:
+            raise serializers.ValidationError("Invalid student")
+        
+        existing_request = EmploymentEducationRequest.objects.filter(
+                student=student ,approval_status = 'P').first()
+        
+        if existing_request!=None:
+            raise serializers.ValidationError(
+                "A registration request for this semester already exists")
+        
+        employment_education_request = EmploymentEducationRequest.objects.create(
+                student = student,
+                need_for = self.validated_data.get('need_for')
+                )
+        
+        return employment_education_request
+
