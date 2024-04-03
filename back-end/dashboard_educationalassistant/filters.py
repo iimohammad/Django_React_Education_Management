@@ -1,7 +1,7 @@
 from django_filters.rest_framework import FilterSet, CharFilter
 
 from accounts.models import Student, Teacher
-from education.models import Course, SemesterCourse
+from education.models import Course, SemesterCourse, StudentCourse
 from dashboard_student.models import (
     EmergencyRemovalRequest,
     StudentDeleteSemesterRequest,
@@ -99,4 +99,15 @@ class EmploymentEducationRequestFilter(FilterSet):
             'student__user__first_name': ['contains'],
             'student__user__last_name': ['contains'],
             'created_at': ['gte', 'lte'],
+        }
+
+
+class StudentCourseFilter(FilterSet):
+    class Meta:
+        model = StudentCourse
+        fields = {
+            'semester_course__course__course_name': ['contains'],
+            'semester_course__semester__name': ['contains'],
+
+            'status': ['exact'],
         }

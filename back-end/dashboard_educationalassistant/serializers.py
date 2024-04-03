@@ -346,5 +346,8 @@ class EmploymentEducationRequestSerializer(serializers.ModelSerializer):
     
         return fields
 
-        model = SemesterCourse
-        fields = ['id', 'course_name', 'score']
+class StudentCourseSerializer(serializers.ModelSerializer):
+    semester_course = SemesterCourseSerializer()
+    class Meta:
+        model = StudentCourse
+        fields = ['semester_course','status','score']
