@@ -76,7 +76,6 @@ from rest_framework import status
 
 
 class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = SemesterCourse.objects.all()
     serializer_class = SemesterCourseSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = SemesterCourseFilter
@@ -85,6 +84,10 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ['course__course_name']
     ordering_fields = ['instructor__user__first_name', 'instructor__user__last_name',
                        'course_capacity', ]
+    def get_queryset(self):
+        last_semester = Semester.objects.order_by('-start_semester').first()
+        return SemesterCourse.objects.filter(semester = last_semester).all()
+        
 
 
 class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
@@ -97,7 +100,9 @@ class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
     ordering_fields = ['entry_semester']
 
     def get_queryset(self):
-        return StudentCourse.objects.filter(student__user=self.request.user).all()
+        last_semester = Semester.objects.order_by('-start_semester').first()
+        return StudentCourse.objects.filter(student__user=self.request.user,
+                                            semester_course__semester = last_semester).all()
     
 class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = StudentCourseSerializer
@@ -123,7 +128,10 @@ class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet):
     ordering_fields = ['entry_semester']
 
     def get_queryset(self):
-        return StudentCourse.objects.filter(student__user=self.request.user).all()
+        last_semester = Semester.objects.order_by('-start_semester').first()
+        return StudentCourse.objects.filter(student__user=self.request.user , 
+                                            semester_course__semester = last_semester , 
+                                            approval_status = 'R').all()
 
 
 class StudentProfileViewset(generics.RetrieveAPIView):
