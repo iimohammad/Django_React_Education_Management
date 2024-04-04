@@ -131,7 +131,7 @@ class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet):
         last_semester = Semester.objects.order_by('-start_semester').first()
         return StudentCourse.objects.filter(student__user=self.request.user , 
                                             semester_course__semester = last_semester , 
-                                            approval_status = 'R').all()
+                                            status = 'R').all()
 
 
 class StudentProfileViewset(generics.RetrieveAPIView):
