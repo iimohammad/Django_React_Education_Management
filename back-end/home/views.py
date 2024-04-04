@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
-
+from django.utils.translation import activate
 from django.shortcuts import render
 from accounts.permissions import (IsAdmin, IsEducationalAssistant, IsStudent,
                                   IsTeacher)
@@ -24,3 +24,12 @@ def login(request):
         login_url = reverse('rest_framework:login')
         return redirect(login_url)
 
+
+
+def set_language(request):
+    if request.method == 'POST':
+        language_code = request.POST.get('language')
+        request.session[translation.LANGUAGE_SESSION_KEY] = language_code
+        activate(language_code)
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False})

@@ -23,6 +23,7 @@ urlpatterns = [
     path('logout/', CustomLogoutView.as_view(), name='custom_logout'),
     path('', login),
     path('', include('rest_framework.urls')),
+    path('home/',include('home.urls')),
 ]
 
 # URLs for different user roles
