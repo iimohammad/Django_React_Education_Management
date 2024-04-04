@@ -16,3 +16,7 @@ docker-compose up --build -d
 docker-compose logs
 
 ```
+
+```bash
+celery -A config beat -l info
+```
