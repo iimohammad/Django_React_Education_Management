@@ -1,24 +1,27 @@
 from rest_framework import viewsets, mixins
 from rest_framework import generics
-from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
 from .permissions import IsStudent , HavePermosionForUnitSelectionForLastSemester
 from accounts.models import Student
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .serializers import EmergencyRemovalRequestSerializer, EmploymentEducationRequestSerializer, EnrollmentRequestSerializer, ExamStudentCourseSerializer, ProfileStudentSerializer, RevisionRequestSerializer, \
-                        SemesterCourseSerializer, SemesterRegistrationRequestSerializer, SemesterSerializer , \
-                        StudentCourseSerializer, StudentDeleteSemesterRequestSerializer, UnitSelectionRequestSerializer
-from education.models import SemesterCourse , StudentCourse , Semester
+from .serializers import CourseSerializer, EmergencyRemovalRequestSerializer,\
+            EmploymentEducationRequestSerializer, EnrollmentRequestSerializer,\
+            ExamStudentCourseSerializer, ProfileStudentSerializer, RevisionRequestSerializer, \
+            SemesterCourseSerializer, SemesterRegistrationRequestSerializer, \
+            StudentCourseSerializer, StudentDeleteSemesterRequestSerializer, \
+            UnitSelectionRequestSerializer
+from education.models import SemesterCourse , StudentCourse , Semester , Course
 from .models import SemesterRegistrationRequest , RevisionRequest , AddRemoveRequest , \
                     EnrollmentRequest , EmergencyRemovalRequest , StudentDeleteSemesterRequest , \
                     EmploymentEducationRequest, UnitSelectionRequest
-from .filters import SemesterCourseFilter , StudentCourseFilter, StudentExamFilter
+from .filters import CorseFilter, SemesterCourseFilter , StudentCourseFilter, StudentExamFilter
 from .pagination import DefaultPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from django.http import Http404
 from django.db.models import Q
-from rest_framework.response import Response
-from rest_framework import status
+
 
 
 # from .models import (
@@ -73,6 +76,19 @@ from rest_framework import status
 #             return Response({'message': 'Enrollment request updated successfully'})
 
 #         return Response({'error': 'Invalid approval status'}, status=status.HTTP_400_BAD_REQUEST)
+
+class CourseViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = CourseSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = CorseFilter
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated, IsStudent]
+    search_fields = ['course_name']
+    ordering_fields = ['course_code' , 'department__department_name' , 'major__major_name',
+                       'credit_num']
+    def get_queryset(self):
+        return Course.objects.filter(availablity = 'A').all()
+    
 
 
 class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
