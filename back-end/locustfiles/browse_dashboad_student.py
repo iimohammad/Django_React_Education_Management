@@ -14,10 +14,6 @@ class SiteUser(HttpUser):
                                     headers={'X-CSRFToken': csrftoken})
         return response
         
-    #requests
-    #get courese
-    #get exams
-    #get profile
     @task(10)
     def view_student_courses(self):
         self.client.get('/dashboard_student/student_courses/' , 
