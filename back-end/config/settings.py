@@ -280,3 +280,10 @@ LOGGING = {
         },
     },
 }
+
+
+# MinIO Configuration
+MINIO_ACCESS_KEY = os.environ.get('MINIO_ACCESS_KEY')
+MINIO_SECRET_KEY = os.environ.get('MINIO_SECRET_KEY')
+MINIO_ENDPOINT = os.environ.get('MINIO_SERVER_URL')
+MINIO_SECURE = False  # Set to True if using HTTPS
