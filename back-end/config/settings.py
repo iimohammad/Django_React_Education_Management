@@ -98,16 +98,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-# Database -> Postgresql
 # DATABASES = {
-#   'default': {
-#       'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#       'NAME': local_settings.DATABASE['NAME'],
-#       'HOST': local_settings.DATABASE['HOST'],
-#       'USER': local_settings.DATABASE['USER'],
-#       'PASSWORD': local_settings.DATABASE['PASSWORD'],
-#       'PORT': local_settings.DATABASE['PORT'],
-#   }
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.environ.get('POSTGRES_DB'),
+#         'USER': os.environ.get('POSTGRES_USER'),
+#         'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+#         'HOST': 'db',
+#         'PORT': '5432',
+#     }
 # }
 
 DATABASES = {

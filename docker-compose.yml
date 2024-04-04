@@ -1,26 +1,27 @@
 version: '3'
 
 services:
-  frontend:
-    build:
-      context: ./frontend
-    ports:
-      - "3000:3000"
-
   backend:
     build:
       context: ./backend
-    ports:
-      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    expose:
+      - "8000"
     depends_on:
       - db
-    environment:
-      - DEBUG=1
-      - DATABASE_URL=postgres://postgres:password@db:5432/dbname
+    env_file:
+      - ./backend/.env
+
+  nginx:
+    build:
+      context: ./deployment/nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
 
   db:
-    image: postgres:latest
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=dbname
+    image: postgres
+    env_file:
+      - ./backend/.env
