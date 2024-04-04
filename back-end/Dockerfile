@@ -21,7 +21,6 @@ COPY . .
 EXPOSE 8000
 
 # Run Django migrations when the container starts
-CMD ["python", "manage.py", "makemigrations"]
 CMD ["python", "manage.py", "migrate"]
 
 # Command to run the Django app
