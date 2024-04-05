@@ -20,7 +20,8 @@ from .filters import CorseFilter, SemesterCourseFilter , StudentCourseFilter, St
 from .pagination import DefaultPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from django.http import Http404
-from django.db.models import Q
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
 
 
 
@@ -86,9 +87,13 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ['course_name']
     ordering_fields = ['course_code' , 'department__department_name' , 'major__major_name',
                        'credit_num']
+    
     def get_queryset(self):
         return Course.objects.filter(availablity = 'A').all()
     
+    @method_decorator(cache_page(60 * 5))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
 
 
 class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -103,6 +108,10 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         last_semester = Semester.objects.order_by('-start_semester').first()
         return SemesterCourse.objects.filter(semester = last_semester).all()
+    
+    @method_decorator(cache_page(60 * 5))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
         
 
 
