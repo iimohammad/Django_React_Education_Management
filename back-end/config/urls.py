@@ -1,6 +1,7 @@
 from django.contrib import admin
 import os
 import dotenv
+# from utils.error_views import handler404
 dotenv.read_dotenv()
 
 from django.urls import include, path
@@ -23,6 +24,7 @@ urlpatterns = [
     path('logout/', CustomLogoutView.as_view(), name='custom_logout'),
     path('', login),
     path('', include('rest_framework.urls')),
+    path('home/',include('home.urls')),
 ]
 
 # URLs for different user roles
@@ -73,5 +75,7 @@ if IsEducationalAssistant():
 # Debug Toolbar URLs
 if os.environ.get('USE_DEBUG_TOOLBAR')  :
     urlpatterns.append(path("__debug__/", include("debug_toolbar.urls")))
-
+    
+if os.environ.get('USE_SILK'):
+    urlpatterns.append(path('silk/', include('silk.urls', namespace='silk')))
 # handler404 = 'utils.error_views.custom_404'

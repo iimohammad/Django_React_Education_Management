@@ -1,23 +1,28 @@
 from rest_framework import viewsets, mixins
 from rest_framework import generics
-from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
-from .permissions import IsStudent
+from rest_framework.response import Response
+from rest_framework import status
+from .permissions import IsStudent , HavePermosionForUnitSelectionForLastSemester
 from accounts.models import Student
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .serializers import EmergencyRemovalRequestSerializer, EmploymentEducationRequestSerializer, EnrollmentRequestSerializer, ExamStudentCourseSerializer, ProfileStudentSerializer, RevisionRequestSerializer, \
-                        SemesterCourseSerializer, SemesterRegistrationRequestSerializer , \
-                        StudentCourseSerializer, StudentDeleteSemesterRequestSerializer, UnitSelectionRequestSerializer
-from education.models import SemesterCourse , StudentCourse
+from .serializers import CourseSerializer, EmergencyRemovalRequestSerializer,\
+            EmploymentEducationRequestSerializer, EnrollmentRequestSerializer,\
+            ExamStudentCourseSerializer, ProfileStudentSerializer, RevisionRequestSerializer, \
+            SemesterCourseSerializer, SemesterRegistrationRequestSerializer, \
+            StudentCourseSerializer, StudentDeleteSemesterRequestSerializer, \
+            UnitSelectionRequestSerializer
+from education.models import SemesterCourse , StudentCourse , Semester , Course
 from .models import SemesterRegistrationRequest , RevisionRequest , AddRemoveRequest , \
                     EnrollmentRequest , EmergencyRemovalRequest , StudentDeleteSemesterRequest , \
                     EmploymentEducationRequest, UnitSelectionRequest
-from .filters import SemesterCourseFilter , StudentCourseFilter, StudentExamFilter
+from .filters import CorseFilter, SemesterCourseFilter , StudentCourseFilter, StudentExamFilter
 from .pagination import DefaultPagination
+from django_filters.rest_framework import DjangoFilterBackend
 from django.http import Http404
-from rest_framework.response import Response
-from rest_framework import status
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
+
 
 
 # from .models import (
@@ -73,9 +78,25 @@ from rest_framework import status
 
 #         return Response({'error': 'Invalid approval status'}, status=status.HTTP_400_BAD_REQUEST)
 
+class CourseViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = CourseSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = CorseFilter
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated, IsStudent]
+    search_fields = ['course_name']
+    ordering_fields = ['course_code' , 'department__department_name' , 'major__major_name',
+                       'credit_num']
+    
+    def get_queryset(self):
+        return Course.objects.filter(availablity = 'A').all()
+    
+    @method_decorator(cache_page(60 * 5))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
 
 class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = SemesterCourse.objects.all()
     serializer_class = SemesterCourseSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = SemesterCourseFilter
@@ -84,6 +105,14 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ['course__course_name']
     ordering_fields = ['instructor__user__first_name', 'instructor__user__last_name',
                        'course_capacity', ]
+    def get_queryset(self):
+        last_semester = Semester.objects.order_by('-start_semester').first()
+        return SemesterCourse.objects.filter(semester = last_semester).all()
+    
+    @method_decorator(cache_page(60 * 5))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+        
 
 
 class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
@@ -96,7 +125,22 @@ class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
     ordering_fields = ['entry_semester']
 
     def get_queryset(self):
-        return StudentCourse.objects.filter(student__user=self.request.user).all()
+        last_semester = Semester.objects.order_by('-start_semester').first()
+        return StudentCourse.objects.filter(student__user=self.request.user,
+                                            semester_course__semester = last_semester).all()
+    
+class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = StudentCourseSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = StudentCourseFilter
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated, IsStudent]
+    search_fields = ['semester_course__course__course_name']
+    ordering_fields = ['entry_semester']
+
+    def get_queryset(self):
+        return StudentCourse.objects.filter(student__user=self.request.user
+                                            ).exclude(score__isnull=True).all()
 
 
 class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -109,7 +153,10 @@ class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet):
     ordering_fields = ['entry_semester']
 
     def get_queryset(self):
-        return StudentCourse.objects.filter(student__user=self.request.user).all()
+        last_semester = Semester.objects.order_by('-start_semester').first()
+        return StudentCourse.objects.filter(student__user=self.request.user , 
+                                            semester_course__semester = last_semester , 
+                                            status = 'R').all()
 
 
 class StudentProfileViewset(generics.RetrieveAPIView):
@@ -118,7 +165,6 @@ class StudentProfileViewset(generics.RetrieveAPIView):
 
     def get_object(self):
         return Student.objects.filter(user=self.request.user).first()
-
 
 class SemesterRegistrationRequestAPIView(mixins.CreateModelMixin,
                                          mixins.RetrieveModelMixin,
@@ -144,14 +190,19 @@ class SemesterRegistrationRequestAPIView(mixins.CreateModelMixin,
     def destroy(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
-
         except Http404:
-            raise NotFound()
+            return Response({'detail': 'Object Not found.'}, status=status.HTTP_404_NOT_FOUND)
         if instance.approval_status != 'P':
             return Response(
                 {'message': 'your request has been answered and you can not delete it.'}
                 , status=status.HTTP_403_FORBIDDEN)
-        self.perform_destroy(instance)
+        if UnitSelectionRequest.objects.filter(
+            semester_registration_request = instance).first()!= None:
+            return Response(
+                {'message': 'you have unit selection for this request.'}
+            )
+        
+        instance.delete()
         return Response({'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
     
 class UnitSelectionRequestAPIView(mixins.CreateModelMixin,
@@ -163,7 +214,9 @@ class UnitSelectionRequestAPIView(mixins.CreateModelMixin,
     serializer_class = UnitSelectionRequestSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
-    permission_classes = [IsAuthenticated, IsStudent]
+    permission_classes = [IsAuthenticated, IsStudent , 
+                          HavePermosionForUnitSelectionForLastSemester,
+                          ]
     ordering_fields = ['created_at', 'approval_status']
 
     def get_queryset(self):
@@ -246,6 +299,7 @@ class RevisionRequestAPIView(mixins.CreateModelMixin,
         self.perform_destroy(instance)
         return Response({'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
     
+
 class EmergencyRemovalRequestAPIView(mixins.CreateModelMixin,
                                      mixins.RetrieveModelMixin,
                                      mixins.DestroyModelMixin,

@@ -2,11 +2,18 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 import logging
 from education.models import Major
-
-from .validators import phone_validator
+from django.conf import settings
+from .validators import phone_validator , validate_national_code
 
 logger = logging.getLogger(__name__)
+from minio import Minio
 
+# minio_client = Minio(
+#     MINIO_SERVER_URL = settings.MINIO_SERVER_URL,
+#     access_key=settings.MINIO_ROOT_USER,
+#     secret_key=settings.MINIO_ROOT_PASSWORD,
+#     secure=settings.MINIO_SECURE
+# )
 
 class User(AbstractUser):
     class Gender(models.TextChoices):
@@ -15,7 +22,8 @@ class User(AbstractUser):
         UNSET = 'MF', 'Unset'
 
     user_number = models.CharField(max_length=255, blank=True)
-    national_code = models.CharField(max_length=10, blank=True)
+    national_code = models.CharField(max_length=10, blank=True , 
+                                    validators = [validate_national_code])
     birthday = models.DateField(null=True, blank=True)
     profile_image = models.ImageField(upload_to='accounts/profile_images/', null=True, blank=True)
     phone = models.CharField(max_length=15, validators=[phone_validator], blank=True)
