@@ -21,6 +21,7 @@ from dashboard_student.models import (
     EmploymentEducationRequest,
     SemesterRegistrationRequest,
 )
+from education.models import Department, Major, StudentCourse, SemesterCourse
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -179,22 +180,16 @@ class EducationalAssistantSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'field']
 
 
-class StudentCoursePassSerializer(serializers.ModelSerializer):
-    semester_course = serializers.SerializerMethodField()
+class StudentCourseSerializer(serializers.ModelSerializer):
+    course_name = serializers.CharField(source='semester_course.course.course_name')
+    semester_name = serializers.CharField(source='semester_course.semester.name')
 
     class Meta:
         model = StudentCourse
-        fields = ['semester_course']
+        fields = ['course_name', 'semester_name', 'status', 'score', 'is_pass']
 
-    def get_semester_course(self, obj):
-        if obj.status == 'R' and obj.score != '':
-            return obj.semester_course
-        else:
-            return None
-
-
-class StudentCourseTermSerializer(serializers.ModelSerializer):
-    semester_course = serializers.SerializerMethodField()
+class SemesterCourseSerializer(serializers.ModelSerializer):
+    course_name = serializers.CharField(source='course.course_name')
 
     class Meta:
         model = StudentCourse
@@ -355,3 +350,9 @@ class EmploymentEducationRequestSerializer(serializers.ModelSerializer):
                 ))
     
         return fields
+
+class StudentCourseSerializer(serializers.ModelSerializer):
+    semester_course = SemesterCourseSerializer()
+    class Meta:
+        model = StudentCourse
+        fields = ['semester_course','status','score']

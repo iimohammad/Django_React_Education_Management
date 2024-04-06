@@ -2,7 +2,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 
-from .views import StudentApiView, StudentViewSet, TeacherViewSet, CoursPass, TermCours
+from .views import StudentApiView, StudentViewSet, TeacherViewSet, StudentCoursesViewSet, StudentPassedCoursesViewSet
 
 from .views import (
     StudentApiView,
@@ -27,16 +27,13 @@ router.register("semester_courses", SemesterCourseViewSet, basename="semester_co
 router.register("emergency_removals", EmergencyRemovalRequestViewSet, basename="emergency_removals")
 router.register("semester_removals", StudentDeleteSemesterRequestViewSet, basename="semester_removals")
 router.register("education_employments", EmploymentEducationRequestViewSet, basename="education_employments")
+router.register('student_courses' , StudentCoursesViewSet , basename='studentcourses')
+router.register('passed_courses' , StudentPassedCoursesViewSet , basename='studentpassescourses')
+router.register('EducatioanlAssistantRole/my-Courses-Semester', SemesterCourseViewSet, basename='SemesterCourse')
 
 urlpatterns = [
     path('', include(router.urls)),
     path('students/<int:pk>/', StudentApiView.as_view(), name='student_detail'),
     path('show_profile/', ShowProfileAPIView.as_view(), name= 'show_assistant_profile'),
     path('edit_profile/', EducationalAssistantProfileUpdateView.as_view(), name= 'edit_assistant_profile'),
-    # path('update_profile/', EducationalAssistantChangeProfileView.as_view(), name= 'update_assistant_profile'),
-    path('student/{pk/me}/pass-courses-report/', CoursPass.as_view()),
-    path('student/{pk/me}/term-courses/', TermCours.as_view()),
-    # path('assistant/{pk,me}/courses/{c-pk}/prof-approved/'),
-    # path('assistant/{pk,me}/courses/{c-pk}/prof-approved/{pk}/'),
-    # path('assistant/{pk,me}/courses/{c-pk}/prof-approved/{pk}/')
 ]

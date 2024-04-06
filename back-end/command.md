@@ -11,3 +11,12 @@ from django.core.management.utils import get_random_secret_key
 ```bash
 print(get_random_secret_key())
 ```
+```bash
+docker-compose up --build -d
+docker-compose logs
+
+```
+
+```bash
+celery -A config beat -l info
+```

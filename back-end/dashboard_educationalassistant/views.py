@@ -1,3 +1,4 @@
+import csv
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, viewsets, status, views
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -11,6 +12,12 @@ from dashboard_student.models import (EmergencyRemovalRequest,
                                       StudentDeleteSemesterRequest,
                                       EmploymentEducationRequest,
                                       RevisionRequest)
+from rest_framework.decorators import action
+
+
+from accounts.models import Student, Teacher, EducationalAssistant
+from education.models import Course, SemesterCourse, Major, StudentCourse
+from dashboard_student.models import EmergencyRemovalRequest, StudentDeleteSemesterRequest, EmploymentEducationRequest
 
 from .filters import (
     StudentFilter,
@@ -21,14 +28,16 @@ from .filters import (
     StudentDeleteSemesterRequestFilter,
     EmploymentEducationRequestFilter,
     RevisionRequestFilter,
+    StudentCourseFilter,
 )
 from .pagination import DefaultPagination
 from .permissions import IsEducationalAssistant
-from .serializers import StudentSerializer, TeacherSerializer, EducationalAssistantSerializer, \
-    StudentCoursePassSerializer
+from .serializers import StudentSerializer, TeacherSerializer, EducationalAssistantSerializer, StudentCourseSerializer
 from accounts.serializers import UserProfileImageUpdateSerializer
 from rest_framework.response import Response
-from rest_framework import views, status
+from rest_framework import status
+from django.http import Http404
+
 
 from .serializers import (
     StudentSerializer,
@@ -149,41 +158,17 @@ class EducationalAssistantChangeProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user.educationalassistant
 
 
-class CoursPass(views.APIView):
-    permission_classes = [IsAuthenticated,]
-    def get(self, request, format=None):
-        if hasattr(request.user, 'Teacher'):
-            Advisor = Teacher.objects.get(id=request.user.teacher.id)
-            students_of_teacher = Student.objects.filter(advisor=Advisor)
-            serializer = StudentCoursePassSerializer(students_of_teacher, many=True)
-            return Response(serializer.data)
-        elif hasattr(request.user, 'Student'):
-            Students = Student.objects.get(id=request.user.student.id)
-            serializer = StudentCoursePassSerializer(Students, many=True)
-            return Response(serializer.data)
-        elif hasattr(request.user, 'EducationalAssistant'):
-            department = EducationalAssistant.objects.get(department)
-        elif hasattr(request.user, 'AdminUser'):
-            pass
+class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = StudentCourseSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = StudentCourseFilter
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated, IsEducationalAssistant]
+    search_fields = ['semester_course__course__course_name']
+    ordering_fields = ['entry_semester']
 
-
-class TermCours(views.APIView):
-    permission_classes = [IsAuthenticated, ]
-
-    def get(self, request, format=None):
-        if hasattr(request.user, 'Teacher'):
-            Advisor = Teacher.objects.get(id=request.user.teacher.id)
-            students_of_teacher = Student.objects.filter(advisor=Advisor)
-            serializer = StudentCoursePassSerializer(students_of_teacher, many=True)
-            return Response(serializer.data)
-        elif hasattr(request.user, 'Student'):
-            Students = Student.objects.get(id=request.user.student.id)
-            serializer = StudentCoursePassSerializer(Students, many=True)
-            return Response(serializer.data)
-        elif hasattr(request.user, 'EducationalAssistant'):
-            department = EducationalAssistant.objects.get(department)
-        elif hasattr(request.user, 'AdminUser'):
-            pass
+    def get_queryset(self):
+        return StudentCourse.objects.filter(student__user=self.request.user).exclude(score__isnull=True).all()
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -485,3 +470,91 @@ class RevisionRequestViewSet(viewsets.ModelViewSet):
         Disallow DELETE requests.
         """
         return Response({"detail": "DELETE requests are not allowed."}, status=405)
+
+
+class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = StudentCourseSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = StudentCourseFilter
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated, IsEducationalAssistant]
+    search_fields = ['semester_course__course__course_name']
+    ordering_fields = ['entry_semester']
+
+
+class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated, IsEducationalAssistant]
+    serializer_class = SemesterCourseSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+
+    def get_queryset(self):
+        educational_assistant = self.request.user.educationalassistant
+        queryset = SemesterCourse.objects.filter(course__department=educational_assistant.field.department)
+        return queryset
+
+    @action(detail=True, methods=['post'], name='Evaluate Students')
+    def evaluate_students(self, request, pk=None):
+        semester_course = self.get_object()
+        data = request.data.get('student_scores', [])
+
+        for entry in data:
+            student_id = entry.get('student_id')
+            score = entry.get('score')
+            action = entry.get('action')
+
+            # Fetch the student course instance
+            student_course = StudentCourse.objects.filter(
+                semester_course=semester_course, student_id=student_id).first()
+
+            if action == 'add':
+                if student_course:
+                    # Update score if student course exists
+                    student_course.score = score
+                    student_course.save()
+            elif action == 'change':
+                # Update score if student course exists
+                if student_course:
+                    student_course.score = score
+                    student_course.save()
+
+        return Response(
+            {'message': 'Student scores updated successfully'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], name='Show Score Students')
+    def score_students(self, request, pk=None):
+        semester_course = self.get_object()
+        students = StudentCourse.objects.filter(
+            semester_course=semester_course)
+        serializer = StudentCourseSerializer(students, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], name='Send CSV file Evaluation')
+    def evaluate_students_by_CSV(self, request, pk=None):
+        semester_course = self.get_object()
+        data_file = request.FILES.get('file')
+
+        if data_file:
+            # Assuming CSV file has 'student_id' and 'score' columns
+            csv_data = csv.DictReader(data_file)
+            for row in csv_data:
+                student_id = row.get('student_id')
+                score = row.get('score')
+
+                # Fetch or create StudentCourse instance
+                student_course, created = StudentCourse.objects.get_or_create(
+                    semester_course=semester_course,
+                    student_id=student_id,
+                    defaults={'score': score}
+                )
+
+                # If not created, update score
+                if not created:
+                    student_course.score = score
+                    student_course.save()
+
+            return Response(
+                {'message': 'Student scores updated successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'No file uploaded'},
+                            status=status.HTTP_400_BAD_REQUEST)

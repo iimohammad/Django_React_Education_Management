@@ -2,11 +2,18 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 import logging
 from education.models import Major
-
+from django.conf import settings
 from .validators import phone_validator , validate_national_code
 
 logger = logging.getLogger(__name__)
+from minio import Minio
 
+# minio_client = Minio(
+#     MINIO_SERVER_URL = settings.MINIO_SERVER_URL,
+#     access_key=settings.MINIO_ROOT_USER,
+#     secret_key=settings.MINIO_ROOT_PASSWORD,
+#     secure=settings.MINIO_SECURE
+# )
 
 class User(AbstractUser):
     class Gender(models.TextChoices):
