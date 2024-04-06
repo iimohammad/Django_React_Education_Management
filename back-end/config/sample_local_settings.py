@@ -18,3 +18,4 @@ GOOGLE_CLIENT_SECRET = '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'
 GOOGLE_REDIRECT_URI = 'http://localhost:8000/google-auth/redirect/'
 
 USE_DEBUG_TOOLBAR = True
+USE_SILK = True

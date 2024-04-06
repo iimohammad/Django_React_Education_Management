@@ -61,6 +61,7 @@ LOCAL_APPS = [
 
 INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -76,6 +77,10 @@ MIDDLEWARE = [
 if os.environ.get('USE_DEBUG_TOOLBAR'):
     MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
     INSTALLED_APPS.append("debug_toolbar")
+    
+if os.environ.get('USE_SILK'):
+    MIDDLEWARE.append('silk.middleware.SilkyMiddleware')
+    INSTALLED_APPS.append('silk')
 
 INTERNAL_IPS = [
     "127.0.0.1",
