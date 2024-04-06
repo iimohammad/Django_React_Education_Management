@@ -1,5 +1,5 @@
 from rest_framework import serializers
-
+from datetime import date
 
 from accounts.models import Student, Teacher, User, EducationalAssistant
 from education.models import (
@@ -176,7 +176,7 @@ class EducationalAssistantSerializer(serializers.ModelSerializer):
     field = MajorSerializer(read_only = True)
     class Meta:
         model = EducationalAssistant
-        fields = ['user', 'field']
+        fields = ['id', 'user', 'field']
 
 
 class StudentCoursePassSerializer(serializers.ModelSerializer):
@@ -260,7 +260,7 @@ class SemesterCourseSerializer(serializers.ModelSerializer):
     def get_class_days(self, obj):
         
         return [day.name for day in obj.class_days.all()]
-    
+
     def get_fields(self):
         fields = super().get_fields()
 
@@ -277,7 +277,12 @@ class SemesterCourseSerializer(serializers.ModelSerializer):
                 queryset=Teacher.objects.filter(
                     department=educational_assistant.field.department
                 ))
-    
+            fields['semester'] = serializers.PrimaryKeyRelatedField(
+                queryset=Semester.objects.filter(
+                    start_semester__lte=date.today(),
+                    end_semester__gte=date.today()
+                ))
+
         return fields
 
 

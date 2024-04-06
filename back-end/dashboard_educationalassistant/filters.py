@@ -20,6 +20,8 @@ class StudentFilter(FilterSet):
             'user__national_code': ['exact'],
             'entry_year': ['exact', 'gte', 'lte'],
             'major__major_name': ['contains'],
+            'major__department__department_name': ['contains'],
+            'military_service_status': ['exact'],
         }
 
 

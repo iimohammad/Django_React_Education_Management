@@ -2,7 +2,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 
-from .views import StudentApiView, StudentViewSet, TeacherViewSet, EducationalAssistantChangeProfileView, CoursPass, TermCours
+from .views import StudentApiView, StudentViewSet, TeacherViewSet, CoursPass, TermCours
 
 from .views import (
     StudentApiView,
@@ -13,6 +13,9 @@ from .views import (
     EmergencyRemovalRequestViewSet,
     StudentDeleteSemesterRequestViewSet,
     EmploymentEducationRequestViewSet,
+    ShowProfileAPIView,
+    EducationalAssistantProfileUpdateView,
+    # EducationalAssistantChangeProfileView,
     )
 
 router = DefaultRouter()
@@ -28,7 +31,9 @@ router.register("education_employments", EmploymentEducationRequestViewSet, base
 urlpatterns = [
     path('', include(router.urls)),
     path('students/<int:pk>/', StudentApiView.as_view(), name='student_detail'),
-    path('EditProfile/', EducationalAssistantChangeProfileView.as_view(), name= 'AssistantProfile'),
+    path('show_profile/', ShowProfileAPIView.as_view(), name= 'show_assistant_profile'),
+    path('edit_profile/', EducationalAssistantProfileUpdateView.as_view(), name= 'edit_assistant_profile'),
+    # path('update_profile/', EducationalAssistantChangeProfileView.as_view(), name= 'update_assistant_profile'),
     path('student/{pk/me}/pass-courses-report/', CoursPass.as_view()),
     path('student/{pk/me}/term-courses/', TermCours.as_view()),
     # path('assistant/{pk,me}/courses/{c-pk}/prof-approved/'),
