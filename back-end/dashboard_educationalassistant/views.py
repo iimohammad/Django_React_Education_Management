@@ -53,10 +53,11 @@ from .serializers import (
     RevisionRequestSerializer,
 )
 
+from .versioning import DefualtVersioning
+
 
 class StudentViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Student.objects.all()
-    serializer_class = StudentSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = StudentFilter
     pagination_class = DefaultPagination
@@ -65,7 +66,11 @@ class StudentViewSet(viewsets.ReadOnlyModelViewSet):
                      'user__national_code',
                      ]
     ordering_fields = ['entry_semester']
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return StudentSerializer
     def get_queryset(self):
         educational_assistant = self.request.user.educationalassistant
 
@@ -78,28 +83,33 @@ class StudentViewSet(viewsets.ReadOnlyModelViewSet):
 
 class TeacherViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Teacher.objects.all()
-    serializer_class = TeacherSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = TeacherFilter
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
     search_fields = ['title', 'description']
     ordering_fields = ['entry_semester']
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return TeacherSerializer
     def get_queryset(self):
         educational_assistant = self.request.user.educationalassistant
 
         queryset = Teacher.objects.filter(
             department=educational_assistant.field.department
         )
-
         return queryset
 
 
 class ShowProfileAPIView(generics.RetrieveAPIView):
-    serializer_class = EducationalAssistantSerializer
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return EducationalAssistantSerializer
     def get_object(self):
         user = self.request.user
 
@@ -122,9 +132,12 @@ class ShowProfileAPIView(generics.RetrieveAPIView):
 
 class EducationalAssistantProfileUpdateView(generics.UpdateAPIView):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return UserSerializer
     def get_object(self):
 
         return self.request.user
@@ -140,22 +153,28 @@ class EducationalAssistantProfileUpdateView(generics.UpdateAPIView):
 
 class EducationalAssistantChangeProfileView(generics.RetrieveUpdateAPIView):
     queryset = EducationalAssistant.objects.all()
-    serializer_class = EducationalAssistantSerializer
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return EducationalAssistantSerializer
     def get_object(self):
-
         return self.request.user.educationalassistant
 
 
 class StudentPassedCoursesAPIView(views.APIView):
-    serializer_class = StudentCourseSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = StudentCourseFilter
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
     search_fields = ['semester_course__course__course_name']
     ordering_fields = ['score']
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return StudentCourseSerializer
 
     def get_queryset(self):
         major = self.request.user.educationalassistant.field
@@ -174,10 +193,13 @@ class StudentPassedCoursesAPIView(views.APIView):
 
 
 class StudentsPassedCoursesAPIView(views.APIView):
-    serializer_class = StudentCourseSerializer
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return StudentCourseSerializer
     def get(self, request, student_id, format=None):
         try:
             major = self.request.user.educationalassistant.field
@@ -202,14 +224,16 @@ class StudentsPassedCoursesAPIView(views.APIView):
 
 
 class StudentRegisteredCoursesAPIView(views.APIView):
-    serializer_class = StudentCourseSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = StudentCourseFilter
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
     search_fields = ['semester_course__course__course_name']
     ordering_fields = ['score']
-
+    versioning_class = DefualtVersioning
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return StudentCourseSerializer
     def get_queryset(self):
         today = date.today()
         major = self.request.user.educationalassistant.field
@@ -230,10 +254,13 @@ class StudentRegisteredCoursesAPIView(views.APIView):
 
 
 class StudentsRegisteredCoursesAPIView(views.APIView):
-    serializer_class = StudentCourseSerializer
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return StudentCourseSerializer
     def get(self, request, student_id, format=None):
         try:
             today = date.today()
@@ -261,14 +288,17 @@ class StudentsRegisteredCoursesAPIView(views.APIView):
 
 
 class CourseViewSet(viewsets.ModelViewSet):
-    serializer_class = CourseSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = CourseFilter
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
     search_fields = ['course_name', 'course_code']
     ordering_fields = ['course_code']
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return CourseSerializer
     def get_queryset(self):
         educational_assistant = self.request.user.educationalassistant
 
@@ -323,14 +353,17 @@ class CourseViewSet(viewsets.ModelViewSet):
 
 
 class SemesterCourseViewSet(viewsets.ModelViewSet):
-    serializer_class = SemesterCourseSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = SemesterCourseFilter
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
     search_fields = ['exam_location']
     ordering_fields = ['exam_datetime', 'course_capacity']
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return SemesterCourseSerializer
     def get_queryset(self):
         educational_assistant = self.request.user.educationalassistant
 
@@ -437,12 +470,16 @@ class SemesterCourseViewSet(viewsets.ModelViewSet):
 
 
 class EmergencyRemovalRequestViewSet(viewsets.ModelViewSet):
-    serializer_class = EmergencyRemovalRequestSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = EmergencyRemovalRequestFilter
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
     ordering_fields = ['created_at']
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return EmergencyRemovalRequestSerializer
 
     def get_queryset(self):
         educational_assistant = self.request.user.educationalassistant
@@ -468,12 +505,16 @@ class EmergencyRemovalRequestViewSet(viewsets.ModelViewSet):
 
 
 class StudentDeleteSemesterRequestViewSet(viewsets.ModelViewSet):
-    serializer_class = StudentDeleteSemesterRequestSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = StudentDeleteSemesterRequestFilter
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
     ordering_fields = ['created_at']
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return StudentDeleteSemesterRequestSerializer
 
     def get_queryset(self):
         educational_assistant = self.request.user.educationalassistant
@@ -500,13 +541,16 @@ class StudentDeleteSemesterRequestViewSet(viewsets.ModelViewSet):
 
 
 class EmploymentEducationRequestViewSet(viewsets.ModelViewSet):
-    serializer_class = EmploymentEducationRequestSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = EmploymentEducationRequestFilter
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
     ordering_fields = ['created_at']
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return EmploymentEducationRequestSerializer
     def get_queryset(self):
         educational_assistant = self.request.user.educationalassistant
 
@@ -531,13 +575,16 @@ class EmploymentEducationRequestViewSet(viewsets.ModelViewSet):
 
 
 class RevisionRequestViewSet(viewsets.ModelViewSet):
-    serializer_class = RevisionRequestSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = RevisionRequestFilter
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
     ordering_fields = ['created_at']
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return RevisionRequestSerializer
     def get_queryset(self):
         educational_assistant = self.request.user.educationalassistant
         today = date.today()
@@ -563,4 +610,3 @@ class RevisionRequestViewSet(viewsets.ModelViewSet):
         Disallow DELETE requests.
         """
         return Response({"detail": "DELETE requests are not allowed."}, status=405)
-

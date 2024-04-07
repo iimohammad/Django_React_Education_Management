@@ -18,6 +18,7 @@ from .models import SemesterRegistrationRequest , RevisionRequest , AddRemoveReq
                     EmploymentEducationRequest, UnitSelectionRequest
 from .filters import CorseFilter, SemesterCourseFilter , StudentCourseFilter, StudentExamFilter
 from .pagination import DefaultPagination
+from .versioning import DefualtVersioning
 from django_filters.rest_framework import DjangoFilterBackend
 from django.http import Http404
 from django.views.decorators.cache import cache_page
@@ -79,15 +80,18 @@ from django.utils.decorators import method_decorator
 #         return Response({'error': 'Invalid approval status'}, status=status.HTTP_400_BAD_REQUEST)
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = CourseSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = CorseFilter
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsStudent]
     search_fields = ['course_name']
     ordering_fields = ['course_code' , 'department__department_name' , 'major__major_name',
-                       'credit_num']
+                        'credit_num']
+    versioning_class = DefualtVersioning
     
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return CourseSerializer
     def get_queryset(self):
         return Course.objects.filter(availablity = 'A').all()
     
@@ -97,14 +101,18 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = SemesterCourseSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = SemesterCourseFilter
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsStudent]
     search_fields = ['course__course_name']
     ordering_fields = ['instructor__user__first_name', 'instructor__user__last_name',
-                       'course_capacity', ]
+                        'course_capacity', ]
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return SemesterCourseSerializer
     def get_queryset(self):
         last_semester = Semester.objects.order_by('-start_semester').first()
         return SemesterCourse.objects.filter(semester = last_semester).all()
@@ -112,46 +120,54 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
     @method_decorator(cache_page(60 * 5))
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
-        
-
 
 class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = StudentCourseSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = StudentCourseFilter
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsStudent]
     search_fields = ['semester_course__course__course_name']
     ordering_fields = ['entry_semester']
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return StudentCourseSerializer
     def get_queryset(self):
         last_semester = Semester.objects.order_by('-start_semester').first()
         return StudentCourse.objects.filter(student__user=self.request.user,
                                             semester_course__semester = last_semester).all()
     
 class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = StudentCourseSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = StudentCourseFilter
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsStudent]
     search_fields = ['semester_course__course__course_name']
     ordering_fields = ['entry_semester']
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return StudentCourseSerializer
     def get_queryset(self):
         return StudentCourse.objects.filter(student__user=self.request.user
                                             ).exclude(score__isnull=True).all()
 
 
 class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = ExamStudentCourseSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = StudentExamFilter
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsStudent]
     search_fields = ['semester_course__course__course_name']
     ordering_fields = ['entry_semester']
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return ExamStudentCourseSerializer
+        
     def get_queryset(self):
         last_semester = Semester.objects.order_by('-start_semester').first()
         return StudentCourse.objects.filter(student__user=self.request.user , 
@@ -160,9 +176,13 @@ class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class StudentProfileViewset(generics.RetrieveAPIView):
-    serializer_class = ProfileStudentSerializer
     permission_classes = [IsAuthenticated, IsStudent]
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return ProfileStudentSerializer
+        
     def get_object(self):
         return Student.objects.filter(user=self.request.user).first()
 
@@ -171,13 +191,17 @@ class SemesterRegistrationRequestAPIView(mixins.CreateModelMixin,
                                          mixins.DestroyModelMixin,
                                          mixins.ListModelMixin,
                                          viewsets.GenericViewSet):
-    serializer_class = SemesterRegistrationRequestSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsStudent]
     search_fields = ['semester__name']
     ordering_fields = ['created_at', 'semester__name']
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return SemesterRegistrationRequestSerializer
+        
     def get_queryset(self):
         return SemesterRegistrationRequest.objects.filter \
             (student__user=self.request.user).all()
@@ -211,14 +235,18 @@ class UnitSelectionRequestAPIView(mixins.CreateModelMixin,
                                   mixins.DestroyModelMixin,
                                   mixins.ListModelMixin,
                                   viewsets.GenericViewSet):
-    serializer_class = UnitSelectionRequestSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsStudent , 
                           HavePermosionForUnitSelectionForLastSemester,
                           ]
     ordering_fields = ['created_at', 'approval_status']
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return UnitSelectionRequestSerializer
+        
     def get_queryset(self):
         return UnitSelectionRequest.objects.filter \
             (semester_registration_request__student__user=self.request.user).all()
@@ -244,12 +272,16 @@ class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
                                           mixins.DestroyModelMixin,
                                           mixins.ListModelMixin,
                                           viewsets.GenericViewSet):
-    serializer_class = StudentDeleteSemesterRequestSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsStudent]
     ordering_fields = ['created_at', 'approval_status']
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return StudentDeleteSemesterRequestSerializer
+        
     def get_queryset(self):
         return StudentDeleteSemesterRequest.objects.filter \
             (semester_registration_request__student__user=self.request.user).all()
@@ -275,12 +307,16 @@ class RevisionRequestAPIView(mixins.CreateModelMixin,
                              mixins.DestroyModelMixin,
                              mixins.ListModelMixin,
                              viewsets.GenericViewSet):
-    serializer_class = RevisionRequestSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsStudent]
     ordering_fields = ['created_at']
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return RevisionRequestSerializer
+        
     def get_queryset(self):
         return RevisionRequest.objects.filter \
             (student__user=self.request.user).all()
@@ -305,12 +341,15 @@ class EmergencyRemovalRequestAPIView(mixins.CreateModelMixin,
                                      mixins.DestroyModelMixin,
                                      mixins.ListModelMixin,
                                      viewsets.GenericViewSet):
-    serializer_class = EmergencyRemovalRequestSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsStudent]
     ordering_fields = ['created_at']
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return EmergencyRemovalRequestSerializer
     def get_queryset(self):
         return EmergencyRemovalRequest.objects.filter \
             (student__user=self.request.user).all()
@@ -334,11 +373,15 @@ class EnrollmentRequestApiView(mixins.CreateModelMixin,
                    mixins.DestroyModelMixin,
                    mixins.ListModelMixin,
                    viewsets.GenericViewSet):
-    serializer_class = EnrollmentRequestSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated,IsStudent]
     ordering_fields = ['created_at']
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return EnrollmentRequestSerializer
     def get_queryset(self):
         return EnrollmentRequest.objects.filter \
                             (student__user = self.request.user).all()
@@ -361,14 +404,20 @@ class EmploymentEducationRequestApiView(mixins.CreateModelMixin,
                    mixins.DestroyModelMixin,
                    mixins.ListModelMixin,
                    viewsets.GenericViewSet):
-    serializer_class = EmploymentEducationRequestSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated,IsStudent]
     ordering_fields = ['created_at']
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return EmploymentEducationRequestSerializer
+        
     def get_queryset(self):
         return EmploymentEducationRequest.objects.filter \
                             (student__user = self.request.user).all()
+                            
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['user'] = self.request.user
