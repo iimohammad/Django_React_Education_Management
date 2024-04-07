@@ -6,7 +6,6 @@ from django.conf import settings
 from .validators import phone_validator , validate_national_code
 
 logger = logging.getLogger(__name__)
-from minio import Minio
 
 # minio_client = Minio(
 #     MINIO_SERVER_URL = settings.MINIO_SERVER_URL,

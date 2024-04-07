@@ -1,15 +1,24 @@
-import csv
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, viewsets, status, views
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from datetime import date
+
+from accounts.models import Student, Teacher, EducationalAssistant, User
+from education.models import Course, SemesterCourse, Major, Semester
+from dashboard_student.models import (EmergencyRemovalRequest,
+                                      StudentDeleteSemesterRequest,
+                                      EmploymentEducationRequest,
+                                      RevisionRequest)
 from rest_framework.decorators import action
 
 
 from accounts.models import Student, Teacher, EducationalAssistant
 from education.models import Course, SemesterCourse, Major, StudentCourse
-from dashboard_student.models import EmergencyRemovalRequest, StudentDeleteSemesterRequest, EmploymentEducationRequest
+from dashboard_student.models import (EmergencyRemovalRequest,
+                                      StudentDeleteSemesterRequest,
+                                      EmploymentEducationRequest)
 
 from .filters import (
     StudentFilter,
@@ -19,15 +28,17 @@ from .filters import (
     EmergencyRemovalRequestFilter,
     StudentDeleteSemesterRequestFilter,
     EmploymentEducationRequestFilter,
+    RevisionRequestFilter,
     StudentCourseFilter,
 )
 from .pagination import DefaultPagination
 from .permissions import IsEducationalAssistant
-from .serializers import StudentSerializer, TeacherSerializer, EducationalAssistantSerializer, StudentCourseSerializer
-from accounts.serializers import UserProfileImageUpdateSerializer
+from .serializers import (StudentSerializer,
+                          TeacherSerializer,
+                          EducationalAssistantSerializer,
+                          StudentCourseSerializer)
 from rest_framework.response import Response
 from rest_framework import status
-from django.http import Http404
 
 
 from .serializers import (
@@ -38,6 +49,8 @@ from .serializers import (
     EmergencyRemovalRequestSerializer,
     StudentDeleteSemesterRequestSerializer,
     EmploymentEducationRequestSerializer,
+    UserSerializer,
+    RevisionRequestSerializer,
 )
 
 
@@ -63,12 +76,6 @@ class StudentViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset
 
 
-class StudentApiView(generics.RetrieveAPIView):
-    queryset = Student.objects.all()
-    serializer_class = StudentSerializer
-    permission_classes = [IsAuthenticated, IsEducationalAssistant]
-
-
 class TeacherViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
@@ -89,31 +96,168 @@ class TeacherViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset
 
 
-class TeacherApiView(generics.RetrieveAPIView):
-    queryset = Teacher.objects.all()
-    serializer_class = TeacherSerializer
-    permission_classes = [IsAuthenticated, IsEducationalAssistant]
-
-
-class EducationalAssistantChangeProfileView(generics.RetrieveUpdateAPIView):
+class ShowProfileAPIView(generics.RetrieveAPIView):
     serializer_class = EducationalAssistantSerializer
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
 
     def get_object(self):
-        return EducationalAssistant.objects.filter(user=self.request.user)
+        user = self.request.user
+
+        try:
+            educational_assistant = EducationalAssistant.objects.get(user=user)
+
+            return educational_assistant
+        except Teacher.DoesNotExist:
+
+            return None
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance is None:
+            return Response({'error': 'User is not an educational assistant'}, status=404)
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
 
-class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet):
+class EducationalAssistantProfileUpdateView(generics.UpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated, IsEducationalAssistant]
+
+    def get_object(self):
+
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+
+class EducationalAssistantChangeProfileView(generics.RetrieveUpdateAPIView):
+    queryset = EducationalAssistant.objects.all()
+    serializer_class = EducationalAssistantSerializer
+    permission_classes = [IsAuthenticated, IsEducationalAssistant]
+
+    def get_object(self):
+
+        return self.request.user.educationalassistant
+
+
+class StudentPassedCoursesAPIView(views.APIView):
     serializer_class = StudentCourseSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = StudentCourseFilter
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
     search_fields = ['semester_course__course__course_name']
-    ordering_fields = ['entry_semester']
+    ordering_fields = ['score']
 
     def get_queryset(self):
-        return StudentCourse.objects.filter(student__user=self.request.user).exclude(score__isnull=True).all()
+        major = self.request.user.educationalassistant.field
+        return StudentCourse.objects.filter(student__major=major,
+                                            score__isnull=False,
+                                            status='F')
+
+    def get(self, request):
+        queryset = self.get_queryset()
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['GET'])
+    def get_all_student_courses(self, request):
+        return self.get(request)
+
+
+class StudentsPassedCoursesAPIView(views.APIView):
+    serializer_class = StudentCourseSerializer
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated, IsEducationalAssistant]
+
+    def get(self, request, student_id, format=None):
+        try:
+            major = self.request.user.educationalassistant.field
+            passed_courses = StudentCourse.objects.filter(
+                student__id=student_id,
+                score__isnull=False,
+                student__major=major,
+                status=StudentCourse.FINALREGISTERED
+            )
+            if not passed_courses.exists():
+                raise StudentCourse.DoesNotExist("Student not found or no passed courses.")
+
+            serializer = StudentCourseSerializer(passed_courses, many=True)
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except StudentCourse.DoesNotExist as e:
+
+            return Response(
+                {"detail": f"{str(e)}"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
+class StudentRegisteredCoursesAPIView(views.APIView):
+    serializer_class = StudentCourseSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = StudentCourseFilter
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated, IsEducationalAssistant]
+    search_fields = ['semester_course__course__course_name']
+    ordering_fields = ['score']
+
+    def get_queryset(self):
+        today = date.today()
+        major = self.request.user.educationalassistant.field
+        return StudentCourse.objects.filter(student__major=major,
+                                            score__isnull=True,
+                                            status='R',
+                                            semester_course__semester__start_semester__lte=today,
+                                            semester_course__semester__end_semester__gte=today)
+
+    def get(self, request):
+        queryset = self.get_queryset()
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['GET'])
+    def get_all_student_courses(self, request):
+        return self.get(request)
+
+
+class StudentsRegisteredCoursesAPIView(views.APIView):
+    serializer_class = StudentCourseSerializer
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated, IsEducationalAssistant]
+
+    def get(self, request, student_id, format=None):
+        try:
+            today = date.today()
+            major = self.request.user.educationalassistant.field
+            passed_courses = StudentCourse.objects.filter(
+                student__id=student_id,
+                score__isnull=True,
+                student__major=major,
+                status=StudentCourse.REGISTERED,
+                semester_course__semester__start_semester__lte=today,
+                semester_course__semester__end_semester__gte=today
+            )
+            if not passed_courses.exists():
+                raise StudentCourse.DoesNotExist("Student not found or no registered courses.")
+
+            serializer = StudentCourseSerializer(passed_courses, many=True)
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except StudentCourse.DoesNotExist as e:
+
+            return Response(
+                {"detail": f"{str(e)}"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -154,6 +298,28 @@ class CourseViewSet(viewsets.ModelViewSet):
                                 status=status.HTTP_403_FORBIDDEN)
         except Major.DoesNotExist:
             return Response({'detail': 'Invalid major ID provided.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    def update(self, request, *args, **kwargs):
+        course_instance = self.get_object()
+        educational_assistant = request.user.educationalassistant
+        semester_data = request.data
+        major_id = semester_data.get('major')
+
+        try:
+            major = Major.objects.get(id=major_id)
+            if major.department == educational_assistant.field.department and \
+                    major == educational_assistant.field:
+                serializer = self.get_serializer(instance=course_instance,
+                                                 data=semester_data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response({'detail':
+                                     'You can only update courses relevant to your department and major.'},
+                                status=status.HTTP_403_FORBIDDEN)
+        except Major.DoesNotExist:
+            return Response({'detail': 'Invalid major ID provided.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SemesterCourseViewSet(viewsets.ModelViewSet):
@@ -177,23 +343,97 @@ class SemesterCourseViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         educational_assistant = request.user.educationalassistant
-        semester_data = request.data
-        course_id = semester_data.get('course')
+        semester_course_data = request.data
+        course_id = semester_course_data.get('course')
+        semester_id = semester_course_data.get('semester')
 
         try:
             course = Course.objects.get(id=course_id)
+            semester = Semester.objects.get(id=semester_id)
+            try:
+                semester_addremove_end = semester.addremove.addremove_end
+                if semester_addremove_end == None:
+                    raise Exception("This semester has no addremove date data!")
+            except Exception as e:
+                return Response({'detail': f"{str(e)}"},
+                                status=status.HTTP_404_NOT_FOUND)
+            today = date.today()
+
             if course.department == educational_assistant.field.department and \
                     course.major == educational_assistant.field:
-                serializer = self.get_serializer(data=semester_data)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                if today <= semester_addremove_end:
+                    if course.course_type == 'A' or course.course_type == 'I' or course.course_type == 'L':
+                        semester_course_data["exam_datetime"] = None
+                        semester_course_data["exam_location"] = None
+                    if course.availablity == 'D':
+                        return Response({'detail':
+                                "This course is deleted! Please select another course."},
+                                        status=status.HTTP_403_FORBIDDEN)
+                    serializer = self.get_serializer(data=semester_course_data)
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                else:
+                    return Response({'detail':
+                            "It's past add and remove time range. Please try again for the next semester!"},
+                                status=status.HTTP_403_FORBIDDEN)
             else:
                 return Response({'detail':
-                                     'You can only create semester courses relevant to your department and major.'},
-                                status=status.HTTP_403_FORBIDDEN)
+                            'You can only create semester courses relevant to your department and major.'},
+                        status=status.HTTP_403_FORBIDDEN)
+
         except Course.DoesNotExist:
             return Response({'detail': 'Invalid course ID provided.'}, status=status.HTTP_400_BAD_REQUEST)
+        except Semester.DoesNotExist:
+            return Response({'detail': 'Invalid semester ID provided.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    def update(self, request, *args, **kwargs):
+        semester_course_instance = self.get_object()
+        educational_assistant = request.user.educationalassistant
+        semester_course_data = request.data
+        course_id = semester_course_data.get('course')
+        semester_id = semester_course_data.get('semester')
+
+        try:
+            course = Course.objects.get(id=course_id)
+            semester = Semester.objects.get(id=semester_id)
+            try:
+                semester_addremove_end = semester.addremove.addremove_end
+                if semester_addremove_end == None:
+                    raise SemesterCourse.DoesNotExist("This semester has no addremove date data!")
+            except SemesterCourse.DoesNotExist as e:
+                return Response({'detail': f"{str(e)}"},
+                                status=status.HTTP_404_NOT_FOUND)
+            today = date.today()
+
+            if course.department == educational_assistant.field.department and \
+                    course.major == educational_assistant.field:
+                if today <= semester_addremove_end:
+                    if course.course_type == 'A' or course.course_type == 'I' or course.course_type == 'L':
+                        semester_course_data["exam_datetime"] = None
+                        semester_course_data["exam_location"] = None
+                    if course.availablity == 'D':
+                        return Response({'detail':
+                                "You cannot update the semester course's availability here!"},
+                                        status=status.HTTP_403_FORBIDDEN)
+                    serializer = self.get_serializer(instance=semester_course_instance,
+                                                     data=semester_course_data)
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                else:
+                    return Response({'detail':
+                            "It's past add and remove time range. Please try again for the next semester!"},
+                                status=status.HTTP_403_FORBIDDEN)
+            else:
+                return Response({'detail':
+                            'You can only create semester courses relevant to your department and major.'},
+                        status=status.HTTP_403_FORBIDDEN)
+
+        except Course.DoesNotExist:
+            return Response({'detail': 'Invalid course ID provided.'}, status=status.HTTP_400_BAD_REQUEST)
+        except Semester.DoesNotExist:
+            return Response({'detail': 'Invalid semester ID provided.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class EmergencyRemovalRequestViewSet(viewsets.ModelViewSet):
@@ -290,90 +530,37 @@ class EmploymentEducationRequestViewSet(viewsets.ModelViewSet):
         return Response({"detail": "DELETE requests are not allowed."}, status=405)
 
 
-class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = StudentCourseSerializer
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_class = StudentCourseFilter
+class RevisionRequestViewSet(viewsets.ModelViewSet):
+    serializer_class = RevisionRequestSerializer
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = RevisionRequestFilter
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
-    search_fields = ['semester_course__course__course_name']
-    ordering_fields = ['entry_semester']
-
-
-# Evaluate Students
-class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
-    permission_classes = [IsAuthenticated, IsEducationalAssistant]
-    serializer_class = SemesterCourseSerializer
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
+    ordering_fields = ['created_at']
 
     def get_queryset(self):
         educational_assistant = self.request.user.educationalassistant
-        queryset = SemesterCourse.objects.filter(course__department=educational_assistant.field.department)
+        today = date.today()
+
+        queryset = RevisionRequest.objects.filter(
+            teacher_approval_status='A',
+            educational_assistant_approval_status='P',
+            student__major=educational_assistant.field,
+            course__semester_course__semester__start_semester__lte=today,
+            course__semester_course__semester__end_semester__gte=today
+        )
+
         return queryset
 
-    @action(detail=True, methods=['post'], name='Evaluate Students')
-    def evaluate_students(self, request, pk=None):
-        semester_course = self.get_object()
-        data = request.data.get('student_scores', [])
+    def create(self, request, *args, **kwargs):
+        """
+        Disallow POST requests.
+        """
+        return Response({"detail": "POST requests are not allowed."}, status=405)
 
-        for entry in data:
-            student_id = entry.get('student_id')
-            score = entry.get('score')
-            action = entry.get('action')
+    def destroy(self, request, *args, **kwargs):
+        """
+        Disallow DELETE requests.
+        """
+        return Response({"detail": "DELETE requests are not allowed."}, status=405)
 
-            # Fetch the student course instance
-            student_course = StudentCourse.objects.filter(
-                semester_course=semester_course, student_id=student_id).first()
-
-            if action == 'add':
-                if student_course:
-                    # Update score if student course exists
-                    student_course.score = score
-                    student_course.save()
-            elif action == 'change':
-                # Update score if student course exists
-                if student_course:
-                    student_course.score = score
-                    student_course.save()
-
-        return Response(
-            {'message': 'Student scores updated successfully'}, status=status.HTTP_200_OK)
-
-    @action(detail=True, methods=['get'], name='Show Score Students')
-    def score_students(self, request, pk=None):
-        semester_course = self.get_object()
-        students = StudentCourse.objects.filter(
-            semester_course=semester_course)
-        serializer = StudentCourseSerializer(students, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['post'], name='Send CSV file Evaluation')
-    def evaluate_students_by_CSV(self, request, pk=None):
-        semester_course = self.get_object()
-        data_file = request.FILES.get('file')
-
-        if data_file:
-            # Assuming CSV file has 'student_id' and 'score' columns
-            csv_data = csv.DictReader(data_file)
-            for row in csv_data:
-                student_id = row.get('student_id')
-                score = row.get('score')
-
-                # Fetch or create StudentCourse instance
-                student_course, created = StudentCourse.objects.get_or_create(
-                    semester_course=semester_course,
-                    student_id=student_id,
-                    defaults={'score': score}
-                )
-
-                # If not created, update score
-                if not created:
-                    student_course.score = score
-                    student_course.save()
-
-            return Response(
-                {'message': 'Student scores updated successfully'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'error': 'No file uploaded'},
-                            status=status.HTTP_400_BAD_REQUEST)

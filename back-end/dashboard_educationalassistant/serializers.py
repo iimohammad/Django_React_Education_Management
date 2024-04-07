@@ -1,5 +1,5 @@
 from rest_framework import serializers
-
+from datetime import date
 
 from accounts.models import Student, Teacher, User, EducationalAssistant
 from education.models import (
@@ -20,6 +20,7 @@ from dashboard_student.models import (
     StudentDeleteSemesterRequest,
     EmploymentEducationRequest,
     SemesterRegistrationRequest,
+    RevisionRequest,
 )
 from education.models import Department, Major, StudentCourse, SemesterCourse
 
@@ -177,7 +178,7 @@ class EducationalAssistantSerializer(serializers.ModelSerializer):
     field = MajorSerializer(read_only = True)
     class Meta:
         model = EducationalAssistant
-        fields = ['user', 'field']
+        fields = ['id', 'user', 'field']
 
 
 class StudentCourseSerializer(serializers.ModelSerializer):
@@ -255,7 +256,7 @@ class SemesterCourseSerializer(serializers.ModelSerializer):
     def get_class_days(self, obj):
         
         return [day.name for day in obj.class_days.all()]
-    
+
     def get_fields(self):
         fields = super().get_fields()
 
@@ -272,7 +273,12 @@ class SemesterCourseSerializer(serializers.ModelSerializer):
                 queryset=Teacher.objects.filter(
                     department=educational_assistant.field.department
                 ))
-    
+            fields['semester'] = serializers.PrimaryKeyRelatedField(
+                queryset=Semester.objects.filter(
+                    start_semester__lte=date.today(),
+                    end_semester__gte=date.today()
+                ))
+
         return fields
 
 
@@ -282,24 +288,6 @@ class EmergencyRemovalRequestSerializer(serializers.ModelSerializer):
         fields = ['id', 'student', 'approval_status', 'created_at',
                   'course', 'student_explanation', 'educational_assistant_explanation']
         read_only_fields = ['id', 'student', 'created_at', 'course', 'student_explanation']
-    
-    def get_fields(self):
-        fields = super().get_fields()
-
-        if self.context.get('request') and (self.context['request'].method == 'POST' 
-                                            or self.context['request'].method == 'PUT'):
-            educational_assistant = self.context['request'].user.educationalassistant
-
-            fields['course'] = serializers.PrimaryKeyRelatedField(
-                queryset=StudentCourse.objects.filter(
-                    student__major=educational_assistant.field
-                ))
-            fields['student'] = serializers.PrimaryKeyRelatedField(
-                queryset=Student.objects.filter(
-                    major=educational_assistant.field
-                ))
-    
-        return fields
 
 
 class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
@@ -310,20 +298,6 @@ class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
                   'student_explanations', 'educational_assistant_explanation']
         read_only_fields = ['id', 'semester_registration_request', 'teacher_approval_status',
                             'created_at', 'student_explanations']
-        
-    def get_fields(self):
-        fields = super().get_fields()
-
-        if self.context.get('request') and (self.context['request'].method == 'POST' 
-                                            or self.context['request'].method == 'PUT'):
-            educational_assistant = self.context['request'].user.educationalassistant
-
-            fields['semester_registration_request'] = serializers.PrimaryKeyRelatedField(
-                queryset=SemesterRegistrationRequest.objects.filter(
-                    student__major=educational_assistant.field
-                ))
-    
-        return fields
 
 
 class EmploymentEducationRequestSerializer(serializers.ModelSerializer):
@@ -331,23 +305,19 @@ class EmploymentEducationRequestSerializer(serializers.ModelSerializer):
         model = EmploymentEducationRequest
         fields = ['id', 'student', 'approval_status', 'created_at']
         read_only_fields = ['id', 'student', 'created_at']
-    
-    def get_fields(self):
-        fields = super().get_fields()
 
-        if self.context.get('request') and (self.context['request'].method == 'POST' 
-                                            or self.context['request'].method == 'PUT'):
-            educational_assistant = self.context['request'].user.educationalassistant
-
-            fields['student'] = serializers.PrimaryKeyRelatedField(
-                queryset=Student.objects.filter(
-                    major=educational_assistant.field
-                ))
-    
-        return fields
 
 class StudentCourseSerializer(serializers.ModelSerializer):
     semester_course = SemesterCourseSerializer()
     class Meta:
         model = StudentCourse
-        fields = ['semester_course','status','score']
+        fields = ['student', 'semester_course','status','score']
+
+
+class RevisionRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RevisionRequest
+        fields = ['id', 'student', 'teacher_approval_status',
+                  'educational_assistant_approval_status', 'created_at',
+                  'course', 'text', 'answer']
+        read_only_fields = ['id', 'student', 'teacher_approval_status', 'created_at', 'course', 'text']

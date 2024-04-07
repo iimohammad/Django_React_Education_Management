@@ -45,7 +45,10 @@ class AddRemoveRequest(models.Model):
 
 class RevisionRequest(models.Model):
     student = models.ForeignKey(Student, on_delete=models.PROTECT)
-    approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
+    teacher_approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, 
+                                               default='P')
+    educational_assistant_approval_status = models.CharField(max_length=1, 
+                                            choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
     course = models.ForeignKey(StudentCourse, on_delete=models.PROTECT)
     text = models.TextField()
