@@ -6,6 +6,7 @@ from dashboard_student.models import (
     EmergencyRemovalRequest,
     StudentDeleteSemesterRequest,
     EmploymentEducationRequest,
+    RevisionRequest,
 )
 
 
@@ -112,4 +113,15 @@ class StudentCourseFilter(FilterSet):
             'semester_course__semester__name': ['contains'],
 
             'status': ['exact'],
+        }
+
+
+class RevisionRequestFilter(FilterSet):
+    class Meta:
+        model = RevisionRequest
+        fields = {
+            'student__user__first_name': ['contains'],
+            'student__user__last_name': ['contains'],
+            'created_at': ['gte', 'lte'],
+            'course__semester_course__course__course_name': ['contains'],
         }
