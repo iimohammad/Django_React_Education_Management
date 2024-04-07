@@ -24,6 +24,7 @@ from .tasks import send_verification_code
 import secrets
 from rest_framework.reverse import reverse_lazy
 from .models import User
+from .versioning import DefualtVersioning
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
@@ -41,8 +42,12 @@ class LogoutAPIView(APIView):
 
 
 class RegisterUserApi(generics.GenericAPIView):
-    serializer_class = RegisterSerializer
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self):
+        if self.request.version == 'v1':
+            return RegisterSerializer
+        
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -55,7 +60,11 @@ class RegisterUserApi(generics.GenericAPIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class GenerateVerificationCodeView(APIView):
-    serializer_class = EmailUserSerializer
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self):
+        if self.request.version == 'v1':
+            return EmailUserSerializer
 
     def generate_verification_code(self):
         alphabet = string.ascii_letters + string.digits
@@ -80,7 +89,11 @@ class GenerateVerificationCodeView(APIView):
 
 
 class PasswordResetActionView(APIView):
-    serializer_class = PasswordResetActionSerializer
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self):
+        if self.request.version == 'v1':
+            return PasswordResetActionSerializer
 
     def post(self, request, user_id):
         serializer = self.serializer_class(data=request.data)
@@ -125,9 +138,13 @@ class CustomLogoutView(APIView):
 
 
 class UserProfileImageViewSet(viewsets.ModelViewSet):
-    serializer_class = UserProfileImageSerializer
     permission_classes = [IsAuthenticated]
-
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self):
+        if self.request.version == 'v1':
+            return UserProfileImageSerializer
+    
     def get_queryset(self):
         return User.objects.filter(id=self.request.user.id)
 
