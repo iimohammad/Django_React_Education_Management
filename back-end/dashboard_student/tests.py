@@ -7,7 +7,7 @@ from rest_framework.test import APITestCase
 from accounts.models import Student, Teacher
 from education.models import SemesterCourse , StudentCourse , Semester
 from .serializers import SemesterCourseSerializer, StudentCourseSerializer, ExamSemesterSerializer, ExamSemesterCourseSerializer, ExamStudentCourseSerializer , ProfileStudentSerializer,SemesterRegistrationRequestSerializer , StudentDeleteSemesterRequest
-from .models import SemesterCourse, SemesterRegistrationRequest, UnitSelectionRequest
+from .models import SemesterCourse, SemesterRegistrationRequest, UnitSelectionRequest , RevisionRequest , EmergencyRemovalRequest , EnrollmentRequest
 
 class SemesterCourseAPITest(APITestCase):
     def setUp(self):
@@ -339,7 +339,6 @@ class StudentDeleteSemesterRequestAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_update_student_delete_semester_request(self):
-        # Create a student delete semester request
         student_delete_semester_request = StudentDeleteSemesterRequest.objects.create(
             semester_registration_request=self.semester_registration_request,
             student_explanations='Initial explanation'
@@ -363,7 +362,160 @@ class StudentDeleteSemesterRequestAPITest(APITestCase):
         )
 
         url = reverse('delete_semester_request', kwargs={'pk': student_delete_semester_request.id})
-
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+class StudentDeleteSemesterRequestAPITest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='test_user', password='test_password')
+        self.student = Student.objects.create(user=self.user)
+        self.semester = Semester.objects.create(name='Test Semester')
+        self.semester_registration_request = SemesterRegistrationRequest.objects.create(
+            student=self.student, semester=self.semester)
+        self.url = reverse('student-delete-semester-request')
+
+    def test_create_student_delete_semester_request(self):
+        data = {
+            'semester_registration_request': self.semester_registration_request.id,
+            'student_explanations': 'Test explanation',
+            'educational_assistant_explanation': 'Test assistant explanation'
+        }
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(StudentDeleteSemesterRequest.objects.count(), 1)
+        self.assertEqual(response.data['student_explanations'], 'Test explanation')
+
+    def test_update_student_delete_semester_request(self):
+        student_delete_semester_request = StudentDeleteSemesterRequest.objects.create(
+            semester_registration_request=self.semester_registration_request,
+            student_explanations='Test explanation',
+            educational_assistant_explanation='Test assistant explanation'
+        )
+        data = {
+            'student_explanations': 'Updated explanation',
+            'educational_assistant_explanation': 'Updated assistant explanation'
+        }
+        url = reverse('student-delete-semester-request-detail', args=[student_delete_semester_request.id])
+        response = self.client.put(url, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(StudentDeleteSemesterRequest.objects.count(), 1)
+        self.assertEqual(response.data['student_explanations'], 'Updated explanation')
+
+    def test_get_student_delete_semester_request(self):
+        student_delete_semester_request = StudentDeleteSemesterRequest.objects.create(
+            semester_registration_request=self.semester_registration_request,
+            student_explanations='Test explanation',
+            educational_assistant_explanation='Test assistant explanation'
+        )
+        url = reverse('student-delete-semester-request-detail', args=[student_delete_semester_request.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['student_explanations'], 'Test explanation')
+
+
+class RevisionRequestAPITest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.student = Student.objects.create(user=self.user)
+        self.semester = Semester.objects.create(name='Test Semester')
+        self.student_course = StudentCourse.objects.create(student=self.student, semester=self.semester)
+        self.url = reverse('revision_request')
+
+    def test_create_revision_request(self):
+        data = {
+            'course': self.student_course.id,
+            'text': 'This is a test revision request.'
+        }
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+    
+    def test_update_revision_request(self):
+        revision_request = RevisionRequest.objects.create(
+            student=self.student,
+            course=self.student_course,
+            text='Test revision request'
+        )
+        data = {'text': 'Updated revision request'}
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(reverse('revision-request-detail', kwargs={'pk': revision_request.id}), data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['text'], 'Updated revision request')
+
+
+class EmergencyRemovalRequestAPITest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.student = Student.objects.create(user=self.user)
+        self.client.login(username='testuser', password='testpassword')
+        self.semester = Semester.objects.create(name='Test Semester')
+        self.semester_course = SemesterCourse.objects.create(semester=self.semester)
+        self.student_course = StudentCourse.objects.create(student=self.student, semester_course=self.semester_course)
+
+    def test_create_emergency_removal_request(self):
+        url = reverse('emergency_remove_request')
+        data = {
+            'course': self.student_course.pk,
+            'student_explanation': 'Test explanation for emergency removal'
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+    def test_get_emergency_removal_request_list(self):
+        EmergencyRemovalRequest.objects.create(
+            student=self.student,
+            course=self.student_course,
+            student_explanation='Test explanation for emergency removal'
+        )
+
+
+
+    def test_update_emergency_removal_request(self):
+        emergency_removal_request = EmergencyRemovalRequest.objects.create(
+            student=self.student,
+            course=self.student_course,
+            student_explanation='Test explanation for emergency removal'
+        )
+
+        url = reverse('emergency_remove_request', args=[emergency_removal_request.pk])
+        updated_data = {
+            'student_explanation': 'Updated test explanation'
+        }
+        response = self.client.patch(url, updated_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['student_explanation'], updated_data['student_explanation'])
+
+class EnrollmentRequestAPITestCase(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.student = Student.objects.create(user=self.user)
+        self.teacher = Teacher.objects.create(user=self.user)
+
+    def test_create_enrollment_request(self):
+        url = reverse('enrollment_request')  # Adjust URL name as per your project's URL configuration
+        data = {
+            'student': self.student.pk,
+            'teacher': self.teacher.pk,
+            'reason_text': 'Test enrollment request reason'
+        }
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+    def test_update_enrollment_request(self):
+        enrollment_request = EnrollmentRequest.objects.create(
+            student=self.student,
+            teacher=self.teacher,
+            reason_text='Test enrollment request reason'
+        )
+        url = reverse('enrollment_request', kwargs={'pk': enrollment_request.pk})  
+        updated_data = {
+            'student': self.student.pk,
+            'teacher': self.teacher.pk,
+            'reason_text': 'Updated enrollment request reason'
+        }
+        self.client.force_authenticate(user=self.user)
+        response = self.client.put(url, updated_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
