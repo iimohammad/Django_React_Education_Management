@@ -1,7 +1,7 @@
 from import_export import fields, resources
 from import_export.widgets import ForeignKeyWidget
 
-from accounts.models import *
+from accounts.models import (User, Teacher, Student, EducationalAssistant)
 from education.models import Department, Major
 
 
@@ -39,7 +39,7 @@ class TeacherResource(resources.ModelResource):
 
     class Meta:
         model = Teacher
-        fields = ('id', 'user_id', 'expertise', 'rank', 'department_id')
+        fields = ('id', 'user_id', 'expertise', 'rank', 'department_id', 'can_be_advisor')
         import_id_fields = ('id',)
 
 
@@ -64,6 +64,7 @@ class StudentResource(resources.ModelResource):
             'entry_semester',
             'major_id',
             'military_service_status',
+            'advisor',
             'year_of_study',
             'gpa')
         import_id_fields = ('id',)

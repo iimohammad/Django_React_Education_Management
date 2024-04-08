@@ -146,9 +146,9 @@ class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = SemesterRegistrationRequest
         fields = ['id','approval_status', 'created_at','semester','requested_courses'
-                  ,'student_comment_for_requested_courses']
+                  ,'teacher_comment_for_requested_courses']
         read_only_fields = ['id','approval_status', 'created_at' , 'semester',
-                            'student_comment_for_requested_courses']
+                            'teacher_comment_for_requested_courses']
         
     def create(self, validated_data):
         user = self.context['user']
@@ -271,11 +271,11 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
             message_wrong_semester = None
             message_no_capacity = None
             if len(wrong_semester)!=0:
-                message_wrong_semester = f"this courses belong to another semester:{
-                    SemesterCourseSerializer(courses,many = True).data}"
+                message_wrong_semester = f"this courses belong to another semester:\
+                {SemesterCourseSerializer(courses,many = True).data}"
             if len(no_capacity)!=0:
-                message_no_capacity = f"this courses have no capacity:{ 
-                    SemesterCourseSerializer(courses,many = True).data}"
+                message_no_capacity = f"this courses have no capacity:\
+                {SemesterCourseSerializer(courses,many = True).data}"
 
             raise serializers.ValidationError(message_wrong_semester+message_no_capacity)
         

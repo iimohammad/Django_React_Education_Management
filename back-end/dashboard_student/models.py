@@ -3,12 +3,13 @@ from accounts.models import Student, Teacher
 from education.models import Course, SemesterCourse , StudentCourse , Semester
 
 
-
 APPROVAL_CHOICES = [
         ('P', 'Pending'),
         ('A', 'Approved'),
         ('R', 'Rejected'),
     ]
+
+
 class SemesterRegistrationRequest(models.Model):
     student = models.ForeignKey(Student, on_delete=models.PROTECT)
     approval_status = models.CharField(
@@ -19,11 +20,12 @@ class SemesterRegistrationRequest(models.Model):
     requested_courses = models.ManyToManyField(
         Course , verbose_name='Requested_courses' , 
         blank=True)
-    student_comment_for_requested_courses = models.TextField(null=True , blank = True)
+    teacher_comment_for_requested_courses = models.TextField(null=True , blank = True)
 
     def __str__(self):
         return f"{self.student.user.first_name} {self.student.user.last_name} - \
             {self.semester.name}"
+
 
 class UnitSelectionRequest(models.Model):
     semester_registration_request = models.OneToOneField(
@@ -42,6 +44,7 @@ class AddRemoveRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add = True)
     removed_courses = models.ManyToManyField(StudentCourse, related_name='removed_courses')
     added_courses = models.ManyToManyField(SemesterCourse, related_name='added_courses')
+
 
 class RevisionRequest(models.Model):
     student = models.ForeignKey(Student, on_delete=models.PROTECT)
