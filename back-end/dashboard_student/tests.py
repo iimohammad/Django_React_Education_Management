@@ -129,3 +129,65 @@ class StudentCourseAPITestCase(APITestCase):
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(StudentCourse.objects.count(), 0)
+
+
+class StudentPassedCoursesViewSetTest(APITestCase):
+    def setUp(self):
+   
+        self.user = User.objects.create_user(username='test_user', password='test_password')
+        self.student = Student.objects.create(user=self.user)
+        self.client.force_authenticate(user=self.user)
+
+    def test_get_passed_courses(self):
+        semester = Semester.objects.create(name='Spring 2024')
+        semester_course = SemesterCourse.objects.create(
+            course_name='Test Course',
+            semester=semester
+        )
+        StudentCourse.objects.create(
+            student=self.student,
+            semester_course=semester_course,
+            score=80 
+        )
+
+        url = reverse('passed_courses') 
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1) 
+
+    def test_create_passed_course(self):
+        semester = Semester.objects.create(name='Spring 2024')
+        semester_course = SemesterCourse.objects.create(
+            course_name='Test Course',
+            semester=semester
+        )
+
+        data = {
+            'student': self.student.id,
+            'semester_course': semester_course.id,
+            'score': 90  
+        }
+
+        url = reverse('passed_courses')  
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_update_passed_course(self):
+        semester = Semester.objects.create(name='Spring 2024')
+        semester_course = SemesterCourse.objects.create(
+            course_name='Test Course',
+            semester=semester
+        )
+        student_course = StudentCourse.objects.create(
+            student=self.student,
+            semester_course=semester_course,
+            score=80  
+        )
+
+        data = {
+            'score': 85  
+        }
+
+        url = reverse('passed_courses', kwargs={'pk': student_course.id})  
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
