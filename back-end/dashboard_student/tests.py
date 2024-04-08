@@ -6,7 +6,7 @@ from django.urls import reverse
 from rest_framework.test import APITestCase
 from accounts.models import Student, Teacher
 from education.models import SemesterCourse , StudentCourse , Semester
-from .serializers import SemesterCourseSerializer, StudentCourseSerializer, ExamSemesterSerializer, ExamSemesterCourseSerializer, ExamStudentCourseSerializer
+from .serializers import SemesterCourseSerializer, StudentCourseSerializer, ExamSemesterSerializer, ExamSemesterCourseSerializer, ExamStudentCourseSerializer , ProfileStudentSerializer,SemesterRegistrationRequestSerializer
 from .models import SemesterCourse, SemesterRegistrationRequest, UnitSelectionRequest
 
 class SemesterCourseAPITest(APITestCase):
@@ -191,3 +191,95 @@ class StudentPassedCoursesViewSetTest(APITestCase):
         url = reverse('passed_courses', kwargs={'pk': student_course.id})  
         response = self.client.put(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+class StudentExamsTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='test_user', password='test_password')
+        self.student = Student.objects.create(user=self.user)
+        self.client.login(username='test_user', password='test_password')
+
+    def test_get_student_exams(self):
+        url = reverse('student_exams')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_create_student_exam(self):
+        semester = Semester.objects.create(name='Test Semester')
+        semester_course = SemesterCourse.objects.create(semester=semester)
+        data = {'semester_course': semester_course.id}
+        url = reverse('student_exams')
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_update_student_exam(self):
+        semester = Semester.objects.create(name='Test Semester')
+        semester_course = SemesterCourse.objects.create(semester=semester)
+        student_course = StudentCourse.objects.create(student=self.student, semester_course=semester_course)
+        student_exam = StudentCourse.objects.create(student=self.student, semester_course=semester_course)
+        new_semester_course = SemesterCourse.objects.create(semester=semester)
+        data = {'semester_course': new_semester_course.id}
+        url = reverse('student_exams', kwargs={'pk': student_exam.id})
+        response = self.client.put(url, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+class StudentProfileViewsetTest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='testuser', email='test@example.com', password='testpassword')
+        self.student = Student.objects.create(
+            user=self.user, entry_semester='Spring', gpa=3.5, entry_year=2022)
+        self.client.force_login(self.user)
+
+    def test_get_student_profile(self):
+        url = reverse('profile/')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        serializer = ProfileStudentSerializer(instance=self.student)
+        self.assertEqual(response.data, serializer.data)
+
+class SemesterRegistrationRequestAPITestCase(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.student = Student.objects.create(user=self.user)
+        self.semester = Semester.objects.create(name='Test Semester')
+        self.course1 = SemesterCourse.objects.create(name='Course 1', semester=self.semester)
+        self.course2 = SemesterCourse.objects.create(name='Course 2', semester=self.semester)
+
+    def test_create_semester_registration_request(self):
+        url = reverse('semester-registration-request-list')  # Replace 'semester-registration-request-list' with your actual URL name
+        data = {
+            'student': self.student.id,
+            'semester': self.semester.id,
+            'requested_courses': [self.course1.id, self.course2.id]
+        }
+        self.client.force_login(self.user)
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(SemesterRegistrationRequest.objects.count(), 1)
+
+    def test_retrieve_semester_registration_request(self):
+        semester_registration_request = SemesterRegistrationRequest.objects.create(
+            student=self.student,
+            semester=self.semester
+        )
+        url = reverse('semester_registration', kwargs={'pk': semester_registration_request.id})
+        self.client.force_login(self.user)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        serializer = SemesterRegistrationRequestSerializer(instance=semester_registration_request)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_update_semester_registration_request(self):
+        semester_registration_request = SemesterRegistrationRequest.objects.create(
+            student=self.student,
+            semester=self.semester
+        )
+        url = reverse('semester_registration', kwargs={'pk': semester_registration_request.id})
+        updated_data = {
+            'approval_status': 'A' 
+        }
+        self.client.force_login(self.user)
+        response = self.client.patch(url, updated_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        semester_registration_request.refresh_from_db()
+        self.assertEqual(semester_registration_request.approval_status, 'A')
