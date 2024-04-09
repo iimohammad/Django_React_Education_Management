@@ -1,31 +1,32 @@
 from rest_framework import serializers
-from education.models import Day, Major, Prerequisite, Requisite, SemesterClass, SemesterCourse, \
-                            Semester , Department , Course , StudentCourse
+from education.models import (
+                                Day, 
+                                Major, 
+                                Prerequisite, 
+                                Requisite, 
+                                SemesterClass, 
+                                SemesterCourse,
+                                Semester, 
+                                Department, 
+                                Course, 
+                                StudentCourse
+)
 from accounts.models import Student, Teacher , User
-from .models import SemesterRegistrationRequest , RevisionRequest , \
-                    EnrollmentRequest , EmergencyRemovalRequest , StudentDeleteSemesterRequest ,\
-                    EmploymentEducationRequest , AddRemoveRequest,\
-                    EmploymentEducationRequest, UnitSelectionRequest
+from .models import (
+                    SemesterRegistrationRequest,
+                    RevisionRequest, 
+                    EnrollmentRequest,
+                    EmergencyRemovalRequest,
+                    StudentDeleteSemesterRequest,
+                    EmploymentEducationRequest,
+                    AddRemoveRequest,
+                    EmploymentEducationRequest,
+                    UnitSelectionRequest
+)
 
 from django.utils import timezone
 from rest_framework.exceptions import NotFound
-
-
-# class EnrollmentRequestSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = EnrollmentRequest
-#         fields = '__all__'
-
-# class EducationalAssistantEnrollmentRequestSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = EnrollmentRequest
-#         fields = '__all__'
-
-# class StudentEnrollmentRequestSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = EnrollmentRequest
-#         exclude = ['is_approved']
-        
+       
         
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
