@@ -22,7 +22,7 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('logout/', CustomLogoutView.as_view(), name='custom_logout'),
-    path('', login),
+    path('', login,name='login'),
     path('', include('rest_framework.urls')),
     path('home/',include('home.urls')),
 ]
@@ -33,10 +33,6 @@ if IsAdmin:
         # Admin URLs
         path(os.environ.get('Admin'), admin.site.urls),
         # App URLs
-        path(
-            'academic_events/',
-            include('academic_events.urls'),
-            name='accounts'),
         path('accounts/', include('accounts.urls'), name='accounts'),
         path('admin/', include('admin_dashboard_panel.urls',
              namespace='admin_dashboard')),

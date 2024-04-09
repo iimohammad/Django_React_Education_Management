@@ -171,3 +171,11 @@ class UserProfileImageUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['profile_image', 'birthday', 'phone', 'address']
+
+class UserChangePassSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class PasswordResetActionSerializer(serializers.Serializer):
+    code = serializers.CharField(max_length=6)
+    new_password = serializers.CharField(max_length=128)

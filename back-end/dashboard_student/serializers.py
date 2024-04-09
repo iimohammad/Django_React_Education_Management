@@ -1,31 +1,32 @@
 from rest_framework import serializers
-from education.models import Day, Major, Prerequisite, Requisite, SemesterClass, SemesterCourse, \
-                            Semester , Department , Course , StudentCourse
+from education.models import (
+                                Day, 
+                                Major, 
+                                Prerequisite, 
+                                Requisite, 
+                                SemesterClass, 
+                                SemesterCourse,
+                                Semester, 
+                                Department, 
+                                Course, 
+                                StudentCourse
+)
 from accounts.models import Student, Teacher , User
-from .models import SemesterRegistrationRequest , RevisionRequest , \
-                    EnrollmentRequest , EmergencyRemovalRequest , StudentDeleteSemesterRequest ,\
-                    EmploymentEducationRequest , AddRemoveRequest,\
-                    EmploymentEducationRequest, UnitSelectionRequest
+from .models import (
+                    SemesterRegistrationRequest,
+                    RevisionRequest, 
+                    EnrollmentRequest,
+                    EmergencyRemovalRequest,
+                    StudentDeleteSemesterRequest,
+                    EmploymentEducationRequest,
+                    AddRemoveRequest,
+                    EmploymentEducationRequest,
+                    UnitSelectionRequest
+)
 
 from django.utils import timezone
 from rest_framework.exceptions import NotFound
-
-
-# class EnrollmentRequestSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = EnrollmentRequest
-#         fields = '__all__'
-
-# class EducationalAssistantEnrollmentRequestSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = EnrollmentRequest
-#         fields = '__all__'
-
-# class StudentEnrollmentRequestSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = EnrollmentRequest
-#         exclude = ['is_approved']
-        
+       
         
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -270,14 +271,12 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         else:
             message_wrong_semester = None
             message_no_capacity = None
-            if len(wrong_semester)!=0:
-                message_wrong_semester = f"this courses belong to another semester:{
-                    SemesterCourseSerializer(courses,many = True).data}"
-            if len(no_capacity)!=0:
-                message_no_capacity = f"this courses have no capacity:{ 
-                    SemesterCourseSerializer(courses,many = True).data}"
+            if len(wrong_semester) != 0:
+                message_wrong_semester = f"this courses belong to another semester: {SemesterCourseSerializer(courses, many=True).data}"
+            if len(no_capacity) != 0:
+                message_no_capacity = f"this courses have no capacity: {SemesterCourseSerializer(courses, many=True).data}"
 
-            raise serializers.ValidationError(message_wrong_semester+message_no_capacity)
+            raise serializers.ValidationError((message_wrong_semester if message_wrong_semester else "") + (message_no_capacity if message_no_capacity else ""))
         
 class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
     semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()

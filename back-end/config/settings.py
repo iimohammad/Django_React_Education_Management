@@ -54,8 +54,6 @@ LOCAL_APPS = [
     'dashboard_professors.apps.DashboardProfessorsConfig',
     'dashboard_educationalassistant.apps.DashboardEducationalAssistantConfig',
 
-    'academic_events.apps.AcademicConfig',
-
 ]
 
 INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -230,8 +228,7 @@ LOGGING = {
 }
 
 
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-# CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_BROKER_URL = 'amqp://localhost'
 
 CELERY_BEAT_SCHEDULE = {
     'send-new-year-email': {

@@ -14,8 +14,8 @@ from .views import LogoutAPIView, RegisterUserApi, GenerateVerificationCodeView,
 urlpatterns = [
     # path('login/', ObtainAuthToken.as_view()),
     path('logout/', LogoutAPIView.as_view()),
-    path('', RegisterUserApi.as_view()),
-    path('change-password-request/', GenerateVerificationCodeView.as_view()),
+    # path('', RegisterUserApi.as_view()),
+    path('change-password-request/', GenerateVerificationCodeView.as_view(),name = "change-password-request"),
     path('change-password-action/<int:user_id>/', PasswordResetActionView.as_view(), name='change-password-action'),
     path('password-change-login/',ChangePasswordLoginView.as_view()),
 
