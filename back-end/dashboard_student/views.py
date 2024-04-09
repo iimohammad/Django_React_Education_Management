@@ -290,7 +290,7 @@ class RevisionRequestAPIView(mixins.CreateModelMixin,
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.approval_status != 'P':
+        if instance.teacher_approval_status != 'P' or instance.educational_assistant_approval_status != 'P':
             return Response(
                 {'message': 'your request has been answered and you can not delete it.'}
                 , status=status.HTTP_403_FORBIDDEN)

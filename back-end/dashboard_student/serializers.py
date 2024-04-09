@@ -337,18 +337,38 @@ class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
                 )
         return student_delete_semester_request
 
+class RevisionRequestSemesterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Semester
+        fields = ['name']
+class RevisionRequestCourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ['course_name']
+class RevisionRequestStudentCourseSemesterCourseSerializer(serializers.ModelSerializer):
+    course = RevisionRequestCourseSerializer()
+    semester = RevisionRequestSemesterSerializer()
+    class Meta:
+        model = SemesterCourse
+        fields = ['semester','course']
+
+class RevisionRequestStudentCourseSerializer(serializers.ModelSerializer):
+    semester_course = RevisionRequestStudentCourseSemesterCourseSerializer()
+    class Meta:
+        model = StudentCourse
+        fields = ['semester_course','status','score']
 
 
 
 class RevisionRequestSerializer(serializers.ModelSerializer):
-    course = StudentCourseSerializer()
+    course = RevisionRequestStudentCourseSerializer()
     class Meta:
         model = RevisionRequest
-        fields = ['id', 'course' ,'approval_status',
-                    'created_at' , 'text', 'answer']
+        fields = ['id', 'course' ,'educational_assistant_approval_status',
+                    'teacher_approval_status','created_at' , 'text', 'answer']
         
-        read_only_fields = ['id','course' ,'approval_status',
-                    'created_at' , 'answer' ]
+        read_only_fields = ['id','course' ,'educational_assistant_approval_status',
+                    'teacher_approval_status','created_at' , 'answer' ]
     
     def get_fields(self):
         fields = super().get_fields()
@@ -361,6 +381,7 @@ class RevisionRequestSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         student_course_pk = validated_data.get('course')
         user = self.context['user']
+        
         try:
             student = Student.objects.get(user = user)
         except:
@@ -370,22 +391,24 @@ class RevisionRequestSerializer(serializers.ModelSerializer):
             course = StudentCourse.objects.get(pk = student_course_pk , student = student)
         except Exception:
             raise serializers.ValidationError("Invalid course")
-
+        
+        if course.score == None:
+            raise serializers.ValidationError("Invalid course score")
+        
         existing_request = RevisionRequest.objects.filter(
-                course=course, student=student ,approval_status = 'P').first()
+                course=course, student=student ,
+                teacher_approval_status = 'P',
+                educational_assistant_approval_status = 'P').first()
         
         if existing_request!=None:
             raise serializers.ValidationError(
                 "A Revision request for this course already exists")
-
-        
-        
         validated_data['course'] = course
         revision_request = RevisionRequest.objects.create(
             student = student , course = course , text = validated_data['text'])
         
         return revision_request
-
+        
 class EmergencyRemovalRequestSerializer(serializers.ModelSerializer):
     course = StudentCourseSerializer()
     class Meta:
