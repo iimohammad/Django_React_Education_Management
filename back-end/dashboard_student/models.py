@@ -52,7 +52,7 @@ class RevisionRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add = True)
     course = models.ForeignKey(StudentCourse, on_delete=models.PROTECT)
     text = models.TextField()
-    answer = models.TextField()
+    answer = models.TextField(null=True , blank = True)
 
 
 class EmergencyRemovalRequest(models.Model):
