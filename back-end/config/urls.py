@@ -33,10 +33,6 @@ if IsAdmin:
         # Admin URLs
         path(os.environ.get('Admin'), admin.site.urls),
         # App URLs
-        path(
-            'academic_events/',
-            include('academic_events.urls'),
-            name='accounts'),
         path('accounts/', include('accounts.urls'), name='accounts'),
         path('admin/', include('admin_dashboard_panel.urls',
              namespace='admin_dashboard')),
