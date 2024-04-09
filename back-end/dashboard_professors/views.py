@@ -7,7 +7,7 @@ from rest_framework import status
 from accounts.models import Student, Teacher, User
 from .pagination import DefaultPagination
 from .versioning import DefualtVersioning
-from .permissions import IsTeacher
+from .permissions import IsTeacher , IsAdvisor
 from dashboard_professors.queryset import get_student_queryset
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -88,7 +88,7 @@ class UserProfileUpdateAPIView(UpdateAPIView):
 
 # Tasks of Teachers
 class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
-    permission_classes = [IsAuthenticated, IsTeacher]
+    permission_classes = [IsAuthenticated, IsTeacher , IsAdvisor]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     queryset = Semester.objects.all()
@@ -113,7 +113,7 @@ class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
 
 # Evaluate Students
 class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
-    permission_classes = [IsAuthenticated, IsTeacher]
+    permission_classes = [IsAuthenticated, IsTeacher , IsAdvisor]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning

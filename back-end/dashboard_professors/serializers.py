@@ -1,10 +1,11 @@
 from rest_framework import serializers
 
 from dashboard_student.models import AddRemoveRequest, EmergencyRemovalRequest, EnrollmentRequest, RevisionRequest, SemesterRegistrationRequest, StudentDeleteSemesterRequest
-from education.models import Course, Semester, SemesterCourse
+from education.models import Course, Semester, SemesterCourse , StudentCourse
 from dashboard_student.models import (
     UnitSelectionRequest,
     )
+from accounts.models import Student , User
 
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -64,8 +65,27 @@ class EnrollmentRequestSerializers(serializers.ModelSerializer):
         model = EnrollmentRequest
         fields = '__all__'
 
+class studentCourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentCourse
+        fields = ['course__course_name']
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['first_name' ,'last_name']
 
+class StudentSerializer(serializers.ModelSerializer):
+    user = UserSerializer() 
+    class Meta:
+        model = Student
+        fields = ['user']
 class RevisionRequestSerializers(serializers.ModelSerializer):
+    student = StudentSerializer
+    course = studentCourseSerializer()
     class Meta:
         model = RevisionRequest
-        fields = '__all__'
+        fields = ['id' , 'student', 'teacher_approval_status', 'educational_assistant_approval_status', 
+                    'created_at', 'course', 'text', 'answer']
+        
+        readonly_fields = ['id' , 'student', 'teacher_approval_status', 'educational_assistant_approval_status', 
+                    'created_at', 'answer']
