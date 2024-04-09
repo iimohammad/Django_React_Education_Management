@@ -28,7 +28,7 @@ urlpatterns = [
 ]
 
 # URLs for different user roles
-if IsAdmin:
+if IsAdmin():
     urlpatterns += [
         # Admin URLs
         path(os.environ.get('Admin'), admin.site.urls),
@@ -49,14 +49,14 @@ if IsAdmin:
         path('dashboard_educationalassistant/', include('dashboard_educationalassistant.urls'),
              name='dashboard_educationalassistant'),
     ]
-if IsStudent:
+if IsStudent():
 
     urlpatterns += [
         path('dashboard_student/', include('dashboard_student.urls'),
              name='dashboard_student'),
     ]
 
-if IsTeacher:
+if IsTeacher():
     urlpatterns += [
         path('dashboard_professors/', include('dashboard_professors.urls'),
              name='dashboard_professors'),
