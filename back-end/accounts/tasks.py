@@ -8,5 +8,11 @@ from config import settings
 def send_verification_code(email, verification_code):
     subject = 'Verification Code'
     message = f'Your verification code is: {verification_code}'
-    print(email)
+    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+
+
+@shared_task
+def send_Password_Changed(email):
+    subject = 'Password Change Notification'
+    message = f'Your password has been changed successfully'
     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])

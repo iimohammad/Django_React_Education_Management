@@ -1,5 +1,4 @@
 import requests
-from django.conf import settings
 from django.contrib.auth import logout
 from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect
@@ -9,19 +8,14 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.shortcuts import redirect
-from django.http import HttpResponseBadRequest
-from rest_framework.authtoken.models import Token
 from .serializers import RegisterSerializer, UserProfileImageSerializer, UserSerializer, EmailUserSerializer, \
     PasswordResetActionSerializer, PasswordResetLoginSerializer, UserChangePassSerializer
 from django.conf import settings
-import requests
 from django.utils import timezone
 import string
 import redis
-from django.conf import settings
 from django.http import JsonResponse
-from .tasks import send_verification_code
+from .tasks import send_verification_code, send_Password_Changed
 import secrets
 from rest_framework.reverse import reverse_lazy
 from .models import User
@@ -96,33 +90,42 @@ class PasswordResetActionView(APIView):
     versioning_class = DefualtVersioning
     serializer_class = PasswordResetActionSerializer
 
+    def send_Password_Changed(self,email):
+        send_Password_Changed.delay(email)
+
     def post(self, request, user_id):
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         code = serializer.validated_data['code']
-        print(code)
         new_password = serializer.validated_data['new_password']
         user = User.objects.get(id=user_id)
         email = user.email 
         cached_code = cache.get(email + '_verification_code')  #
-        print(cached_code)
         if code != cached_code:
             return Response({'message': 'Invalid verification code'}, status=status.HTTP_400_BAD_REQUEST)
 
         user.set_password(new_password)
         user.save()
+        self.send_Password_Changed(email)
         return redirect('login')
 
 class ChangePasswordLoginView(APIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = PasswordResetLoginSerializer
+
+    def send_Password_Changed(self,email):
+        send_Password_Changed.delay(email)
+
     def post(self, request):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
+            user_email = request.user.email 
+            self.send_Password_Changed(user_email)
             return Response({"message": "Password changed successfully."}, status=status.HTTP_200_OK)
+            
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
