@@ -1,3 +1,4 @@
+from __future__ import absolute_import, unicode_literals
 from celery import shared_task
 from django.core.mail import send_mail
 from config import settings
@@ -7,5 +8,5 @@ from config import settings
 def send_verification_code(email, verification_code):
     subject = 'Verification Code'
     message = f'Your verification code is: {verification_code}'
-    from_email = settings.EMAIL_HOST_USER
-    send_mail(subject, message, from_email, [email])
+    print(email)
+    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])

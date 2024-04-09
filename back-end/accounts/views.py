@@ -13,9 +13,10 @@ from django.shortcuts import redirect
 from django.http import HttpResponseBadRequest
 from rest_framework.authtoken.models import Token
 from .serializers import RegisterSerializer, UserProfileImageSerializer, UserSerializer, EmailUserSerializer, \
-    PasswordResetActionSerializer, PasswordResetLoginSerializer
+    PasswordResetActionSerializer, PasswordResetLoginSerializer, UserChangePassSerializer
 from django.conf import settings
 import requests
+from django.utils import timezone
 import string
 import redis
 from django.conf import settings
@@ -28,7 +29,7 @@ from .versioning import DefualtVersioning
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
-
+from .permissions import IsNotAuthenticated
 
 class LogoutAPIView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -58,69 +59,67 @@ class RegisterUserApi(generics.GenericAPIView):
             user, context=self.get_serializer_context()).data, "token": token.key})
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class GenerateVerificationCodeView(APIView):
     versioning_class = DefualtVersioning
-    
-    def get_serializer_class(self):
-        if self.request.version == 'v1':
-            return EmailUserSerializer
+    serializer_class = UserChangePassSerializer 
 
     def generate_verification_code(self):
         alphabet = string.ascii_letters + string.digits
         verification_code = ''.join(secrets.choice(alphabet) for _ in range(6))
-        cache.set('code', f'{verification_code}', 360)
-        return cache.get('code')
+        return verification_code
 
     def send_verification_code(self, email, verification_code):
         send_verification_code.delay(email, verification_code)
 
     def post(self, request):
+        email = request.data.get('email')
+        last_request_time = cache.get(email + '_last_request_time')
+        current_time = timezone.now()
+
+        if last_request_time and (current_time - last_request_time).seconds < 120:
+            remaining_time = 120 - (current_time - last_request_time).seconds
+            return Response({'message': f'Please wait for {remaining_time} seconds before trying again.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            email_in = serializer.validated_data['email']
             verification_code = self.generate_verification_code()
-            self.send_verification_code(email_in, verification_code)
-            user = User.objects.get(email=email_in)
+            self.send_verification_code(email, verification_code)
+            cache.set(email + '_verification_code', verification_code, 120)  
+            cache.set(email + '_last_request_time', current_time, 120)  
+            user = User.objects.get(email=email)
             return redirect('change-password-action', user_id=user.id)
-
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 class PasswordResetActionView(APIView):
+    permission_classes = [IsNotAuthenticated]
     versioning_class = DefualtVersioning
-    
-    def get_serializer_class(self):
-        if self.request.version == 'v1':
-            return PasswordResetActionSerializer
+    serializer_class = PasswordResetActionSerializer
 
     def post(self, request, user_id):
         serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            code = serializer.validated_data['code']
-            new_password = serializer.validated_data['new_password']
-            user = User.objects.get(id=user_id)
-            codes = cache.get('code')
-
-            if code == codes:
-                if user:
-                    user.set_password(new_password)
-                    user.save()
-                    return Response({'message': 'Password reset successfully'}, status=status.HTTP_200_OK)
-                else:
-                    return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-            else:
-                return Response({'message': 'Invalid verification code'}, status=status.HTTP_400_BAD_REQUEST)
-        else:
+        if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        code = serializer.validated_data['code']
+        print(code)
+        new_password = serializer.validated_data['new_password']
+        user = User.objects.get(id=user_id)
+        email = user.email 
+        cached_code = cache.get(email + '_verification_code')  #
+        print(cached_code)
+        if code != cached_code:
+            return Response({'message': 'Invalid verification code'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+        return redirect('login')
 
 class ChangePasswordLoginView(APIView):
     permission_classes = (IsAuthenticated,)
-
+    serializer_class = PasswordResetLoginSerializer
     def post(self, request):
-        serializer = PasswordResetLoginSerializer(data=request.data, context={'request': request})
+        serializer = self.serializer_class(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response({"message": "Password changed successfully."}, status=status.HTTP_200_OK)

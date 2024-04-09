@@ -230,8 +230,7 @@ LOGGING = {
 }
 
 
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-# CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_BROKER_URL = 'amqp://localhost'
 
 CELERY_BEAT_SCHEDULE = {
     'send-new-year-email': {
