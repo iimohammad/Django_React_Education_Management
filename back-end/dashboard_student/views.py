@@ -6,16 +6,31 @@ from rest_framework import status
 from .permissions import IsStudent , HavePermosionForUnitSelectionForLastSemester
 from accounts.models import Student
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .serializers import CourseSerializer, EmergencyRemovalRequestSerializer,\
-            EmploymentEducationRequestSerializer, EnrollmentRequestSerializer,\
-            ExamStudentCourseSerializer, ProfileStudentSerializer, RevisionRequestSerializer, \
-            SemesterCourseSerializer, SemesterRegistrationRequestSerializer, \
-            StudentCourseSerializer, StudentDeleteSemesterRequestSerializer, \
-            UnitSelectionRequestSerializer
+from .serializers import (
+                        CourseSerializer, 
+                        EmergencyRemovalRequestSerializer,
+                        EmploymentEducationRequestSerializer, 
+                        EnrollmentRequestSerializer,
+                        ExamStudentCourseSerializer, 
+                        ProfileStudentSerializer, 
+                        RevisionRequestSerializer,
+                        SemesterCourseSerializer, 
+                        SemesterRegistrationRequestSerializer, 
+                        StudentCourseSerializer, 
+                        StudentDeleteSemesterRequestSerializer, 
+                        UnitSelectionRequestSerializer
+)
 from education.models import SemesterCourse , StudentCourse , Semester , Course
-from .models import SemesterRegistrationRequest , RevisionRequest , AddRemoveRequest , \
-                    EnrollmentRequest , EmergencyRemovalRequest , StudentDeleteSemesterRequest , \
-                    EmploymentEducationRequest, UnitSelectionRequest
+from .models import (
+                        SemesterRegistrationRequest, 
+                        RevisionRequest, 
+                        AddRemoveRequest,
+                        EnrollmentRequest,
+                        EmergencyRemovalRequest, 
+                        StudentDeleteSemesterRequest, 
+                        EmploymentEducationRequest, 
+                        UnitSelectionRequest
+)
 from .filters import CorseFilter, SemesterCourseFilter , StudentCourseFilter, StudentExamFilter
 from .pagination import DefaultPagination
 from .versioning import DefualtVersioning
@@ -25,59 +40,6 @@ from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 
 
-
-# from .models import (
-#     EnrollmentRequest,
-# ) 
-# from .serializers import (
-#     EducationalAssistantEnrollmentRequestSerializer,
-#     EnrollmentRequestSerializer,
-#     StudentEnrollmentRequestSerializer,
-# )
-
-# class BaseUpdateFieldViewSet(viewsets.ReadOnlyModelViewSet):
-#     allowed_fields = set()
-
-#     def update(self, request, *args, **kwargs):
-#         partial = kwargs.pop('partial', False)
-#         instance = self.get_object()
-#         serializer = self.get_serializer(instance, data=request.data, partial=partial)
-#         serializer.is_valid(raise_exception=True)
-
-#         for field in request.data.keys():
-#             if field not in self.allowed_fields:
-#                 return Response({'error': f'Updating {field} is not allowed'}, status=status.HTTP_403_FORBIDDEN)
-
-#         self.perform_update(serializer)
-#         return Response(serializer.data)
-# class EnrollmentRequestViewSet(viewsets.ModelViewSet):
-#     permission_classes = [IsAuthenticated, IsEducationalAssistant | IsStudent | IsAdminUser]
-
-#     def get_queryset(self):
-#         return EnrollmentRequest.objects.all()
-
-#     def get_serializer_class(self):
-#         user = self.request.user
-#         if hasattr(user, 'educationalassistant'):
-#             return EducationalAssistantEnrollmentRequestSerializer
-#         elif hasattr(user, 'student'):
-#             return StudentEnrollmentRequestSerializer
-#         else:
-#             return EnrollmentRequestSerializer
-
-#     def update(self, request, *args, **kwargs):
-#         instance = self.get_object()
-#         approval_status = request.data.get('approval_status')
-
-#         if approval_status in ['A', 'R']:
-#             if instance.approval_status != 'P':
-#                 return Response({'error': 'This request has already been processed'}, status=status.HTTP_400_BAD_REQUEST)
-
-#             instance.approval_status = approval_status
-#             instance.save()
-#             return Response({'message': 'Enrollment request updated successfully'})
-
-#         return Response({'error': 'Invalid approval status'}, status=status.HTTP_400_BAD_REQUEST)
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
