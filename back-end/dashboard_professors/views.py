@@ -1,5 +1,5 @@
 import csv
-from rest_framework import viewsets
+from rest_framework import viewsets , mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -7,7 +7,7 @@ from rest_framework import status
 from accounts.models import Student, Teacher, User
 from .pagination import DefaultPagination
 from .versioning import DefualtVersioning
-from accounts.permissions import IsTeacher
+from .permissions import IsTeacher
 from dashboard_professors.queryset import get_student_queryset
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -36,7 +36,7 @@ from rest_framework.mixins import ListModelMixin
 
 # General Tasks
 class ShowProfileAPIView(RetrieveAPIView):
-    permission_classes = [IsAuthenticated]  # Assuming IsTeacher permission is checked inside serializer
+    permission_classes = [IsAuthenticated , IsTeacher]  
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning
@@ -64,7 +64,7 @@ class ShowProfileAPIView(RetrieveAPIView):
         return Response(serializer.data)
 
 
-class UserProfileImageView(UpdateAPIView):
+class UserProfileUpdateAPIView(UpdateAPIView):
     queryset = User.objects.all()
     permission_classes = [IsAuthenticated, IsTeacher]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -108,7 +108,7 @@ class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
         course_serializer = SemesterCourseSerializer(courses, many=True)
 
         return Response({'semester': serializer.data,
-                         'courses': course_serializer.data})
+                        'courses': course_serializer.data})
 
 
 # Evaluate Students
@@ -193,7 +193,10 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
-class RevisionRequestView(generics.UpdateAPIView):
+class RevisionRequestView(viewsets.GenericViewSet,
+                          mixins.UpdateModelMixin,
+                          mixins.ListModelMixin,
+                          mixins.RetrieveModelMixin):
     permission_classes = [IsAuthenticated, IsTeacher]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
