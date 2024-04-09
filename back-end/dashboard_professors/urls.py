@@ -25,14 +25,14 @@ urlpatterns = [
     path('update-profile/',UserProfileUpdateAPIView.as_view(),name = 'update_profile'),
     path('semester_show/', ShowSemestersView.as_view({'get': 'list'}), name="semester_show"),
     # path('my_courses_semester/', SemesterCourseViewSet.as_view({'get': 'list'}), name="semester_courses"),
-    path('AdvisorRole/ShowMyStudents/',ShowMyStudentsVeiw.as_view(),name = 'ShowMyStudents'),
-    path('AdvisorRole/UnitSelectionRequest/',UnitSelectionRequestView.as_view(),name = 'UnitSelectionRequest'),
+    path('ShowMyStudents/',ShowMyStudentsVeiw.as_view(),name = 'ShowMyStudents'),
+    path('UnitSelectionRequest/',UnitSelectionRequestView.as_view(),name = 'UnitSelectionRequest'),
 
-    path('AdvisorRole/SemesterRegistrationRequest/',SemesterRegistrationRequestView.as_view(),name = 'SemesterRegistrationRequest'),
-    path('AdvisorRole/AddRemoveRequest/',AddRemoveRequestView.as_view(),name = 'AddRemoveRequest'),
-    path('AdvisorRole/EmergencyRemovalRequest/',EmergencyRemovalRequestView.as_view(),name = 'EmergencyRemovalRequest'),
-    path('AdvisorRole/StudentDeleteSemesterRequest/',StudentDeleteSemesterRequestView.as_view(),name = 'StudentDeleteSemesterRequest'),
-    path('AdvisorRole/EnrollmentRequestView/',EnrollmentRequestView.as_view(),name = 'EnrollmentRequestView'),
+    path('SemesterRegistrationRequest/',SemesterRegistrationRequestView.as_view(),name = 'SemesterRegistrationRequest'),
+    path('AddRemoveRequest/',AddRemoveRequestView.as_view(),name = 'AddRemoveRequest'),
+    path('EmergencyRemovalRequest/',EmergencyRemovalRequestView.as_view(),name = 'EmergencyRemovalRequest'),
+    path('StudentDeleteSemesterRequest/',StudentDeleteSemesterRequestView.as_view(),name = 'StudentDeleteSemesterRequest'),
+    path('EnrollmentRequestView/',EnrollmentRequestView.as_view(),name = 'EnrollmentRequestView'),
     
 
 ]
