@@ -54,8 +54,6 @@ LOCAL_APPS = [
     'dashboard_professors.apps.DashboardProfessorsConfig',
     'dashboard_educationalassistant.apps.DashboardEducationalAssistantConfig',
 
-    'academic_events.apps.AcademicConfig',
-
 ]
 
 INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
