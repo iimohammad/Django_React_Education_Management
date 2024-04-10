@@ -10,7 +10,6 @@ from .serializers import (
                         CourseSerializer, 
                         EmergencyRemovalRequestSerializer,
                         EmploymentEducationRequestSerializer, 
-                        EnrollmentRequestSerializer,
                         ExamStudentCourseSerializer, 
                         ProfileStudentSerializer, 
                         RevisionRequestSerializer,
@@ -25,13 +24,17 @@ from .models import (
                         SemesterRegistrationRequest, 
                         RevisionRequest, 
                         AddRemoveRequest,
-                        EnrollmentRequest,
                         EmergencyRemovalRequest, 
                         StudentDeleteSemesterRequest, 
                         EmploymentEducationRequest, 
                         UnitSelectionRequest
 )
-from .filters import CorseFilter, SemesterCourseFilter , StudentCourseFilter, StudentExamFilter
+from .filters import (
+    CorseFilter, 
+    SemesterCourseFilter, 
+    StudentCourseFilter, 
+    StudentExamFilter
+)
 from .pagination import DefaultPagination
 from .versioning import DefualtVersioning
 from django_filters.rest_framework import DjangoFilterBackend
@@ -54,6 +57,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return CourseSerializer
+
     def get_queryset(self):
         return Course.objects.filter(availablity = 'A').all()
     
@@ -75,6 +79,7 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return SemesterCourseSerializer
+
     def get_queryset(self):
         last_semester = Semester.objects.order_by('-start_semester').first()
         return SemesterCourse.objects.filter(semester = last_semester).all()
@@ -95,6 +100,7 @@ class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return StudentCourseSerializer
+
     def get_queryset(self):
         last_semester = Semester.objects.order_by('-start_semester').first()
         return StudentCourse.objects.filter(student__user=self.request.user,
@@ -112,9 +118,15 @@ class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet):
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return StudentCourseSerializer
+        
+        raise NotImplementedError("Unsupported version requested")
+
     def get_queryset(self):
-        return StudentCourse.objects.filter(student__user=self.request.user
-                                            ).exclude(score__isnull=True).all()
+        return StudentCourse.objects.filter(
+            student__user=self.request.user,
+            score__isnull=False,
+            score__gte=10
+        )
 
 
 class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -129,12 +141,17 @@ class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet):
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return ExamStudentCourseSerializer
+
+        raise NotImplementedError("Unsupported version requested")
         
     def get_queryset(self):
         last_semester = Semester.objects.order_by('-start_semester').first()
-        return StudentCourse.objects.filter(student__user=self.request.user , 
-                                            semester_course__semester = last_semester , 
-                                            status = 'R').all()
+
+        return StudentCourse.objects.filter(
+            student__user=self.request.user,
+            semester_course__semester = last_semester, 
+            status = 'R'
+            ).all()
 
 
 class StudentProfileViewset(generics.RetrieveAPIView):
@@ -144,29 +161,34 @@ class StudentProfileViewset(generics.RetrieveAPIView):
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return ProfileStudentSerializer
+
+        raise NotImplementedError("Unsupported version requested")
         
     def get_object(self):
-        return Student.objects.filter(user=self.request.user).first()
+        return Student.objects.filter(
+            user=self.request.user
+            ).first()
 
-class SemesterRegistrationRequestAPIView(mixins.CreateModelMixin,
-                                         mixins.RetrieveModelMixin,
-                                         mixins.DestroyModelMixin,
-                                         mixins.ListModelMixin,
-                                         viewsets.GenericViewSet):
+
+
+class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated, IsStudent]
     search_fields = ['semester__name']
     ordering_fields = ['created_at', 'semester__name']
     versioning_class = DefualtVersioning
-    
+
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return SemesterRegistrationRequestSerializer
-        
+
+        raise NotImplementedError("Unsupported version requested")
+
     def get_queryset(self):
-        return SemesterRegistrationRequest.objects.filter \
-            (student__user=self.request.user).all()
+        return SemesterRegistrationRequest.objects.filter(
+            student__user=self.request.user
+            ).all()
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -176,57 +198,63 @@ class SemesterRegistrationRequestAPIView(mixins.CreateModelMixin,
     def destroy(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
+
         except Http404:
-            return Response({'detail': 'Object Not found.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {'detail': 'Object Not found.'}, status=status.HTTP_404_NOT_FOUND
+                )
+
         if instance.approval_status != 'P':
             return Response(
-                {'message': 'your request has been answered and you can not delete it.'}
-                , status=status.HTTP_403_FORBIDDEN)
+                {'message': 'Your request has been answered and you can not delete it.'}
+                , status=status.HTTP_403_FORBIDDEN
+                )
+
         if UnitSelectionRequest.objects.filter(
-            semester_registration_request = instance).first()!= None:
+            semester_registration_request = instance
+            ).first()!= None:
             return Response(
-                {'message': 'you have unit selection for this request.'}
+                {'message': 'You have unit selection for this request.'}
             )
         
         instance.delete()
-        return Response({'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
-    
-class UnitSelectionRequestAPIView(mixins.CreateModelMixin,
-                                  mixins.RetrieveModelMixin,
-                                  mixins.UpdateModelMixin,
-                                  mixins.DestroyModelMixin,
-                                  mixins.ListModelMixin,
-                                  viewsets.GenericViewSet):
+        return Response(
+            {'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT
+            )
+
+
+
+
+class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
-    permission_classes = [IsAuthenticated, IsStudent , 
-                          HavePermosionForUnitSelectionForLastSemester,
-                          ]
+    permission_classes = [
+        IsAuthenticated,
+        IsStudent, 
+        HavePermosionForUnitSelectionForLastSemester,
+    ]
+
     ordering_fields = ['created_at', 'approval_status']
-    versioning_class = DefualtVersioning
-    
+    versioning_class = DefaultVersioning
+
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return UnitSelectionRequestSerializer
         
-    def get_queryset(self):
-        return UnitSelectionRequest.objects.filter \
-            (semester_registration_request__student__user=self.request.user).all()
+        raise NotImplementedError("Unsupported version requested")
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context['user'] = self.request.user
-        return context
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.approval_status != 'P':
-            return Response(
-                {'message': 'your request has been answered and you can not delete it.'}
-                , status=status.HTTP_403_FORBIDDEN)
         self.perform_destroy(instance)
-        return Response({'message': 'Resource deleted successfully.'}, 
-                        status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 
 
 class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
@@ -330,36 +358,6 @@ class EmergencyRemovalRequestAPIView(mixins.CreateModelMixin,
         return Response({'message': 'Resource deleted successfully.'}, 
                         status=status.HTTP_204_NO_CONTENT)
     
-class EnrollmentRequestApiView(mixins.CreateModelMixin,
-                   mixins.RetrieveModelMixin,
-                   mixins.DestroyModelMixin,
-                   mixins.ListModelMixin,
-                   viewsets.GenericViewSet):
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
-    pagination_class = DefaultPagination
-    permission_classes = [IsAuthenticated,IsStudent]
-    ordering_fields = ['created_at']
-    versioning_class = DefualtVersioning
-    
-    def get_serializer_class(self, *args, **kwargs):
-        if self.request.version == 'v1':
-            return EnrollmentRequestSerializer
-    def get_queryset(self):
-        return EnrollmentRequest.objects.filter \
-                            (student__user = self.request.user).all()
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context['user'] = self.request.user
-        return context
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if instance.approval_status != 'P' :
-            return Response(
-                {'message': 'your request has been answered and you can not delete it.'}
-                , status=status.HTTP_403_FORBIDDEN)
-        self.perform_destroy(instance)
-        return Response({'message': 'Resource deleted successfully.'}, 
-                        status=status.HTTP_204_NO_CONTENT)
         
 class EmploymentEducationRequestApiView(mixins.CreateModelMixin,
                    mixins.RetrieveModelMixin,

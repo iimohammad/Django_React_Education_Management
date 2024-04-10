@@ -16,7 +16,6 @@ from education.serializers import StudentCourseSerializer
 from .serializers import (
     AddRemoveRequestViewSerializers,
     EmergencyRemovalRequestSerializers,
-    EnrollmentRequestSerializers,
     RevisionRequestSerializers,
     SemesterCourseSerializer,
     SemesterRegistrationRequestSerializers,

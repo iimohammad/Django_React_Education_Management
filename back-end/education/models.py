@@ -1,6 +1,9 @@
 from django.db import models
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
+from dashboard_student.models import UnitSelectionRequest
+from django.db.models.signals import post_delete, post_save
+
 
 class Department(models.Model):
     department_name = models.CharField(max_length=40, unique=True)
@@ -147,6 +150,7 @@ class Day(models.Model):
     @receiver(post_migrate)
     def on_migrate(sender, **kwargs):
         create_week_days(sender, **kwargs)
+        
 class SemesterCourse(models.Model):
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
@@ -160,6 +164,7 @@ class SemesterCourse(models.Model):
     course_capacity = models.PositiveSmallIntegerField()
     corse_reserve_capasity = models.PositiveSmallIntegerField(default=0)
 
+
     @property
     def remain_course_capacity(self):
         return self.course_capacity - StudentCourse.objects.filter(
@@ -168,6 +173,20 @@ class SemesterCourse(models.Model):
     def __str__(self):
         return f"{self.course.course_name} - {self.semester.name}"
 
+@receiver(post_save, sender=UnitSelectionRequest)
+def update_course_capacity(sender, instance, created, **kwargs):
+    if created:
+        # Increment or decrement the course_capacity based on the request_course
+        if instance.request_course:
+            instance.request_course.course_capacity -= 1  
+            instance.request_course.save()
+
+
+@receiver(post_delete, sender=UnitSelectionRequest)
+def increase_course_capacity(sender, instance, **kwargs):
+    if instance.request_course:
+        instance.request_course.course_capacity += 1  
+        instance.request_course.save()
 
 class StudentCourse(models.Model):
     FINALREGISTERED = 'F'
@@ -209,3 +228,4 @@ class StudentCourse(models.Model):
     def __str__(self):
         return f"{self.student.user.first_name} {self.student.user.last_name} - \
         {self.semester_course.semester.name}"
+    

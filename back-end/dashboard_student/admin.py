@@ -63,14 +63,3 @@ admin.site.register(StudentDeleteSemesterRequest,
                     StudentDeleteSemesterRequestAdmin)
 
 
-class EnrollmentRequestAdmin(admin.ModelAdmin):
-    list_display = ('teacher', 'approval_status', 'reason_text')
-    list_filter = ('approval_status',)
-    search_fields = ('teacher', 'reason_text')
-    search_help_text = "Search in: Teacher, Reason Text"
-    save_as = True
-    list_per_page = 10
-    list_max_show_all = 50
-
-
-admin.site.register(EnrollmentRequest, EnrollmentRequestAdmin)

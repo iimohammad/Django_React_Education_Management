@@ -15,7 +15,6 @@ from accounts.models import Student, Teacher , User
 from .models import (
                     SemesterRegistrationRequest,
                     RevisionRequest, 
-                    EnrollmentRequest,
                     EmergencyRemovalRequest,
                     StudentDeleteSemesterRequest,
                     EmploymentEducationRequest,
@@ -144,6 +143,7 @@ class SemesterRegistrationRequestSemesterSerializer(serializers.ModelSerializer)
 class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
     semester = SemesterRegistrationRequestSemesterSerializer()
     requested_courses = SemesterCourseSerializer(many = True)
+
     class Meta:
         model = SemesterRegistrationRequest
         fields = ['id','approval_status', 'created_at','semester','requested_courses'
@@ -188,21 +188,114 @@ class UnitSelectionSemesterRegistrationRequestSerializer(serializers.ModelSerial
         model = SemesterRegistrationRequest
         fields = ['id']
 
+# class UnitSelectionRequestSerializer(serializers.ModelSerializer):
+#     semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()
+#     requested_courses = SemesterCourseSerializer(many = True)
+#     class Meta:
+#         model = UnitSelectionRequest
+#         fields = ['id','semester_registration_request', 'approval_status',
+#                     'created_at' , 'requested_courses']
+        
+#         read_only_fields = ['id', 'approval_status','created_at']
+#     def get_fields(self):
+#         fields = super().get_fields()
+
+#         if self.context.get('request') and self.context['request'].method == 'POST':
+#             fields['requested_courses'] = serializers.PrimaryKeyRelatedField(
+#                 queryset=SemesterCourse.objects.all(), many=True)
+#             fields['semester_registration_request'] = serializers.PrimaryKeyRelatedField(
+#                 queryset=SemesterRegistrationRequest.objects.all())
+        
+#         return fields
+    
+#     def create(self, validated_data):
+#         user = self.context['user']
+#         credit_sum = 0
+#         #find student
+#         try:
+#             student = Student.objects.get(user = user)
+#         except Student.DoesNotExist:
+#             raise serializers.ValidationError("Invalid student")
+        
+#         #get gpa
+#         gpa = student.gpa
+        
+#         #check for duplicate Request
+#         existing_request = UnitSelectionRequest.objects.filter(
+#             semester_registration_request=semester_registration_request, 
+#             semester_registration_request__student__user=user).exists()
+#         if existing_request:
+#             raise serializers.ValidationError(
+#                 "A unitselection request for this semester already exists")
+        
+#         #get semester
+#         semester = SemesterRegistrationRequest.objects.get(
+#             pk = SemesterRegistrationRequest.pk).semester
+#         current_date = timezone.now().date()
+        
+#         #check unit selection period
+#         if current_date < semester.unit_selection.unit_selection_start or \
+#             current_date > semester.unit_selection.unit_selection_end:
+#                 raise serializers.ValidationError("Unvalide semester unit selection time")
+        
+
+        
+#         #check capacity and semester of corse
+#         no_capacity = list()
+#         wrong_semester = list()
+#         courses = validated_data.pop('requested_courses')
+#         for i in courses:
+#             if i.semester != semester:
+#                 wrong_semester.append(i)
+#             if i.remain_course_capacity==0:
+#                 no_capacity.append(i)
+#             credit_sum += i.semester_course.course.credit_num
+            
+#         if credit_sum<14:
+#             raise serializers.ValidationError(
+#                 "the sum of Credits are less than minimum(14)")
+            
+#         if gpa>=17 and credit_sum>24:
+#             raise serializers.ValidationError(
+#                 "the sum of Credits are more than maximum(24)")
+        
+#         if gpa<17 and credit_sum>20:
+#             raise serializers.ValidationError(
+#                 "the sum of Credits are more than maximum(20)")
+        
+#         if len(wrong_semester)==0 and len(no_capacity)==0:
+#             unit_selection_request = UnitSelectionRequest.objects.create(
+#                 semester_registration_request = SemesterRegistrationRequest)
+#             unit_selection_request.requested_courses.set(courses)
+#             return unit_selection_request
+#         else:
+#             message_wrong_semester = None
+#             message_no_capacity = None
+#             if len(wrong_semester) != 0:
+#                 message_wrong_semester = f"this courses belong to another semester: {SemesterCourseSerializer(courses, many=True).data}"
+#             if len(no_capacity) != 0:
+#                 message_no_capacity = f"this courses have no capacity: {SemesterCourseSerializer(courses, many=True).data}"
+
+#             raise serializers.ValidationError((message_wrong_semester if message_wrong_semester else "") + (message_no_capacity if message_no_capacity else ""))
+        
+
+
 class UnitSelectionRequestSerializer(serializers.ModelSerializer):
     semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()
-    requested_courses = SemesterCourseSerializer(many = True)
+    requested_course = SemesterCourseSerializer()
+
     class Meta:
         model = UnitSelectionRequest
         fields = ['id','semester_registration_request', 'approval_status',
-                    'created_at' , 'requested_courses']
+                    'created_at' , 'requested_course']
         
         read_only_fields = ['id', 'approval_status','created_at']
+
     def get_fields(self):
         fields = super().get_fields()
-
         if self.context.get('request') and self.context['request'].method == 'POST':
-            fields['requested_courses'] = serializers.PrimaryKeyRelatedField(
-                queryset=SemesterCourse.objects.all(), many=True)
+            fields['requested_course'] = serializers.PrimaryKeyRelatedField(
+                queryset=SemesterCourse.objects.all())
             fields['semester_registration_request'] = serializers.PrimaryKeyRelatedField(
                 queryset=SemesterRegistrationRequest.objects.all())
         
@@ -210,74 +303,35 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         user = self.context['user']
-        credit_sum = 0
-        #find student
         try:
-            student = Student.objects.get(user = user)
+            student = Student.objects.get(user=user)
         except Student.DoesNotExist:
             raise serializers.ValidationError("Invalid student")
-        
-        #get gpa
-        gpa = student.gpa
-        
-        #check for duplicate Request
-        existing_request = UnitSelectionRequest.objects.filter(
-            semester_registration_request=semester_registration_request, 
-            semester_registration_request__student__user=user).exists()
-        if existing_request:
-            raise serializers.ValidationError(
-                "A unitselection request for this semester already exists")
-        
-        #get semester
+
         semester = SemesterRegistrationRequest.objects.get(
-            pk = SemesterRegistrationRequest.pk).semester
+            pk=SemesterRegistrationRequest.pk).semester
         current_date = timezone.now().date()
         
-        #check unit selection period
         if current_date < semester.unit_selection.unit_selection_start or \
             current_date > semester.unit_selection.unit_selection_end:
-                raise serializers.ValidationError("Unvalide semester unit selection time")
+            raise serializers.ValidationError("Invalid semester unit selection time")
         
+        unit_selection_request = UnitSelectionRequest.objects.create(
+            student=student,
+            **validated_data
+        )
 
-        
-        #check capacity and semester of corse
-        no_capacity = list()
-        wrong_semester = list()
-        courses = validated_data.pop('requested_courses')
-        for i in courses:
-            if i.semester != semester:
-                wrong_semester.append(i)
-            if i.remain_course_capacity==0:
-                no_capacity.append(i)
-            credit_sum += i.semester_course.course.credit_num
-            
-        if credit_sum<14:
-            raise serializers.ValidationError(
-                "the sum of Credits are less than minimum(14)")
-            
-        if gpa>=17 and credit_sum>24:
-            raise serializers.ValidationError(
-                "the sum of Credits are more than maximum(24)")
-        
-        if gpa<17 and credit_sum>20:
-            raise serializers.ValidationError(
-                "the sum of Credits are more than maximum(20)")
-        
-        if len(wrong_semester)==0 and len(no_capacity)==0:
-            unit_selection_request = UnitSelectionRequest.objects.create(
-                semester_registration_request = SemesterRegistrationRequest)
-            unit_selection_request.requested_courses.set(courses)
-            return unit_selection_request
-        else:
-            message_wrong_semester = None
-            message_no_capacity = None
-            if len(wrong_semester) != 0:
-                message_wrong_semester = f"this courses belong to another semester: {SemesterCourseSerializer(courses, many=True).data}"
-            if len(no_capacity) != 0:
-                message_no_capacity = f"this courses have no capacity: {SemesterCourseSerializer(courses, many=True).data}"
+        request_course = validated_data.get('request_course')
+        if request_course:
+            student_course_data = {
+                'student': student,
+                'semester_course': request_course,
+                'status': StudentCourse.REGISTERED,
+            }
+            StudentCourse.objects.create(**student_course_data)
 
-            raise serializers.ValidationError((message_wrong_semester if message_wrong_semester else "") + (message_no_capacity if message_no_capacity else ""))
-        
+        return unit_selection_request
+
 class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
     semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()
     class Meta:
@@ -440,87 +494,9 @@ class EmergencyRemovalRequestSerializer(serializers.ModelSerializer):
         return emergency_removal_request
     
 
-class EnrollmentRequestSerializer(serializers.ModelSerializer):
-    teacher = TeacherSerializer()
-    class Meta:
-        model = EnrollmentRequest
-        fields = ['id', 'teacher' ,'approval_status','created_at' , 
-                    'reason_text']
-        
-        read_only_fields = ['id' ,'approval_status','created_at']
-        
-    def get_fields(self):
-        fields = super().get_fields()
 
-        if self.context.get('request') and self.context['request'].method == 'POST':
-            fields['teacher'] = serializers.IntegerField()
-        return fields
-    def create(self, validated_data):
-        user = self.context['user']
-        try:
-            teacher = Teacher.objects.get(pk = validated_data['teacher'])
-        except:
-            raise serializers.ValidationError("Invalid teacher")
-            
-        try:
-            student = Student.objects.get(user = user)
-        except:
-            raise serializers.ValidationError("Invalid student")
-        
-        existing_request = EnrollmentRequest.objects.filter(
-                student=student ,approval_status = 'P').first()
-        
-        if existing_request!=None:
-            raise serializers.ValidationError("A registration request for this semester already exists")
-
-        validated_data['teacher'] = teacher
-            
-        enrollment_request = EnrollmentRequest.objects.create(
-                student = student,
-                teacher = teacher,
-                reason_text = validated_data['reason_text'])
-        
-        return enrollment_request
     
-class EmploymentEducationRequestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EnrollmentRequest
-        fields = ['id','approval_status','created_at']
-        
-        read_only_fields = ['id' ,'approval_status','created_at']
-        
-    def get_fields(self):
-        fields = super().get_fields()
 
-        if self.context.get('request') and self.context['request'].method == 'POST':
-            fields['teacher'] = serializers.IntegerField()
-        return fields
-    def create(self, validated_data):
-        user = self.context['user']
-        try:
-            teacher = Teacher.objects.get(pk = validated_data['teacher'])
-        except:
-            raise serializers.ValidationError("Invalid teacher")
-            
-        try:
-            student = Student.objects.get(user = user)
-        except:
-            raise serializers.ValidationError("Invalid student")
-        
-        existing_request = EnrollmentRequest.objects.filter(
-                student=student ,approval_status = 'P').first()
-        
-        if existing_request!=None:
-            raise serializers.ValidationError("A registration request for this semester already exists")
-
-        validated_data['teacher'] = teacher
-            
-        enrollment_request = EnrollmentRequest.objects.create(
-                student = student,
-                teacher = teacher,
-                reason_text = validated_data['reason_text'])
-        
-        return enrollment_request
 
       
 class AddRemoveRequestSerializer(serializers.ModelSerializer):

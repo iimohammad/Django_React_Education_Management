@@ -4,6 +4,9 @@ import logging
 from education.models import Major
 from django.conf import settings
 from .validators import phone_validator , validate_national_code
+from django.db.models.signals import post_save
+from education.models import StudentCourse
+from django.dispatch import receiver
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +69,6 @@ class Student(models.Model):
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     entry_semester = models.CharField(max_length=100)
-    gpa = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
     entry_year = models.CharField(max_length=4)
     major = models.ForeignKey('education.Major', on_delete=models.PROTECT)
     advisor = models.ForeignKey(
@@ -74,11 +76,54 @@ class Student(models.Model):
     military_service_status = models.CharField(max_length=2, choices=MILITARY_CHOICES, default='EP')
     year_of_study = models.PositiveSmallIntegerField()
 
+    @property
+    def gpa(self):
+        # Calculate GPA based on scores of registered courses
+        registered_courses = StudentCourse.objects.filter(student=self)
+        if registered_courses.exists():
+            gpa = registered_courses.aggregate(Avg('score'))['score__avg']
+            return gpa
+        return None
+
+    @property
+    def calculate_total_credits(self):
+        # Calculate total credits taken by the student
+        total_credits = StudentCourse.objects.filter(student=self).aggregate(Sum('semester_course__course__credit_num'))['semester_course__course__credit_num__sum']
+        if total_credits is not None:
+            return total_credits
+        return 0
+
+    @property
+    def category_of_student_grade(self):
+        if self.gpa >= 17:
+            return 'A'
+        elif self.gpa < 17 and self.gpa >= 14:
+            return 'B'
+        elif self.gpa <14 and self.gpa >=12:
+            return 'C'
+        else:
+            return 'D'
+        
+    def save(self, *args, **kwargs):
+        # Update GPA and total credits when saving the student object
+        self.gpa = self.calculate_gpa()
+        self.total_credits = self.calculate_total_credits()
+        super().save(*args, **kwargs)
+
     def __str__(self) -> str:
         if self.user.first_name and self.user.last_name:
             return f"{self.user.first_name} {self.user.last_name}"
         else:
             return str(self.user)
+
+@receiver(post_save, sender=StudentCourse)
+def update_student_info(sender, instance, **kwargs):
+    student = instance.student
+    # Recalculate the student's GPA and total credits
+    student.gpa = student.calculate_gpa()
+    student.total_credits = student.calculate_total_credits()
+    student.save()
+
 
 
 class EducationalAssistant(models.Model):
