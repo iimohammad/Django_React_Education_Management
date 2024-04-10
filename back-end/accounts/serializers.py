@@ -151,20 +151,18 @@ class TeacherSerializer(serializers.ModelSerializer):
 
 
 class StudentSerializer(serializers.ModelSerializer):
-    user = UserUpdateSerializer()
+    username = serializers.CharField(source='user.username', read_only=True)
+    user_number = serializers.CharField(source='user.user_number')
 
     class Meta:
         model = Student
-        fields = ['id', 'user', 'entry_semester', 'gpa', 'entry_year', 'major', 'advisor', 'military_service_status',
-                  'year_of_study']
+        fields = ['id', 'user', 'username','user_number', 'entry_semester', 'gpa', 'entry_year', 'major', 'advisor', 'military_service_status', 'year_of_study']
 
 
 class EducationalAssistantSerializer(serializers.ModelSerializer):
-    user = UserUpdateSerializer()
-
     class Meta:
         model = EducationalAssistant
-        fields = ['id', 'user', 'field']
+        fields = '__all__'
 
 
 class UserProfileImageUpdateSerializer(serializers.ModelSerializer):
