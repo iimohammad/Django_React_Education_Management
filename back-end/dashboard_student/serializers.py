@@ -408,7 +408,8 @@ class EmergencyRemovalRequestSerializer(serializers.ModelSerializer):
             course = StudentCourse.objects.get(pk = student_course_pk , student = student)
         except Exception:
             raise serializers.ValidationError("Invalid course")
-
+        
+        
         current_date = timezone.now().date()
         emergency_start = course.semester_course.semester.emergency.emergency_remove_start
         emergency_end = course.semester_course.semester.emergency.emergency_remove_end
@@ -426,10 +427,15 @@ class EmergencyRemovalRequestSerializer(serializers.ModelSerializer):
 
         
         validated_data['course'] = course
-        emergency_removal_request = EmergencyRemovalRequest.objects.create(
-            student = student , course = course , 
-            student_explanation = validated_data['student_explanation'])
-        
+        try:
+            emergency_removal_request = EmergencyRemovalRequest.objects.create(
+                student = student , course = course , 
+                student_explanation = validated_data['student_explanation'])
+        except Exception as e:
+            print('*****************')
+            print('*****************')
+            print(validated_data)
+            print(e)
         return emergency_removal_request
     
 

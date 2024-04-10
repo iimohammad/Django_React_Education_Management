@@ -152,8 +152,8 @@ class EmergencyRemovalRequest(models.Model):
     def save(self, *args, **kwargs):
         existing_request = EmergencyRemovalRequest.objects.filter(
             student=self.student,
-            course__semester_course__semester__start_date__lte=timezone.now(),
-            course__semester_course__semester__end_date__gte=timezone.now()
+            course__semester_course__semester__emergency__emergency_remove_start__lte=timezone.now(),
+            course__semester_course__semester__emergency__emergency_remove_end__gte=timezone.now()
         ).exists()
 
         if existing_request:
