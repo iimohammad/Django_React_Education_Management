@@ -117,7 +117,7 @@ class EmergencyRemovalRequestResource(resources.ModelResource):
     class Meta:
         model = EmergencyRemovalRequest
         fields = ('id', 'student_id', 'approval_status', 'created_at',
-                  'student_course_id', 'student_explanation', 'educational_assistant_explanation')
+                  'student_course_id', 'student_explanation')
         import_id_fields = ('id',)
 
 

@@ -49,13 +49,12 @@ from django.http import Http404
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 
-class BaseConfig():
+
+class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefaultVersioning
     filterset_class = CorseFilter
-
-class CourseViewSet(viewsets.ReadOnlyModelViewSet,BaseConfig):
     permission_classes = [IsAuthenticated, IsStudent]
     search_fields = ['course_name']
     ordering_fields = ['course_code', 'department__department_name', 'major__major_name',
@@ -75,7 +74,11 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet,BaseConfig):
         return super().dispatch(*args, **kwargs)
 
 
-class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet,BaseConfig):
+class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefaultVersioning
+    filterset_class = SemesterCourseFilter
     permission_classes = [IsAuthenticated, IsStudent]
     search_fields = ['course__course_name']
     ordering_fields = ['instructor__user__first_name', 'instructor__user__last_name',
@@ -96,7 +99,11 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet,BaseConfig):
         return super().dispatch(*args, **kwargs)
 
 
-class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet,BaseConfig):
+class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefaultVersioning
+    filterset_class = StudentCourseFilter
     permission_classes = [IsAuthenticated, IsStudent]
     search_fields = ['semester_course__course__course_name']
     ordering_fields = ['entry_semester']
@@ -113,7 +120,11 @@ class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet,BaseConfig):
                                             semester_course__semester=last_semester).all()
 
 
-class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet,BaseConfig):
+class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet):
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefaultVersioning
+    filterset_class = StudentCourseFilter
     permission_classes = [IsAuthenticated, IsStudent]
     search_fields = ['semester_course__course__course_name']
     ordering_fields = ['entry_semester']
@@ -132,7 +143,11 @@ class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet,BaseConfig):
         )
 
 
-class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet,BaseConfig):
+class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet):
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefaultVersioning
+    filterset_class = StudentExamFilter
     permission_classes = [IsAuthenticated, IsStudent]
     search_fields = ['semester_course__course__course_name']
     ordering_fields = ['entry_semester']
@@ -169,7 +184,10 @@ class StudentProfileViewset(generics.RetrieveAPIView):
         ).first()
 
 
-class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet,BaseConfig):
+class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefaultVersioning
     permission_classes = [IsAuthenticated, IsStudent]
     search_fields = ['semester__name']
     ordering_fields = ['created_at', 'semester__name']
@@ -218,7 +236,10 @@ class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet,BaseConfig):
         )
 
 
-class UnitSelectionRequestAPIView(viewsets.ModelViewSet,BaseConfig):
+class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefaultVersioning
     permission_classes = [
         IsAuthenticated,
         IsStudent, 
@@ -255,7 +276,10 @@ class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
                                           mixins.DestroyModelMixin,
                                           mixins.ListModelMixin,
                                           viewsets.GenericViewSet,
-                                          BaseConfig,):
+                                          ):
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefaultVersioning
     permission_classes = [IsAuthenticated, IsStudent]
     ordering_fields = ['created_at', 'approval_status']
 
@@ -292,7 +316,10 @@ class RevisionRequestAPIView(mixins.CreateModelMixin,
                              mixins.DestroyModelMixin,
                              mixins.ListModelMixin,
                              viewsets.GenericViewSet,
-                             BaseConfig,):
+                             ):
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefaultVersioning
     permission_classes = [IsAuthenticated, IsStudent]
     ordering_fields = ['created_at']
 
@@ -329,15 +356,17 @@ class EmergencyRemovalRequestAPIView(mixins.CreateModelMixin,
                                      mixins.DestroyModelMixin,
                                      mixins.ListModelMixin,
                                      viewsets.GenericViewSet,
-                                     BaseConfig,):
+                                     ):
 
     """
         Send a Reuest to Your Advisor and If Accepted your course
         will be remove from your courses
     """
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefaultVersioning
     permission_classes = [IsAuthenticated, IsStudent]
     ordering_fields = ['created_at']
-
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return EmergencyRemovalRequestSerializer
@@ -370,11 +399,14 @@ class EmploymentEducationRequestApiView(mixins.CreateModelMixin,
                                         mixins.DestroyModelMixin,
                                         mixins.ListModelMixin,
                                         viewsets.GenericViewSet,
-                                        BaseConfig):
+                                        ):
 
     """
         If Student have accept military status can Send
     """
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefaultVersioning
     permission_classes = [IsAuthenticated, IsStudent,HavePermssionEmoloymentDegreeTime]
     ordering_fields = ['created_at']
 
@@ -407,10 +439,13 @@ class EmploymentEducationRequestApiView(mixins.CreateModelMixin,
 
 
 
-class AddRemoveRequestViewSet(UnitSelectionRequestAPIView,BaseConfig):
+class AddRemoveRequestViewSet(UnitSelectionRequestAPIView):
     """
         Student Can Change Courses During the Add Remove Time
     """
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefaultVersioning
     permission_classes = [
         IsStudent,
         IsAuthenticated,
@@ -451,8 +486,3 @@ class AddRemoveRequestViewSet(UnitSelectionRequestAPIView,BaseConfig):
                  )
         
         return super().create(request, *args, **kwargs)
-
-    
-
-
-    

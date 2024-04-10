@@ -49,7 +49,8 @@ class tests(APITestCase):
             user_number = '123456',
             national_code = '1234567890',
             phone = '09111111111',
-            gender = 'M'
+            gender = 'M' ,
+            email = 'abcd@abc.com'
             )
         self.teacher = Teacher.objects.create(
             user=self.teacher_user,
@@ -63,7 +64,8 @@ class tests(APITestCase):
             user_number = '123456',
             national_code = '1234567890',
             phone = '09111111111',
-            gender = 'M'
+            gender = 'M' ,
+            email = 'abc@abc.com'
             )
         self.student = Student.objects.create(
             user = self.student_user ,
@@ -93,101 +95,101 @@ class tests(APITestCase):
             course = self.student_course ,
             text = 'text'
         )
-    # def test_retrieve_teacher_profile(self):
-    #     url = '/show-profile/'
-    #     self.client.force_authenticate(user=self.teacher_user)
-    #     response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
-    #     print(f"Response status code: {response.status_code}")
+    def test_retrieve_teacher_profile(self):
+        url = '/show-profile/'
+        self.client.force_authenticate(user=self.teacher_user)
+        response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
+        print(f"Response status code: {response.status_code}")
     
-    # def test_retrieve_profile_not_teacher(self):
-    #     non_teacher_user = User.objects.create(username='non_teacher', password='non_teacher_password')
-    #     url = '/show-profile/'
-    #     self.client.force_authenticate(user=non_teacher_user)
-    #     response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
-    #     self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+    def test_retrieve_profile_not_teacher(self):
+        non_teacher_user = User.objects.create(username='non_teacher', password='non_teacher_password')
+        url = '/show-profile/'
+        self.client.force_authenticate(user=non_teacher_user)
+        response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         
-    # def test_update_teacher_profile_post_valid_data(self):
-    #     url = reverse('update_profile')
-    #     self.client.force_authenticate(user=self.teacher_user)
-    #     data = {
-    #         "profile_image": None,
-    #         "birthday": '1990-10-10',
-    #         "phone": "09111111111",
-    #         "address": "tests"
-    #     }   
-    #     response = self.client.put(url, data=data, format='json')
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    def test_update_teacher_profile_post_valid_data(self):
+        url = reverse('update_profile')
+        self.client.force_authenticate(user=self.teacher_user)
+        data = {
+            "profile_image": None,
+            "birthday": '1990-10-10',
+            "phone": "09111111111",
+            "address": "tests"
+        }   
+        response = self.client.put(url, data=data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
     
-    # def test_semester_show_get(self):
-    #     url = reverse('semester_show')
-    #     self.client.force_authenticate(user=self.teacher_user)
-    #     response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    def test_semester_show_get(self):
+        url = reverse('semester_show')
+        self.client.force_authenticate(user=self.teacher_user)
+        response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         
-    # def test_semester_show_get_not_advisor(self):
-    #     self.teacher.can_be_advisor = False
-    #     self.teacher.save()
-    #     url = reverse('semester_show')
-    #     self.client.force_authenticate(user=self.teacher_user)
-    #     response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
-    #     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+    def test_semester_show_get_not_advisor(self):
+        self.teacher.can_be_advisor = False
+        self.teacher.save()
+        url = reverse('semester_show')
+        self.client.force_authenticate(user=self.teacher_user)
+        response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
     
-    # def test_semester_courses_get_list(self):
-    #     self.teacher.can_be_advisor = True
-    #     self.teacher.save()
-    #     url = reverse('semester_courses-list')
-    #     self.client.force_authenticate(user=self.teacher_user)
-    #     response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    def test_semester_courses_get_list(self):
+        self.teacher.can_be_advisor = True
+        self.teacher.save()
+        url = reverse('semester_courses-list')
+        self.client.force_authenticate(user=self.teacher_user)
+        response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
     
-    # def test_semester_courses_get_list(self):
-    #     self.teacher.can_be_advisor = True
-    #     self.teacher.save()
-    #     url = f'/dashboard_professors/my_courses_semester/{self.student_course.id}/'
-    #     print('*****************')
-    #     print(url)
-    #     self.client.force_authenticate(user=self.teacher_user)
-    #     response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    def test_semester_courses_get_list(self):
+        self.teacher.can_be_advisor = True
+        self.teacher.save()
+        url = f'/dashboard_professors/my_courses_semester/{self.student_course.id}/'
+        print('*****************')
+        print(url)
+        self.client.force_authenticate(user=self.teacher_user)
+        response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
     
-    # def test_revision_request_get_list(self):
-    #     url = '/dashboard_professors/revision_requests/'
-    #     self.client.force_authenticate(user=self.teacher_user)
-    #     response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    def test_revision_request_get_list(self):
+        url = '/dashboard_professors/revision_requests/'
+        self.client.force_authenticate(user=self.teacher_user)
+        response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
     
-    # def test_revision_request_get_object(self):
-    #     url = f'/dashboard_professors/revision_requests/{self.revision_request.id}/'
-    #     self.client.force_authenticate(user=self.teacher_user)
-    #     response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    def test_revision_request_get_object(self):
+        url = f'/dashboard_professors/revision_requests/{self.revision_request.id}/'
+        self.client.force_authenticate(user=self.teacher_user)
+        response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
     
-    # def test_revision_request_patch_object(self):
-    #     url = f'/dashboard_professors/revision_requests/{self.revision_request.id}/'
-    #     self.client.force_authenticate(user=self.teacher_user)
-    #     data = {
-    #     'teacher_approval_status': 'A',
-    #     'answer': 'test'
-    # }
-    #     response = self.client.patch(url, json.dumps(data),
-    #                             content_type='application/json',
-    #                             HTTP_ACCEPT='application/json; version=v1')
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    def test_revision_request_patch_object(self):
+        url = f'/dashboard_professors/revision_requests/{self.revision_request.id}/'
+        self.client.force_authenticate(user=self.teacher_user)
+        data = {
+        'teacher_approval_status': 'A',
+        'answer': 'test'
+    }
+        response = self.client.patch(url, json.dumps(data),
+                                content_type='application/json',
+                                HTTP_ACCEPT='application/json; version=v1')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
     
-    # def test_show_my_students_get_list(self):
-    #     url = reverse('showmystudents')
-    #     self.client.force_authenticate(user=self.teacher_user)
-    #     response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    def test_show_my_students_get_list(self):
+        url = reverse('showmystudents')
+        self.client.force_authenticate(user=self.teacher_user)
+        response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
     
-    # def test_show_semester_registration_request_list(self):
-    #     url = reverse('semester_registration-list')
-    #     self.client.force_authenticate(user=self.teacher_user)
-    #     response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    def test_show_semester_registration_request_list(self):
+        url = reverse('semester_registration-list')
+        self.client.force_authenticate(user=self.teacher_user)
+        response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    # def test_show_unit_selection_request_list(self):
-    #     url = reverse('unit_selection-list')
-    #     self.client.force_authenticate(user=self.teacher_user)
-    #     response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    def test_show_unit_selection_request_list(self):
+        url = reverse('unit_selection-list')
+        self.client.force_authenticate(user=self.teacher_user)
+        response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

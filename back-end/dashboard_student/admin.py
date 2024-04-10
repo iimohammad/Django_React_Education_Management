@@ -135,15 +135,14 @@ admin.site.register(RevisionRequest, RevisionRequestAdmin)
 
 class EmergencyRemovalRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     list_display = ('id', 'student_link', 'student_course_link', 'approval_status',
-                    'student_explanation', 'educational_assistant_explanation')
+                    'student_explanation')
     list_filter = ('approval_status',)
     sortable_by = ('student', 'course')
     list_editable = ('approval_status',)
     ordering = ('created_at',)
     resource_class = EmergencyRemovalRequestResource
     list_display_links = ('id', 'student_link', 'student_course_link')
-    search_fields = ('student_explanation',
-                     'educational_assistant_explanation')
+    search_fields = ('student_explanation',)
     search_help_text = "Search in: Student Explanation, Educational Assistant Explanation"
     save_as = True
     list_per_page = 10

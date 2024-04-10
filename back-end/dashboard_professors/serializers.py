@@ -108,9 +108,9 @@ class EmergencyRemovalConfirmationSerializers(serializers.ModelSerializer):
     class Meta:
         model = EmergencyRemovalRequest
         fields = ['id', 'course', 'approval_status', 'created_at', 
-                  'student_explanation', 'educational_assistant_explanation']
+                  'student_explanation']
         
-        read_only_fields = ['id', 'course', 'created_at', 'student_explanation', 'educational_assistant_explanation']
+        read_only_fields = ['id', 'course', 'created_at', 'student_explanation']
 
     def update(self, instance, validated_data):
         instance.approval_status = validated_data.get('approval_status', instance.approval_status)

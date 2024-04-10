@@ -385,10 +385,9 @@ class EmergencyRemovalRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmergencyRemovalRequest
         fields = ['id', 'course' ,'approval_status','created_at' , 
-                    'student_explanation','educational_assistant_explanation']
+                    'student_explanation']
         
-        read_only_fields = ['id','approval_status','created_at' , 
-                            'educational_assistant_explanation']
+        read_only_fields = ['id','approval_status','created_at']
     def get_fields(self):
         fields = super().get_fields()
 

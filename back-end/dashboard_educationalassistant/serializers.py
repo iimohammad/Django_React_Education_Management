@@ -286,7 +286,7 @@ class EmergencyRemovalRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmergencyRemovalRequest
         fields = ['id', 'student', 'approval_status', 'created_at',
-                  'course', 'student_explanation', 'educational_assistant_explanation']
+                  'course', 'student_explanation']
         read_only_fields = ['id', 'student', 'created_at', 'course', 'student_explanation']
 
 

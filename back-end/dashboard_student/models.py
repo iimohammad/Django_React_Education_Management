@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 APPROVAL_CHOICES = [
         ('P', 'Pending'),
@@ -141,7 +142,6 @@ class EmergencyRemovalRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     course = models.ForeignKey('education.StudentCourse', on_delete=models.PROTECT, null=True)
     student_explanation = models.TextField()
-    educational_assistant_explanation = models.TextField()
 
     def __str__(self):
         return (
