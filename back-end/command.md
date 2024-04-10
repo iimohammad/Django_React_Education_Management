@@ -24,3 +24,15 @@ celery -A config beat -l info
 celery -A config worker -l info
 ```
 
+```bash
+    python3 manage.py runserver
+```
+
+
+```bash
+    python3 manage.py test
+```
+
+```bash
+    pip install -r requirements.txt
+```
