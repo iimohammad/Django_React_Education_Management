@@ -54,7 +54,6 @@ LOCAL_APPS = [
     'dashboard_professors.apps.DashboardProfessorsConfig',
     'dashboard_educationalassistant.apps.DashboardEducationalAssistantConfig',
 
-    'academic_events.apps.AcademicConfig',
 
 ]
 

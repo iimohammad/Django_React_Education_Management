@@ -3,8 +3,8 @@ from django.db.models.signals import post_migrate
 from django.dispatch import receiver
 
 class Department(models.Model):
-    department_name = models.CharField(max_length=40)
-    department_code = models.PositiveSmallIntegerField()
+    department_name = models.CharField(max_length=40, unique=True)
+    department_code = models.PositiveSmallIntegerField(unique=True)
     year_established = models.DateField()
     department_location = models.TextField(blank=True)
 
@@ -19,7 +19,7 @@ class Major(models.Model):
         PHD = 'P', 'PhD'
 
     major_name = models.CharField(max_length=30)
-    major_code = models.PositiveSmallIntegerField()
+    major_code = models.PositiveSmallIntegerField(unique=True)
     department = models.ForeignKey(Department, on_delete=models.PROTECT)
     number_of_credits = models.PositiveIntegerField()
     level = models.CharField(
@@ -44,7 +44,7 @@ class Course(models.Model):
         ('D', 'Deleted'),
     ]
     course_name = models.CharField(max_length=40)
-    course_code = models.PositiveSmallIntegerField()
+    course_code = models.PositiveSmallIntegerField(unique=True)
     department = models.ForeignKey(Department, on_delete=models.PROTECT)
     major = models.ForeignKey(Major, on_delete=models.PROTECT)
     credit_num = models.PositiveSmallIntegerField()

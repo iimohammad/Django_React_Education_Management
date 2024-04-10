@@ -28,6 +28,7 @@ class User(AbstractUser):
     phone = models.CharField(max_length=15, validators=[phone_validator], blank=True)
     address = models.TextField(blank=True, null=True)
     gender = models.CharField(max_length=2, choices=Gender.choices, default=Gender.UNSET)
+    email = models.EmailField(unique=True, blank=False)
 
     def save(self, *args, **kwargs):
         logger.debug('DEBUG: Saving instance of Account: %s', self.username)
