@@ -2,18 +2,16 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from .views import  (
     AddRemoveRequestView,
-    EmergencyRemovalRequestView,
+    EmergencyRemovalConfirmationView,
     SemesterCourseViewSet,
-    SemesterRegistrationRequestView,
+    SemesterRegistrationConfirmationViewAPI,
     ShowMyStudentsVeiw, ShowSemestersView,
-    StudentDeleteSemesterRequestView,
+    StudentDeleteSemesterConfirmationAPI,
     UnitSelectionRequestView,
     ShowProfileAPIView,
-    UserProfileImageView,
     EmploymentEducationConfirmationAPI,
 
 )
-from . import views
 
 router = DefaultRouter()
 router.register('TeacherRole/Semester-Show',
@@ -32,40 +30,36 @@ urlpatterns = [
         name='show_profile'
         ),
 
-    path('update-profile/',
-        UserProfileImageView.as_view(),
-        name = 'update_profile'
-        ),
    
     path('AdvisorRole/ShowMyStudents/',
         ShowMyStudentsVeiw.as_view(),
         name = 'ShowMyStudents'
         ),
     
-    path('AdvisorRole/UnitSelectionRequest/',
+    path('AdvisorRole/UnitSelectionConfirmation/',
         UnitSelectionRequestView.as_view(),
-        name = 'UnitSelectionRequest'
+        name = 'UnitSelectionConfirmation'
         ),
 
-    path('AdvisorRole/SemesterRegistrationRequest/',
-        SemesterRegistrationRequestView.as_view(),
+    path('AdvisorRole/SemesterRegistrationConfirmation/',
+        SemesterRegistrationConfirmationViewAPI.as_view(),
         name = 'SemesterRegistrationRequest'
         ),
 
     path(
-        'AdvisorRole/AddRemoveRequest/',
+        'AdvisorRole/AddRemoveConfirmation/',
         AddRemoveRequestView.as_view(),
-        name = 'AddRemoveRequest'
+        name = 'AddRemoveConfirmation'
         ),
     path(
-        'AdvisorRole/EmergencyRemovalRequest/',
-        EmergencyRemovalRequestView.as_view(),
-        name = 'EmergencyRemovalRequest'
+        'AdvisorRole/EmergencyRemovalConfirmation/',
+        EmergencyRemovalConfirmationView.as_view(),
+        name = 'EmergencyRemovalConfirmation'
         ),
     
-    path('AdvisorRole/StudentDeleteSemesterRequest/',
-        StudentDeleteSemesterRequestView.as_view(),
-        name = 'StudentDeleteSemesterRequest'
+    path('AdvisorRole/StudentDeleteConfirmation/',
+        StudentDeleteSemesterConfirmationAPI.as_view(),
+        name = 'StudentDeleteSemesterConfirmation'
         ),
     
     path(

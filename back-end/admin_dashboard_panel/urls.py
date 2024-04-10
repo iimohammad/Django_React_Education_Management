@@ -5,12 +5,11 @@ from accounts.permissions import IsAdmin
 from .views import (CourseViewSet, DepartmentViewSet,
                     EducationalAssistantViewSet, SemesterCourseViewSet,
                     SemesterViewSet, StudentViewSet, TeacherViewSet,
-                    UserViewSet)
+                    )
 
 app_name = 'dashboard_admin'
 router = DefaultRouter()
-UserViewSet
-router.register("User", UserViewSet, basename="User")
+# router.register("User", UserViewSet, basename="User")
 router.register("teacher", TeacherViewSet, basename="teacher")
 router.register('EducationalAssist', EducationalAssistantViewSet,
                 basename="EducationalAssistant")
