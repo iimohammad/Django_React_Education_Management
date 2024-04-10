@@ -7,14 +7,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from accounts.models import EducationalAssistant, Student, Teacher
 from accounts.permissions import IsAdmin
-from accounts.serializers import (EducationalAssistantSerializer,
-                                  StudentSerializer, TeacherSerializers)
+from accounts.serializers import (EducationalAssistantSerializer)
 from education.models import Course, Department, Semester, SemesterCourse
 from education.serializers import (CourseSerializers, DepartmentSerializers,
                                    SemesterCourseSerializers,
                                    SemesterSerializers)
 
-
+from .serializers import StudentSerializer
 class TeacherViewSet(viewsets.ModelViewSet):
     queryset = Teacher.objects.all()
     permission_classes = [IsAdminUser | IsAdmin]
