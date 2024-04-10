@@ -4,6 +4,12 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from datetime import date
+from .tasks import (
+    send_revision_request_approval_email,
+    send_revision_request_rejection_email,
+    send_semester_deletion_approval_email,
+    send_semester_deletion_rejection_email,
+)
 
 from accounts.models import Student, Teacher, EducationalAssistant, User
 from education.models import Course, SemesterCourse, Major, Semester
@@ -527,6 +533,9 @@ class StudentDeleteSemesterRequestViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+
+    
+
     def create(self, request, *args, **kwargs):
         """
         Disallow POST requests.
@@ -539,6 +548,19 @@ class StudentDeleteSemesterRequestViewSet(viewsets.ModelViewSet):
         """
         return Response({"detail": "DELETE requests are not allowed."}, status=405)
 
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        old_status = instance.educational_assistant_approval_status
+        new_status = serializer.validated_data.get('educational_assistant_approval_status', old_status)
+        
+        if old_status != new_status:
+            # Send email based on the new status
+            if new_status == 'A':
+                send_semester_deletion_approval_email.delay(instance.semester_registration_request.student.user.email)
+            elif new_status == 'R':
+                send_semester_deletion_rejection_email.delay(instance.semester_registration_request.student.user.email)
+
+        serializer.save()
 
 class EmploymentEducationRequestViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -610,3 +632,17 @@ class RevisionRequestViewSet(viewsets.ModelViewSet):
         Disallow DELETE requests.
         """
         return Response({"detail": "DELETE requests are not allowed."}, status=405)
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        old_status = instance.educational_assistant_approval_status
+        new_status = serializer.validated_data.get('educational_assistant_approval_status', old_status)
+        
+        if old_status != new_status:
+            # Send email based on the new status
+            if new_status == 'A':
+                send_revision_request_approval_email.delay(instance.student.user.email)
+            elif new_status == 'R':
+                send_revision_request_rejection_email.delay(instance.student.user.email)
+
+        serializer.save()

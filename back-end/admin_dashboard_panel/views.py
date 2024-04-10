@@ -7,28 +7,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from accounts.models import EducationalAssistant, Student, Teacher, User
 from accounts.permissions import IsAdmin
-from accounts.serializers import (EducationalAssistantSerializer,
-                                  StudentSerializer, TeacherSerializers,
-                                  UserSerializer)
+from accounts.serializers import (EducationalAssistantSerializer)
 from education.models import Course, Department, Semester, SemesterCourse
 from education.serializers import (CourseSerializers, DepartmentSerializers,
                                    SemesterCourseSerializers,
                                    SemesterSerializers)
 
-
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    permission_classes = [IsAdminUser | IsAdmin]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    versioning_class = DefualtVersioning
-    
-    def get_serializer_class(self):
-        if self.request.version == 'v1':
-            return UserSerializer
-
+from .serializers import StudentSerializer
 class TeacherViewSet(viewsets.ModelViewSet):
     queryset = Teacher.objects.all()
     permission_classes = [IsAdminUser | IsAdmin]
