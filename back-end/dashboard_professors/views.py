@@ -9,7 +9,11 @@ from .pagination import DefaultPagination
 from .versioning import DefualtVersioning
 from .permissions import IsTeacher , IsAdvisor
 from dashboard_professors.queryset import get_student_queryset
-from dashboard_student.models import RevisionRequest , UnitSelectionRequest ,SemesterRegistrationRequest
+from dashboard_student.models import (
+    RevisionRequest, 
+    UnitSelectionRequest,
+    SemesterRegistrationRequest
+    )
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from education.models import Semester, SemesterCourse, StudentCourse
@@ -25,6 +29,7 @@ from .serializers import (
     UnitSelectionRequestTeacherUpdateSerializer,
     EmploymentEducationConfirmationSerializer,
     StudentDeleteSemesterRequestTeacherUpdateSerializer,
+    SemesterRegistrationRequestSerializers,
 )
 from accounts.serializers import (
     UserProfileImageUpdateSerializer,
@@ -53,6 +58,7 @@ class BaseConfig():
 
 # General Tasks
 class ShowProfileAPIView(RetrieveAPIView):
+    """Show Profile APIView"""
     permission_classes = [IsAuthenticated] 
     versioning_class = DefualtVersioning
     def get_serializer_class(self, *args, **kwargs):
@@ -82,6 +88,7 @@ class ShowProfileAPIView(RetrieveAPIView):
 
 
 class UserProfileUpdateAPIView(UpdateAPIView):
+    """UserProfileUpdateAPIView"""
     queryset = User.objects.all()
     permission_classes = [IsAuthenticated, IsTeacher]
     
@@ -104,6 +111,7 @@ class UserProfileUpdateAPIView(UpdateAPIView):
 
 # Tasks of Teachers
 class ShowSemestersView(viewsets.ReadOnlyModelViewSet, BaseConfig):
+    """ShowSemestersView"""
     permission_classes = [IsAuthenticated, IsTeacher]
     queryset = Semester.objects.all()
     
@@ -128,6 +136,8 @@ class ShowSemestersView(viewsets.ReadOnlyModelViewSet, BaseConfig):
 
 # Evaluate Students
 class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet, BaseConfig):
+    """Semester CourseView Set"""
+
     permission_classes = [IsAuthenticated, IsTeacher]
     
     def get_serializer_class(self, *args, **kwargs):
@@ -212,12 +222,14 @@ class RevisionRequestView(viewsets.GenericViewSet,
                           mixins.UpdateModelMixin,
                           mixins.ListModelMixin,
                           mixins.RetrieveModelMixin,):
+
+    """Revision Confirmation View"""
     permission_classes = [IsAuthenticated, IsTeacher]
     
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return RevisionRequestSerializers
-
+        raise NotImplementedError("Unsupported version requested")
 
     def get_queryset(self):
         teacher = Teacher.objects.get(user = self.request.user)
@@ -227,26 +239,33 @@ class RevisionRequestView(viewsets.GenericViewSet,
     
 
 # Adviser Tasks APIs
-class ShowMyStudentsVeiw(generics.GenericAPIView, ListModelMixin, BaseConfig):
+class ShowMyStudentsVeiw(
+                        generics.GenericAPIView,
+                        ListModelMixin,
+                        BaseConfig
+                        ):
+    """Show My Students Veiw"""
+
     permission_classes = [IsAuthenticated, IsTeacher]
     
     def get_serializer_class(self):
         if self.request.version == 'v1':
             return StudentSerializer
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+        raise NotImplementedError("Unsupported version requested")
 
     def get_queryset(self):
         return get_student_queryset(self.request)
 
 
 class UnitSelectionRequestView(generics.UpdateAPIView, BaseConfig):
+    """Unit Selection Request View"""
     permission_classes = [IsTeacher, IsAuthenticated]
 
     
     def get_serializer_class(self):
         if self.request.version == 'v1':
             return UnitSelectionRequestTeacherUpdateSerializer
+        raise NotImplementedError("Unsupported version requested")
     
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -258,12 +277,14 @@ class UnitSelectionRequestView(generics.UpdateAPIView, BaseConfig):
             ).all()
 
 
-class SemesterRegistrationRequestView(generics.UpdateAPIView):
+class SemesterRegistrationConfirmationViewAPI(generics.UpdateAPIView):
+    """Semester Registration Confirmation View API"""
     permission_classes = [IsTeacher, IsAuthenticated] 
     
     def get_serializer_class(self):
         if self.request.version == 'v1':
             return SemesterRegistrationRequestSerializers
+        raise NotImplementedError("Unsupported version requested")
 
     def get_queryset(self):
         teacher = Teacher.objects.get(user = self.request.user)
@@ -282,7 +303,7 @@ class AddRemoveRequestView(generics.UpdateAPIView, BaseConfig):
 
     def get_queryset(self):
         # Filter students assigned to the requesting teacher
-        teacher = self.request.user
+        teacher = Teacher.objects.get(user = self.request.user)
         students = Student.objects.filter(advisor=teacher)
 
         # Filter delete semester requests related to those students
@@ -301,12 +322,11 @@ class EmergencyRemovalConfirmationView(generics.UpdateAPIView,
     def get_serializer_class(self):
         if self.request.version == 'v1':
             return EmergencyRemovalConfirmationSerializers
-
         raise NotImplementedError("Unsupported version requested")
 
     def get_queryset(self):
         # Filter students assigned to the requesting teacher
-        teacher = self.request.user
+        teacher = Teacher.objects.get(user = self.request.user)
         students = Student.objects.filter(advisor=teacher)
 
         # Filter delete semester requests related to those students
@@ -331,7 +351,7 @@ class StudentDeleteSemesterConfirmationAPI(generics.UpdateAPIView,
 
     def get_queryset(self):
         # Filter students assigned to the requesting teacher
-        teacher = self.request.user
+        teacher = Teacher.objects.get(user = self.request.user)
         students = Student.objects.filter(advisor=teacher)
 
         # Filter delete semester requests related to those students

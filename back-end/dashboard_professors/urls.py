@@ -4,7 +4,7 @@ from .views import  (
     AddRemoveRequestView,
     EmergencyRemovalConfirmationView,
     SemesterCourseViewSet,
-    SemesterRegistrationRequestView,
+    SemesterRegistrationConfirmationViewAPI,
     ShowMyStudentsVeiw, ShowSemestersView,
     StudentDeleteSemesterConfirmationAPI,
     UnitSelectionRequestView,
@@ -42,7 +42,7 @@ urlpatterns = [
         ),
 
     path('AdvisorRole/SemesterRegistrationConfirmation/',
-        SemesterRegistrationRequestView.as_view(),
+        SemesterRegistrationConfirmationViewAPI.as_view(),
         name = 'SemesterRegistrationRequest'
         ),
 
