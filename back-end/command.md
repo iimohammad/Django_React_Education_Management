@@ -20,3 +20,7 @@ docker-compose logs
 ```bash
 celery -A config beat -l info
 ```
+```bash
+celery -A config worker -l info
+```
+

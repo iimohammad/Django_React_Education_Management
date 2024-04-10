@@ -7,7 +7,6 @@ from dashboard_student.models import (SemesterRegistrationRequest,
                                       RevisionRequest,
                                       EmergencyRemovalRequest,
                                       StudentDeleteSemesterRequest,
-                                      EnrollmentRequest,
                                       EmploymentEducationRequest)
 from accounts.models import Student, Teacher
 from education.models import (Semester,
@@ -136,24 +135,6 @@ class StudentDeleteSemesterRequestResource(resources.ModelResource):
                   'student_explanations', 'educational_assistant_explanation')
         import_id_fields = ('id',)
 
-
-class EnrollmentRequestResource(resources.ModelResource):
-    student_id = fields.Field(
-        column_name='student_id',
-        attribute='student',
-        widget=ForeignKeyWidget(Student, field='id')
-    )
-    teacher_id = fields.Field(
-        column_name='teacher_id',
-        attribute='teacher',
-        widget=ForeignKeyWidget(Teacher, field='id')
-    )
-
-    class Meta:
-        model = EnrollmentRequest
-        fields = ('id', 'student_id', 'approval_status', 'created_at',
-                  'teacher_id', 'reason_text')
-        import_id_fields = ('id',)
 
 
 class EmploymentEducationRequestResource(resources.ModelResource):

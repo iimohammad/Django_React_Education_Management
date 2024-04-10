@@ -10,15 +10,14 @@ from dashboard_student.models import (SemesterRegistrationRequest,
                                       RevisionRequest,
                                       EmergencyRemovalRequest,
                                       StudentDeleteSemesterRequest,
-                                      EnrollmentRequest)
+                                      )
 from dashboard_student.resource import (SemesterRegistrationRequestResource,
                                         UnitSelectionRequestResource,
                                         AddRemoveRequestResource,
                                         RevisionRequestResource,
                                         EmergencyRemovalRequestResource,
                                         StudentDeleteSemesterRequestResource,
-                                        EnrollmentRequestResource,
-                                        EmploymentEducationRequestResource)
+                                        )
 
 
 class SemesterRegistrationRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
@@ -199,58 +198,3 @@ admin.site.register(StudentDeleteSemesterRequest,
                     StudentDeleteSemesterRequestAdmin)
 
 
-class EnrollmentRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('id', 'student_link', 'teacher_link', 'approval_status', 'reason_text')
-    list_filter = ('approval_status',)
-    sortable_by = ('student', 'teacher')
-    list_editable = ('approval_status',)
-    ordering = ('created_at',)
-    list_display_links = ('id', 'student_link', 'teacher_link')
-    resource_class = EnrollmentRequestResource
-    search_fields = ('teacher', 'reason_text')
-    search_help_text = "Search in: Teacher, Reason Text"
-    save_as = True
-    list_per_page = 10
-    list_max_show_all = 50
-
-    def student_link(self, obj):
-        student_id = obj.student.id
-        student_url = f"http://127.0.0.1:8000/{local_settings.Admin}accounts/student/{student_id}/change/"
-
-        return format_html('<a href="{}">{}</a>', student_url, obj.student)
-    
-    def teacher_link(self, obj):
-        teacher_id = obj.teacher.id
-        teacher_url = f"http://127.0.0.1:8000/{local_settings.Admin}accounts/teacher/{teacher_id}/change/"
-
-        return format_html('<a href="{}">{}</a>', teacher_url, obj.teacher)
-    
-    student_link.short_description = "Student"
-    teacher_link.short_description = "Teacher"
-
-admin.site.register(EnrollmentRequest, EnrollmentRequestAdmin)
-
-
-class EmploymentEducationRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('id', 'student_link', 'approval_status', 'need_for')
-    list_filter = ('approval_status',)
-    sortable_by = ('student',)
-    list_editable = ('approval_status',)
-    ordering = ('created_at',)
-    list_display_links = ('id', 'student_link')
-    resource_class = EmploymentEducationRequestResource
-    search_fields = ('need_for',)
-    search_help_text = "Search in: Reason Text"
-    save_as = True
-    list_per_page = 10
-    list_max_show_all = 50
-
-    def student_link(self, obj):
-        student_id = obj.student.id
-        student_url = f"http://127.0.0.1:8000/{local_settings.Admin}accounts/student/{student_id}/change/"
-
-        return format_html('<a href="{}">{}</a>', student_url, obj.student)
-    
-    student_link.short_description = "Student"
-
-admin.site.register(EmploymentEducationRequest, EmploymentEducationRequestAdmin)

@@ -31,3 +31,13 @@ class IsAdmin(BasePermission):
             return False
 
         return hasattr(request.user, 'adminuser')
+
+
+
+class IsNotAuthenticated(BasePermission):
+    """
+    Custom permission to only allow access to unauthenticated users.
+    """
+
+    def has_permission(self, request, view):
+        return not request.user.is_authenticated
