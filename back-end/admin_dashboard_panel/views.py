@@ -5,16 +5,15 @@ from .pagination import DefaultPagination
 from .versioning import DefualtVersioning
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from accounts.models import EducationalAssistant, Student, Teacher
+from accounts.models import EducationalAssistant, Student, Teacher, User
 from accounts.permissions import IsAdmin
-from accounts.serializers import (EducationalAssistantSerializer,
-                                  StudentSerializer, TeacherSerializers)
+from accounts.serializers import (EducationalAssistantSerializer)
 from education.models import Course, Department, Semester, SemesterCourse
 from education.serializers import (CourseSerializers, DepartmentSerializers,
                                    SemesterCourseSerializers,
                                    SemesterSerializers)
 
-
+from .serializers import StudentSerializer
 class TeacherViewSet(viewsets.ModelViewSet):
     queryset = Teacher.objects.all()
     permission_classes = [IsAdminUser | IsAdmin]
@@ -25,9 +24,6 @@ class TeacherViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.request.version == 'v1':
             return TeacherSerializers
-        
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
 
 
 class EducationalAssistantViewSet(viewsets.ModelViewSet):
@@ -41,8 +37,6 @@ class EducationalAssistantViewSet(viewsets.ModelViewSet):
         if self.request.version == 'v1':
             return EducationalAssistantSerializer
         
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
 
 
 class StudentViewSet(viewsets.ModelViewSet):
@@ -56,8 +50,6 @@ class StudentViewSet(viewsets.ModelViewSet):
         if self.request.version == 'v1':
             return StudentSerializer
     
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
 
 
 # Department
@@ -72,13 +64,10 @@ class DepartmentViewSet(viewsets.ModelViewSet):
         if self.request.version == 'v1':
             return DepartmentSerializers
     
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+
 
 
 # Semester
-
-
 class SemesterViewSet(viewsets.ModelViewSet):
     queryset = Semester.objects.all()
     permission_classes = [IsAdminUser | IsAdmin]
@@ -90,16 +79,13 @@ class SemesterViewSet(viewsets.ModelViewSet):
         if self.request.version == 'v1':
             return SemesterSerializers
         
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+
 
 
 # Use in two pannels
-
-
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
-    permission_classes = [IsAuthenticated, IsAdmin, IsAdminUser]
+    permission_classes = [IsAdminUser | IsAdmin]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning
@@ -110,7 +96,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 
 class SemesterCourseViewSet(viewsets.ModelViewSet):
     queryset = SemesterCourse.objects.all()
-    permission_classes = [IsAuthenticated, IsAdmin, IsAdminUser]
+    permission_classes = [IsAdminUser | IsAdmin]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning
