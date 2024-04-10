@@ -4,7 +4,6 @@ from django.dispatch import receiver
 from dashboard_student.models import UnitSelectionRequest
 from django.db.models.signals import post_delete, post_save
 
-
 class Department(models.Model):
     department_name = models.CharField(max_length=40, unique=True)
     department_code = models.PositiveSmallIntegerField(unique=True)
@@ -150,7 +149,7 @@ class Day(models.Model):
     @receiver(post_migrate)
     def on_migrate(sender, **kwargs):
         create_week_days(sender, **kwargs)
-        
+
 class SemesterCourse(models.Model):
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)

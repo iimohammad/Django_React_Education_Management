@@ -5,13 +5,17 @@ from config import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from .models import UnitSelectionRequest
+from django_redis import get_redis_connection
 
-# @shared_task
-# def Confirm_Student_Courses(email,firstname,lastname):
-#     subject = ''
-#     message = f'Hi {firstname} {lastname} Your Courses Confirm by Your Teacher'
-#     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+@shared_task
+def clear_redis():
+    try:
+        # Connect to Redis
+        redis_conn = get_redis_connection('default')
 
+        # Clear the Redis database
+        redis_conn.flushdb()
 
-
-
+        print('Successfully cleared the Redis database')
+    except Exception as e:
+        print(f'An error occurred: {str(e)}')

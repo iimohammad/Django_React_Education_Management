@@ -316,6 +316,13 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
             current_date > semester.unit_selection.unit_selection_end:
             raise serializers.ValidationError("Invalid semester unit selection time")
         
+        if validated_data['request_course'].course_capacity == 0:
+            QueuedRequest.objects.create(
+                student=student,
+                **validated_data
+            )
+            raise ValidationError("Course capacity is zero, request is queued.")
+        
         unit_selection_request = UnitSelectionRequest.objects.create(
             student=student,
             **validated_data
@@ -495,66 +502,12 @@ class EmergencyRemovalRequestSerializer(serializers.ModelSerializer):
     
 
 
+
+class AddRemoveRequestSerializer(UnitSelectionRequestSerializer):
+    pass
+
+
     
-
-
-      
-class AddRemoveRequestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = StudentCourse
-        fields = ['name']
-
-class AddRemoveRequestSerializer(serializers.ModelSerializer):
-    StudentCourse = AddRemoveRequestSerializer()
-    class Meta:
-        model = AddRemoveRequest
-        fields = ['id', 'student', 'approval_status', 'created_at', 'semester', 'added_universities', 'removed_universities']
-        read_only_fields = ['id', 'approval_status', 'created_at']
-
-    def create(self, validated_data):
-        user = self.context['request'].user  # دریافت کاربری که درخواست را ارسال کرده است
-        semester = validated_data.get('semester')
-        added_universities = validated_data.get('added_universities', [])
-        removed_universities = validated_data.get('removed_universities', [])
-
-        try:
-            # Check the end date of the semester  
-
-            if semester.end_date < timezone.now().date():
-                raise serializers.ValidationError("This semester has ended!")
-
-            # Checking the account settlement before starting to delete and add 
-
-            if semester.start_date < timezone.now().date():
-                raise serializers.ValidationError("Financial clearance must be completed before add/remove")
-            
-            # Checking that deletion and addition are done after selecting the unit   
-
-            if semester.unit_selection_end < timezone.now().date():
-                raise serializers.ValidationError("Add/remove must be done after unit selection")
-
-            # Checking the number of units
-            
-            total_units = sum(course.units for course in added_universities)
-            if total_units > 6:
-                raise serializers.ValidationError("Maximum 6 units can be added")
-
-            # Check repeated lessons   
-               
-            course_codes = [course.code for course in added_universities]
-            if len(set(course_codes)) != len(course_codes):
-                raise serializers.ValidationError("Duplicate courses are not allowed")
-
-            # Create request
-          
-            request = AddRemoveRequest.objects.create(student=user, **validated_data)
-            return request
-
-        except serializers.ValidationError as e:
-            raise e
-        except Exception as e:
-            raise serializers.ValidationError("An error occurred while processing your request. Please try again later.")
-        
     
 class EmploymentEducationRequestSerializer(serializers.ModelSerializer):
     class Meta:
