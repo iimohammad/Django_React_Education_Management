@@ -1,10 +1,12 @@
 from django.db import models
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
+from dashboard_student.models import UnitSelectionRequest
+from django.db.models.signals import post_delete, post_save
 
 class Department(models.Model):
-    department_name = models.CharField(max_length=40)
-    department_code = models.PositiveSmallIntegerField()
+    department_name = models.CharField(max_length=40, unique=True)
+    department_code = models.PositiveSmallIntegerField(unique=True)
     year_established = models.DateField()
     department_location = models.TextField(blank=True)
 
@@ -19,7 +21,7 @@ class Major(models.Model):
         PHD = 'P', 'PhD'
 
     major_name = models.CharField(max_length=30)
-    major_code = models.PositiveSmallIntegerField()
+    major_code = models.PositiveSmallIntegerField(unique=True)
     department = models.ForeignKey(Department, on_delete=models.PROTECT)
     number_of_credits = models.PositiveIntegerField()
     level = models.CharField(
@@ -44,7 +46,7 @@ class Course(models.Model):
         ('D', 'Deleted'),
     ]
     course_name = models.CharField(max_length=40)
-    course_code = models.PositiveSmallIntegerField()
+    course_code = models.PositiveSmallIntegerField(unique=True)
     department = models.ForeignKey(Department, on_delete=models.PROTECT)
     major = models.ForeignKey(Major, on_delete=models.PROTECT)
     credit_num = models.PositiveSmallIntegerField()
@@ -126,9 +128,12 @@ class SemesterEmergency(models.Model):
     emergency_remove_start = models.DateField()
     emergency_remove_end = models.DateField()
 
+
 def create_week_days(sender, **kwargs):
         for day, _ in Day.DAY_CHOICES:
             Day.objects.get_or_create(name=day)
+
+
 class Day(models.Model):
     DAY_CHOICES = [
         ('saturday', 'Saturday'),
@@ -147,6 +152,7 @@ class Day(models.Model):
     @receiver(post_migrate)
     def on_migrate(sender, **kwargs):
         create_week_days(sender, **kwargs)
+
 class SemesterCourse(models.Model):
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
@@ -160,6 +166,7 @@ class SemesterCourse(models.Model):
     course_capacity = models.PositiveSmallIntegerField()
     corse_reserve_capasity = models.PositiveSmallIntegerField(default=0)
 
+
     @property
     def remain_course_capacity(self):
         return self.course_capacity - StudentCourse.objects.filter(
@@ -168,6 +175,20 @@ class SemesterCourse(models.Model):
     def __str__(self):
         return f"{self.course.course_name} - {self.semester.name}"
 
+@receiver(post_save, sender=UnitSelectionRequest)
+def update_course_capacity(sender, instance, created, **kwargs):
+    if created:
+        # Increment or decrement the course_capacity based on the request_course
+        if instance.request_course:
+            instance.request_course.course_capacity -= 1  
+            instance.request_course.save()
+
+
+@receiver(post_delete, sender=UnitSelectionRequest)
+def increase_course_capacity(sender, instance, **kwargs):
+    if instance.request_course:
+        instance.request_course.course_capacity += 1  
+        instance.request_course.save()
 
 class StudentCourse(models.Model):
     FINALREGISTERED = 'F'
@@ -209,3 +230,4 @@ class StudentCourse(models.Model):
     def __str__(self):
         return f"{self.student.user.first_name} {self.student.user.last_name} - \
         {self.semester_course.semester.name}"
+    

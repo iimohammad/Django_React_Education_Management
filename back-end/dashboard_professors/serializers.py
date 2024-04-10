@@ -1,9 +1,17 @@
 from rest_framework import serializers
 
-from dashboard_student.models import AddRemoveRequest, EmergencyRemovalRequest, EnrollmentRequest, RevisionRequest, SemesterRegistrationRequest, StudentDeleteSemesterRequest
-from education.models import Course, Major, Semester, SemesterCourse , StudentCourse
+from dashboard_student.models import (
+    AddRemoveRequest,
+    EmergencyRemovalRequest,
+    RevisionRequest,
+    SemesterRegistrationRequest,
+    StudentDeleteSemesterRequest,
+    EmploymentEducationRequest,
+)
+from education.models import Course, Semester, SemesterCourse,Major,StudentCourse
 from dashboard_student.models import (
     UnitSelectionRequest,
+    
     )
 from accounts.models import Student , User
 class UserSerializerNameLastname(serializers.ModelSerializer):
@@ -53,48 +61,64 @@ class ShowSemestersSerializers(serializers.ModelSerializer):
                 'end_semester', 'semester_type', 'Semester_courses']
 
 
-class UnitSelectionRequestSerializers(serializers.ModelSerializer):
+class UnitSelectionRequestTeacherUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = UnitSelectionRequest
-        fields = ['semester_registration_request' , 'approval_status' ,'created_at' , 'requested_courses']
-        read_only_fields = ['semester_registration_request' ,'created_at' , 'requested_courses']
+        fields = ['id', 'approval_status']
 
-class SemesterSerializerName(serializers.ModelSerializer):
+    def validate_approval_status(self, value):
+        if value not in UnitSelectionRequest.UnitSelection_APPROVAL_CHOICES:
+            raise serializers.ValidationError("Invalid approval status.")
+        return value
+
+    def update(self, instance, validated_data):
+        instance.approval_status = validated_data.get('approval_status', instance.approval_status)
+        instance.save()
+        return instance
+
+
+class SemesterRegistrationConfirmationSerializers(serializers.ModelSerializer):
     class Meta:
-        model = Semester()
-        fields = ['name']
-class SemesterRegistrationRequestSerializers(serializers.ModelSerializer):
-    student = StudentSerializerNameLastname()
-    semester = SemesterSerializerName()
-    requested_courses = CourseSerializer(many = True)
-    class Meta:
-        model = SemesterRegistrationRequest
-        fields = ['student' ,'approval_status' ,'created_at' ,'semester' ,'requested_courses' ,
-                    'student_comment_for_requested_courses']
-        read_only_fields = ['student' ,'created_at' ,'semester' ,'requested_courses']
+        fields = ['id', 'student', 'approval_status', 'created_at', 'semester', 'requested_courses', 'teacher_comment_for_requested_courses']
+        read_only_fields = ['id', 'student', 'created_at', 'semester', 'requested_courses']
 
 
-class AddRemoveRequestViewSerializers(serializers.ModelSerializer):
-    class Meta:
-        model = AddRemoveRequest
-        fields = '__all__'
+    def update(self, instance, validated_data):
+        instance.approval_status = validated_data.get('approval_status', instance.approval_status)
+        instance.save()
+        return instance
 
-class EmergencyRemovalRequestSerializers(serializers.ModelSerializer):
+class AddRemoveRequestViewSerializers(UnitSelectionRequestTeacherUpdateSerializer):
+    pass
+
+class EmergencyRemovalConfirmationSerializers(serializers.ModelSerializer):
     class Meta:
         model = EmergencyRemovalRequest
-        fields = '__all__'
+        fields = ['id', 'course', 'approval_status', 'created_at', 
+                  'student_explanation', 'educational_assistant_explanation']
+        
+        read_only_fields = ['id', 'course', 'created_at', 'student_explanation', 'educational_assistant_explanation']
+
+    def update(self, instance, validated_data):
+        instance.approval_status = validated_data.get('approval_status', instance.approval_status)
+        instance.save()
+        return instance
 
 
-class StudentDeleteSemesterRequestSerializers(serializers.ModelSerializer):
+class StudentDeleteSemesterRequestTeacherUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentDeleteSemesterRequest
-        fields = '__all__'
+        fields = ['teacher_approval_status']
+
+    def update(self, instance, validated_data):
+        instance.teacher_approval_status = validated_data.get(
+            'teacher_approval_status',
+             instance.teacher_approval_status
+             )
+        instance.save()
+        return instance
 
 
-class EnrollmentRequestSerializers(serializers.ModelSerializer):
-    class Meta:
-        model = EnrollmentRequest
-        fields = '__all__'
 
 class studentCourseSerializer(serializers.ModelSerializer):
     semester_course = SemesterCourseSerializer()
@@ -120,3 +144,10 @@ class RevisionRequestSerializers(serializers.ModelSerializer):
         instance.answer = validated_data.get('answer', instance.answer)
         instance.save()
         return instance
+
+class EmploymentEducationConfirmationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmploymentEducationRequest
+        fields = ['id','approval_status','created_at','need_for']
+        
+        read_only_fields = ['id' ,'created_at','need_for']
