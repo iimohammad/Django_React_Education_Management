@@ -2,11 +2,11 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from .views import  (
     AddRemoveRequestView,
-    EmergencyRemovalRequestView,
+    EmergencyRemovalConfirmationView,
     SemesterCourseViewSet,
     SemesterRegistrationRequestView,
     ShowMyStudentsVeiw, ShowSemestersView,
-    StudentDeleteSemesterRequestView,
+    StudentDeleteSemesterConfirmationAPI,
     UnitSelectionRequestView,
     ShowProfileAPIView,
     UserProfileImageView,
@@ -42,30 +42,30 @@ urlpatterns = [
         name = 'ShowMyStudents'
         ),
     
-    path('AdvisorRole/UnitSelectionRequest/',
+    path('AdvisorRole/UnitSelectionConfirmation/',
         UnitSelectionRequestView.as_view(),
-        name = 'UnitSelectionRequest'
+        name = 'UnitSelectionConfirmation'
         ),
 
-    path('AdvisorRole/SemesterRegistrationRequest/',
+    path('AdvisorRole/SemesterRegistrationConfirmation/',
         SemesterRegistrationRequestView.as_view(),
         name = 'SemesterRegistrationRequest'
         ),
 
     path(
-        'AdvisorRole/AddRemoveRequest/',
+        'AdvisorRole/AddRemoveConfirmation/',
         AddRemoveRequestView.as_view(),
-        name = 'AddRemoveRequest'
+        name = 'AddRemoveConfirmation'
         ),
     path(
-        'AdvisorRole/EmergencyRemovalRequest/',
-        EmergencyRemovalRequestView.as_view(),
-        name = 'EmergencyRemovalRequest'
+        'AdvisorRole/EmergencyRemovalConfirmation/',
+        EmergencyRemovalConfirmationView.as_view(),
+        name = 'EmergencyRemovalConfirmation'
         ),
     
-    path('AdvisorRole/StudentDeleteSemesterRequest/',
-        StudentDeleteSemesterRequestView.as_view(),
-        name = 'StudentDeleteSemesterRequest'
+    path('AdvisorRole/StudentDeleteConfirmation/',
+        StudentDeleteSemesterConfirmationAPI.as_view(),
+        name = 'StudentDeleteSemesterConfirmation'
         ),
     
     path(
