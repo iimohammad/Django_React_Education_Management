@@ -3,7 +3,6 @@ from rest_framework.routers import DefaultRouter
 from .views import  (
     AddRemoveRequestView,
     EmergencyRemovalRequestView,
-    EnrollmentRequestView,
     SemesterCourseViewSet,
     SemesterRegistrationRequestView,
     ShowMyStudentsVeiw, ShowSemestersView,
@@ -31,7 +30,6 @@ urlpatterns = [
     path('AdvisorRole/AddRemoveRequest/',AddRemoveRequestView.as_view(),name = 'AddRemoveRequest'),
     path('AdvisorRole/EmergencyRemovalRequest/',EmergencyRemovalRequestView.as_view(),name = 'EmergencyRemovalRequest'),
     path('AdvisorRole/StudentDeleteSemesterRequest/',StudentDeleteSemesterRequestView.as_view(),name = 'StudentDeleteSemesterRequest'),
-    path('AdvisorRole/EnrollmentRequestView/',EnrollmentRequestView.as_view(),name = 'EnrollmentRequestView'),
 
 ]
 

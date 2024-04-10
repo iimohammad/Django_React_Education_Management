@@ -5,7 +5,8 @@ from dashboard_student.models import (
     EmergencyRemovalRequest,
     RevisionRequest,
     SemesterRegistrationRequest,
-    StudentDeleteSemesterRequest
+    StudentDeleteSemesterRequest,
+    EmploymentEducationRequest,
 )
 from education.models import Course, Semester, SemesterCourse
 from dashboard_student.models import (
@@ -72,3 +73,12 @@ class RevisionRequestSerializers(serializers.ModelSerializer):
     class Meta:
         model = RevisionRequest
         fields = '__all__'
+
+
+class EmploymentEducationConfirmationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmploymentEducationRequest
+        fields = ['id','approval_status','created_at','need_for']
+        
+        read_only_fields = ['id' ,'created_at','need_for']
+        

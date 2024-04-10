@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 APPROVAL_CHOICES = [
         ('P', 'Pending'),
@@ -168,6 +169,8 @@ class EmploymentEducationRequest(models.Model):
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
     need_for = models.TextField()
+
     def __str__(self) -> str:
         return f"{self.student.user.first_name} {self.student.user.last_name}"
+    
     

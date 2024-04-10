@@ -13,6 +13,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from education.models import Semester, SemesterCourse, StudentCourse
 from education.serializers import StudentCourseSerializer
+from .tasks import send_approval_email
 from .serializers import (
     AddRemoveRequestViewSerializers,
     EmergencyRemovalRequestSerializers,
@@ -28,18 +29,25 @@ from accounts.serializers import (
     UserProfileImageUpdateSerializer,
     TeacherSerializer
 )
+from dashboard_student.models import EmploymentEducationRequest
 from rest_framework.generics import RetrieveAPIView, UpdateAPIView
 from rest_framework import generics
 from rest_framework.mixins import ListModelMixin
+from .serializers import (
+    EmploymentEducationConfirmationSerializer,
+)
+
+
+class BaseConfig():
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefualtVersioning
 
 
 # General Tasks
 class ShowProfileAPIView(RetrieveAPIView):
-    permission_classes = [IsAuthenticated]  # Assuming IsTeacher permission is checked inside serializer
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated] 
     versioning_class = DefualtVersioning
-    
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return TeacherSerializer
@@ -63,12 +71,9 @@ class ShowProfileAPIView(RetrieveAPIView):
         return Response(serializer.data)
 
 
-class UserProfileImageView(UpdateAPIView):
+class UserProfileImageView(UpdateAPIView, BaseConfig):
     queryset = User.objects.all()
     permission_classes = [IsAuthenticated, IsTeacher]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    versioning_class = DefualtVersioning
     
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
@@ -86,12 +91,9 @@ class UserProfileImageView(UpdateAPIView):
 
 
 # Tasks of Teachers
-class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
+class ShowSemestersView(viewsets.ReadOnlyModelViewSet, BaseConfig):
     permission_classes = [IsAuthenticated, IsTeacher]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
     queryset = Semester.objects.all()
-    versioning_class = DefualtVersioning
     
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
@@ -111,11 +113,8 @@ class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
 
 
 # Evaluate Students
-class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
+class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet, BaseConfig):
     permission_classes = [IsAuthenticated, IsTeacher]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    versioning_class = DefualtVersioning
     
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
@@ -192,11 +191,8 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
-class RevisionRequestView(generics.UpdateAPIView):
+class RevisionRequestView(generics.UpdateAPIView, BaseConfig):
     permission_classes = [IsAuthenticated, IsTeacher]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    versioning_class = DefualtVersioning
     
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
@@ -208,11 +204,8 @@ class RevisionRequestView(generics.UpdateAPIView):
 
 
 # Adviser Tasks APIs
-class ShowMyStudentsVeiw(generics.GenericAPIView, ListModelMixin):
+class ShowMyStudentsVeiw(generics.GenericAPIView, ListModelMixin, BaseConfig):
     permission_classes = [IsAuthenticated, IsTeacher]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    versioning_class = DefualtVersioning
     
     def get_serializer_class(self):
         if self.request.version == 'v1':
@@ -224,11 +217,9 @@ class ShowMyStudentsVeiw(generics.GenericAPIView, ListModelMixin):
         return get_student_queryset(self.request)
 
 
-class UnitSelectionRequestView(generics.UpdateAPIView):
+class UnitSelectionRequestView(generics.UpdateAPIView, BaseConfig):
     permission_classes = [IsTeacher, IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    versioning_class = DefualtVersioning
+
     
     def get_serializer_class(self):
         if self.request.version == 'v1':
@@ -241,11 +232,8 @@ class UnitSelectionRequestView(generics.UpdateAPIView):
         return get_student_queryset(self.request)
 
 
-class SemesterRegistrationRequestView(generics.UpdateAPIView):
+class SemesterRegistrationRequestView(generics.UpdateAPIView, BaseConfig):
     permission_classes = [IsTeacher, IsAuthenticated] 
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    versioning_class = DefualtVersioning
     
     def get_serializer_class(self):
         if self.request.version == 'v1':
@@ -257,9 +245,8 @@ class SemesterRegistrationRequestView(generics.UpdateAPIView):
         return get_student_queryset(self.request)
 
 
-class AddRemoveRequestView(generics.UpdateAPIView):
+class AddRemoveRequestView(generics.UpdateAPIView, BaseConfig):
     permission_classes = [IsTeacher, IsAuthenticated]
-    versioning_class = DefualtVersioning
     
     def get_serializer_class(self):
         if self.request.version == 'v1':
@@ -271,11 +258,8 @@ class AddRemoveRequestView(generics.UpdateAPIView):
         return get_student_queryset(self.request)
 
 
-class EmergencyRemovalRequestView(generics.UpdateAPIView):
+class EmergencyRemovalRequestView(generics.UpdateAPIView, BaseConfig):
     permission_classes = [IsTeacher, IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    versioning_class = DefualtVersioning
     
     # def get_serializer_class(self):
     #   if self.request.version == 'v1':
@@ -287,11 +271,8 @@ class EmergencyRemovalRequestView(generics.UpdateAPIView):
         return get_student_queryset(self.request)
 
 
-class StudentDeleteSemesterRequestView(generics.UpdateAPIView):
+class StudentDeleteSemesterRequestView(generics.UpdateAPIView, BaseConfig):
     permission_classes = [IsTeacher, IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    versioning_class = DefualtVersioning
     
     def get_serializer_class(self):
         if self.request.version == 'v1':
@@ -304,18 +285,27 @@ class StudentDeleteSemesterRequestView(generics.UpdateAPIView):
         return get_student_queryset(self.request)
 
 
-class EnrollmentRequestView(generics.UpdateAPIView):
+class EmploymentEducationConfirmationAPI(
+    generics.UpdateAPIView,
+    BaseConfig,
+    generics.ListAPIView
+):
     permission_classes = [IsTeacher, IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    versioning_class = DefualtVersioning
-    
+
     def get_serializer_class(self):
         if self.request.version == 'v1':
-            return EnrollmentRequestSerializers
-    
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+            return EmploymentEducationConfirmationSerializer
 
-    def get_queryset(self):
-        return get_student_queryset(self.request)
+    queryset = EmploymentEducationRequest.objects.filter(approval_status='P')
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        approval_status_changed = instance.approval_status != serializer.validated_data['approval_status']
+        serializer.save()
+
+        if approval_status_changed and serializer.validated_data['approval_status'] == 'A':
+            send_approval_email.delay(instance.student.user.email)
+            
+        return Response(serializer.data)

@@ -66,6 +66,7 @@ class Student(models.Model):
         ('EP', 'Education Pardon'),  # معافیت تحصیلی
         ('P', 'Passed'),  # گزرانده
         ('E', 'Exempted'),  # معاف
+        ('F','Finished')
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     entry_semester = models.CharField(max_length=100)

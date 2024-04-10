@@ -8,6 +8,7 @@ from .permissions import (
     HavePermosionForUnitSelectionForLastSemester,
     HavePermissionBasedOnUnitSelectionTime,
     HavePermissionBasedOnAddAndRemoveTime,
+    HavePermssionEmoloymentDegreeTime,
 )
 from accounts.models import Student
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -381,9 +382,13 @@ class EmploymentEducationRequestApiView(mixins.CreateModelMixin,
                                         mixins.DestroyModelMixin,
                                         mixins.ListModelMixin,
                                         viewsets.GenericViewSet):
+
+    """
+        If Student have accept military status can Send
+    """
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     pagination_class = DefaultPagination
-    permission_classes = [IsAuthenticated, IsStudent]
+    permission_classes = [IsAuthenticated, IsStudent,HavePermssionEmoloymentDegreeTime]
     ordering_fields = ['created_at']
     versioning_class = DefaultVersioning
 
@@ -417,10 +422,14 @@ class EmploymentEducationRequestApiView(mixins.CreateModelMixin,
 
 
 class AddRemoveRequestViewSet(UnitSelectionRequestAPIView):
+    """
+        Student Can Change Courses During the Add Remove Time
+    """
     permission_classes = [
         IsStudent,
         IsAuthenticated,
         HavePermissionBasedOnAddAndRemoveTime,
+        HavePermssionEmoloymentDegreeTime
     ]
 
     versioning_class = DefaultVersioning
