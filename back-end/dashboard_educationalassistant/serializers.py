@@ -299,7 +299,7 @@ class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'semester_registration_request', 'teacher_approval_status',
                             'created_at', 'student_explanations']
 
-
+    
 class EmploymentEducationRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmploymentEducationRequest

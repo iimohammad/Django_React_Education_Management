@@ -1,4 +1,14 @@
 from rest_framework import serializers
+from .tasks import (
+    send_approval_email, 
+    send_rejection_email,
+    send_unit_selection_email,
+    send_semester_delete_approval_email,
+    send_semester_delete_rejected_email,
+    send_rejected_revision,
+    send_approved_revision,
+    
+    )
 
 from dashboard_student.models import (
     AddRemoveRequest,
@@ -74,6 +84,9 @@ class UnitSelectionRequestTeacherUpdateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.approval_status = validated_data.get('approval_status', instance.approval_status)
         instance.save()
+
+        student_email = instance.student.user.email
+        send_unit_selection_email.delay(student_email, instance.approval_status)
         return instance
 
 
@@ -102,8 +115,17 @@ class EmergencyRemovalConfirmationSerializers(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.approval_status = validated_data.get('approval_status', instance.approval_status)
         instance.save()
-        return instance
+        student_courses = StudentCourse.objects.filter(
+            course=instance.course, 
+            student=instance.student
+        )
+        for student_course in student_courses:
+            if instance.approval_status == 'A':
+                send_DeleteCourse_email.delay(instance.student.user.email)
+            elif instance.approval_status == 'R':
+                send_Reject_DeleteCourse_email.delay(instance.student.user.email)
 
+        return instance
 
 class StudentDeleteSemesterRequestTeacherUpdateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -111,10 +133,16 @@ class StudentDeleteSemesterRequestTeacherUpdateSerializer(serializers.ModelSeria
         fields = ['teacher_approval_status']
 
     def update(self, instance, validated_data):
-        instance.teacher_approval_status = validated_data.get(
-            'teacher_approval_status',
-             instance.teacher_approval_status
-             )
+        teacher_approval_status = validated_data.get('teacher_approval_status', instance.teacher_approval_status)
+        student_email = instance.semester_registration_request.student.user.email
+
+        if teacher_approval_status == 'A':  
+            send_semester_delete_approval_email.delay(student_email)
+
+        elif teacher_approval_status == 'R':
+            send_semester_delete_rejected_email.delay(student_email)
+
+        instance.teacher_approval_status = teacher_approval_status
         instance.save()
         return instance
 
@@ -143,6 +171,11 @@ class RevisionRequestSerializers(serializers.ModelSerializer):
             'teacher_approval_status', instance.teacher_approval_status)
         instance.answer = validated_data.get('answer', instance.answer)
         instance.save()
+        if instance.teacher_approval_status == 'A':
+            send_approved_revision.delay(instance.student.user.email)
+        elif instance.teacher_approval_status == 'R':
+            send_rejected_revision.delay(instance.student.user.email)
+
         return instance
 
 class EmploymentEducationConfirmationSerializer(serializers.ModelSerializer):
@@ -151,3 +184,37 @@ class EmploymentEducationConfirmationSerializer(serializers.ModelSerializer):
         fields = ['id','approval_status','created_at','need_for']
         
         read_only_fields = ['id' ,'created_at','need_for']
+
+
+
+class SemesterRegistrationRequestSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = SemesterRegistrationRequest
+        fields = ['id', 'student', 'approval_status', 'created_at', 
+                  'semester', 'requested_courses', 'teacher_comment_for_requested_courses']
+        read_only_fields = ['id', 'student', 'created_at', 'semester', 'requested_courses']
+        
+    def validate_approval_status(self, value):
+        if value not in ['P', 'A', 'R']:
+            raise serializers.ValidationError("Invalid approval status.")
+        return value
+
+    def update(self, instance, validated_data):
+        previous_status = instance.approval_status
+        instance.approval_status = validated_data.get(
+            'approval_status',
+            instance.approval_status)
+
+        instance.teacher_comment_for_requested_courses = validated_data.get(
+            'teacher_comment_for_requested_courses',
+             instance.teacher_comment_for_requested_courses
+             )
+        instance.save()
+        
+        if previous_status != instance.approval_status:
+            if instance.approval_status == 'A':
+                send_approval_email.delay(instance.student.user.email)
+            elif instance.approval_status == 'R':
+                send_rejection_email.delay(instance.student.user.email)
+        
+        return instance
