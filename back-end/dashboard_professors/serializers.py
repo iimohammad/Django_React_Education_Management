@@ -28,13 +28,14 @@ class ShowSemestersSerializers(serializers.ModelSerializer):
     class Meta:
         model = Semester
         fields = ['id', 'name', 'start_semester',
-                  'end_semester', 'semester_type', 'Semester_courses']
+                'end_semester', 'semester_type', 'Semester_courses']
 
 
 class UnitSelectionRequestSerializers(serializers.ModelSerializer):
     class Meta:
         model = UnitSelectionRequest
-        fields = '__all__'
+        fields = ['semester_registration_request' , 'approval_status' ,'created_at' , 'requested_courses']
+        read_only_fields = ['semester_registration_request' ,'created_at' , 'requested_courses']
 
 
 class SemesterRegistrationRequestSerializers(serializers.ModelSerializer):
@@ -66,9 +67,10 @@ class EnrollmentRequestSerializers(serializers.ModelSerializer):
         fields = '__all__'
 
 class studentCourseSerializer(serializers.ModelSerializer):
+    semester_course = SemesterCourseSerializer()
     class Meta:
         model = StudentCourse
-        fields = ['course__course_name']
+        fields = ['semester_course']
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -80,12 +82,19 @@ class StudentSerializer(serializers.ModelSerializer):
         model = Student
         fields = ['user']
 class RevisionRequestSerializers(serializers.ModelSerializer):
-    student = StudentSerializer
+    student = StudentSerializer()
     course = studentCourseSerializer()
     class Meta:
         model = RevisionRequest
-        fields = ['id' , 'student', 'teacher_approval_status', 'educational_assistant_approval_status', 
-                    'created_at', 'course', 'text', 'answer']
+        fields = ['id' , 'student', 'teacher_approval_status', 'educational_assistant_approval_status',
+                    'created_at', 'course', 'text' , 'answer']
         
-        readonly_fields = ['id' , 'student', 'teacher_approval_status', 'educational_assistant_approval_status', 
-                    'created_at', 'answer']
+        read_only_fields = ['id' , 'student', 'educational_assistant_approval_status',
+                    'created_at', 'text']
+        
+    def update(self, instance, validated_data):
+        instance.teacher_approval_status = validated_data.get(
+            'teacher_approval_status', instance.teacher_approval_status)
+        instance.answer = validated_data.get('answer', instance.answer)
+        instance.save()
+        return instance
