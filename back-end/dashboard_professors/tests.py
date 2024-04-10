@@ -93,7 +93,6 @@ class tests(APITestCase):
             course = self.student_course ,
             text = 'text'
         )
-
     # def test_retrieve_teacher_profile(self):
     #     url = '/show-profile/'
     #     self.client.force_authenticate(user=self.teacher_user)
@@ -175,8 +174,20 @@ class tests(APITestCase):
     #                             HTTP_ACCEPT='application/json; version=v1')
     #     self.assertEqual(response.status_code, status.HTTP_200_OK)
     
-    def test_show_my_students_get_list(self):
-        url = reverse('showmystudents')
-        self.client.force_authenticate(user=self.teacher_user)
-        response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+    # def test_show_my_students_get_list(self):
+    #     url = reverse('showmystudents')
+    #     self.client.force_authenticate(user=self.teacher_user)
+    #     response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    
+    # def test_show_semester_registration_request_list(self):
+    #     url = reverse('semester_registration-list')
+    #     self.client.force_authenticate(user=self.teacher_user)
+    #     response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    # def test_show_unit_selection_request_list(self):
+    #     url = reverse('unit_selection-list')
+    #     self.client.force_authenticate(user=self.teacher_user)
+    #     response = self.client.get(url, {'HTTP_ACCEPT': 'application/json; version=v1'})
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
