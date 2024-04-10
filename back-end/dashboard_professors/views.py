@@ -9,7 +9,7 @@ from .pagination import DefaultPagination
 from .versioning import DefualtVersioning
 from .permissions import IsTeacher , IsAdvisor
 from dashboard_professors.queryset import get_student_queryset
-from dashboard_student.models import RevisionRequest , UnitSelectionRequest
+from dashboard_student.models import RevisionRequest , UnitSelectionRequest ,SemesterRegistrationRequest
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from education.models import Semester, SemesterCourse, StudentCourse
@@ -23,10 +23,9 @@ from .serializers import (
     SemesterRegistrationRequestSerializers,
     ShowSemestersSerializers,
     StudentDeleteSemesterRequestSerializers,
-    UnitSelectionRequestSerializers,
+    UnitSelectionRequestSerializers
 )
 from accounts.serializers import (
-    StudentSerializer,
     UserProfileImageUpdateSerializer,
     TeacherSerializer
 )
@@ -235,7 +234,7 @@ class UnitSelectionRequestView(viewsets.GenericViewSet,
                                mixins.ListModelMixin,
                                mixins.RetrieveModelMixin,
                                mixins.UpdateModelMixin):
-    permission_classes = [IsTeacher, IsAuthenticated]
+    permission_classes = [IsTeacher, IsAuthenticated , IsTeacher]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning
@@ -248,10 +247,13 @@ class UnitSelectionRequestView(viewsets.GenericViewSet,
         teacher = Teacher.objects.get(user = self.request.user)
         return UnitSelectionRequest.objects.filter(
             semester_registration_request__student__advisor = teacher
-        ).all()
+            ).all()
 
 
-class SemesterRegistrationRequestView(generics.UpdateAPIView):
+class SemesterRegistrationRequestView(viewsets.GenericViewSet,
+                                        mixins.ListModelMixin,
+                                        mixins.RetrieveModelMixin,
+                                        mixins.UpdateModelMixin):
     permission_classes = [IsTeacher, IsAuthenticated] 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
@@ -260,11 +262,10 @@ class SemesterRegistrationRequestView(generics.UpdateAPIView):
     def get_serializer_class(self):
         if self.request.version == 'v1':
             return SemesterRegistrationRequestSerializers
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
 
     def get_queryset(self):
-        return get_student_queryset(self.request)
+        teacher = Teacher.objects.get(user = self.request.user)
+        return SemesterRegistrationRequest.objects.filter(student__advisor = teacher).all()
 
 
 class AddRemoveRequestView(generics.UpdateAPIView):

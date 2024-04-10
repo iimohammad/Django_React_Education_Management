@@ -1,16 +1,38 @@
 from rest_framework import serializers
 
 from dashboard_student.models import AddRemoveRequest, EmergencyRemovalRequest, EnrollmentRequest, RevisionRequest, SemesterRegistrationRequest, StudentDeleteSemesterRequest
-from education.models import Course, Semester, SemesterCourse , StudentCourse
+from education.models import Course, Major, Semester, SemesterCourse , StudentCourse
 from dashboard_student.models import (
     UnitSelectionRequest,
     )
 from accounts.models import Student , User
+class UserSerializerNameLastname(serializers.ModelSerializer):
 
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name')
+    
+class MajorSerializerName(serializers.ModelSerializer):
+    class Meta:
+        model = Major
+        fields = ['major_name']
+        
+class StudentSerializer(serializers.ModelSerializer):
+    user = UserSerializerNameLastname()
+    major = MajorSerializerName()
+    class Meta:
+        model = Student
+        fields = ['id', 'user', 'entry_semester', 'gpa', 'entry_year', 'major',
+                    'military_service_status','year_of_study']
+class StudentSerializerNameLastname(serializers.ModelSerializer):
+    user = UserSerializerNameLastname() 
+    class Meta:
+        model = Student
+        fields = ['user']
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = ['id', 'course_name']
+        fields = ['course_code', 'course_name']
 
 
 class SemesterCourseSerializer(serializers.ModelSerializer):
@@ -19,7 +41,7 @@ class SemesterCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = SemesterCourse
         fields = ['id', 'course_name']
-        # readonly_fields = ['id', 'course_name']
+        read_only_fields = ['id', 'course_name']
 
 
 class ShowSemestersSerializers(serializers.ModelSerializer):
@@ -37,11 +59,19 @@ class UnitSelectionRequestSerializers(serializers.ModelSerializer):
         fields = ['semester_registration_request' , 'approval_status' ,'created_at' , 'requested_courses']
         read_only_fields = ['semester_registration_request' ,'created_at' , 'requested_courses']
 
-
+class SemesterSerializerName(serializers.ModelSerializer):
+    class Meta:
+        model = Semester()
+        fields = ['name']
 class SemesterRegistrationRequestSerializers(serializers.ModelSerializer):
+    student = StudentSerializerNameLastname()
+    semester = SemesterSerializerName()
+    requested_courses = CourseSerializer(many = True)
     class Meta:
         model = SemesterRegistrationRequest
-        fields = '__all__'
+        fields = ['student' ,'approval_status' ,'created_at' ,'semester' ,'requested_courses' ,
+                    'student_comment_for_requested_courses']
+        read_only_fields = ['student' ,'created_at' ,'semester' ,'requested_courses']
 
 
 class AddRemoveRequestViewSerializers(serializers.ModelSerializer):
@@ -71,16 +101,8 @@ class studentCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentCourse
         fields = ['semester_course']
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['first_name' ,'last_name']
 
-class StudentSerializer(serializers.ModelSerializer):
-    user = UserSerializer() 
-    class Meta:
-        model = Student
-        fields = ['user']
+
 class RevisionRequestSerializers(serializers.ModelSerializer):
     student = StudentSerializer()
     course = studentCourseSerializer()
