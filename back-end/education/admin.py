@@ -105,15 +105,15 @@ class CourseAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
 
     def department_link(self, obj):
         department_id = obj.department.id
-        department_url = f"http://127.0.0.1:8000/{local_settings.Admin}education/\
-        department/{department_id}/change/"
+        local_host = 'http://127.0.0.1:8000/'
+        department_url = f"{local_host}{local_settings.Admin}education/department/{department_id}/change/"
         return format_html('<a href="{}">{}</a>',
                            department_url, obj.department)
     
     def major_link(self, obj):
         major_id = obj.major.id
-        major_url = f"http://127.0.0.1:8000/{local_settings.Admin}education/\
-        major/{major_id}/change/"
+        local_host = 'http://127.0.0.1:8000/'
+        major_url = f"{local_host}{local_settings.Admin}education/major/{major_id}/change/"
         return format_html('<a href="{}">{}</a>',
                            major_url, obj.major)
 
@@ -159,8 +159,8 @@ class MajorAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
 
     def department_link(self, obj):
         department_id = obj.department.id
-        department_url = f"http://127.0.0.1:8000/{local_settings.Admin}education/\
-        department/{department_id}/change/"
+        local_host = 'http://127.0.0.1:8000/'
+        department_url = f"{local_host}{local_settings.Admin}education/department/{department_id}/change/"
         return format_html('<a href="{}">{}</a>',
                            department_url, obj.department)
 
@@ -253,22 +253,22 @@ class SemesterCourseAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
 
     def semester_link(self, obj):
         semester_id = obj.semester.id
-        semester_url = f"http://127.0.0.1:8000/{local_settings.Admin}education/\
-        semester/{semester_id}/change/"
+        local_host = 'http://127.0.0.1:8000/'
+        semester_url = f"{local_host}{local_settings.Admin}education/semester/{semester_id}/change/"
         return format_html('<a href="{}">{}</a>',
                            semester_url, obj.semester)
     
     def course_link(self, obj):
         course_id = obj.course.id
-        course_url = f"http://127.0.0.1:8000/{local_settings.Admin}education/\
-        course/{course_id}/change/"
+        local_host = 'http://127.0.0.1:8000/'
+        course_url = f"{local_host}{local_settings.Admin}education/course/{course_id}/change/"
         return format_html('<a href="{}">{}</a>',
                            course_url, obj.course)
     
     def instructor_link(self, obj):
         instructor_id = obj.instructor.id
-        instructor_url = f"http://127.0.0.1:8000/{local_settings.Admin}accounts/\
-        teacher/{instructor_id}/change/"
+        local_host = 'http://127.0.0.1:8000/'
+        instructor_url = f"{local_host}{local_settings.Admin}accounts/teacher/{instructor_id}/change/"
         return format_html('<a href="{}">{}</a>',
                            instructor_url, obj.instructor)
 

@@ -25,8 +25,6 @@ class Command(BaseCommand):
             Permission.objects.get(codename='change_revisionrequest'),
             Permission.objects.get(codename='view_emergencyremovalrequest'),
             Permission.objects.get(codename='change_emergencyremovalrequest'),
-            Permission.objects.get(codename='view_enrollmentrequest'),
-            Permission.objects.get(codename='change_enrollmentrequest'),
             Permission.objects.get(codename='view_employmenteducationrequest'),
             Permission.objects.get(codename='change_employmenteducationrequest'),
             Permission.objects.get(codename='view_studentdeletesemesterrequest'),
