@@ -149,19 +149,19 @@ class EmergencyRemovalRequest(models.Model):
             f"{self.student.user.last_name} - "
             f"{self.course.semester_course.semester.name}"
         )
-    def save(self, *args, **kwargs):
-        existing_request = EmergencyRemovalRequest.objects.filter(
-            student=self.student,
-            course__semester_course__semester__emergency__emergency_remove_start__lte=timezone.now(),
-            course__semester_course__semester__emergency__emergency_remove_end__gte=timezone.now()
-        ).exists()
+    # def save(self, *args, **kwargs):
+    #     existing_request = EmergencyRemovalRequest.objects.filter(
+    #         student=self.student,
+    #         course__semester_course__semester__emergency__emergency_remove_start__lte=timezone.now(),
+    #         course__semester_course__semester__emergency__emergency_remove_end__gte=timezone.now()
+    #     ).exists()
 
-        if existing_request:
-            raise ValidationError(
-                "A student can only create one EmergencyRemovalRequest per semester."
-                )
+    #     if existing_request:
+    #         raise ValidationError(
+    #             "A student can only create one EmergencyRemovalRequest per semester."
+    #             )
 
-        super().save(*args, **kwargs)
+    #     super().save(*args, **kwargs)
 
 class StudentDeleteSemesterRequest(models.Model):
     semester_registration_request = models.ForeignKey(
