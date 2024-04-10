@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.utils import timezone
 from .tasks import (
     send_approval_email, 
     send_rejection_email,
@@ -104,27 +105,55 @@ class SemesterRegistrationConfirmationSerializers(serializers.ModelSerializer):
 class AddRemoveRequestViewSerializers(UnitSelectionRequestTeacherUpdateSerializer):
     pass
 
+
+class StudentCourseSerializer(serializers.ModelSerializer):
+    semester_course = SemesterCourseSerializer()
+    class Meta:
+        model = StudentCourse
+        fields = ['semester_course','status','score']
+
 class EmergencyRemovalConfirmationSerializers(serializers.ModelSerializer):
+    student = StudentSerializerNameLastname()
+    course = StudentCourseSerializer()
     class Meta:
         model = EmergencyRemovalRequest
-        fields = ['id', 'course', 'approval_status', 'created_at', 
-                  'student_explanation']
+        fields = ['id','student' ,'course', 'approval_status', 'created_at', 
+                    'student_explanation']
         
-        read_only_fields = ['id', 'course', 'created_at', 'student_explanation']
-
+        read_only_fields = ['id','student' , 'course', 'created_at', 'student_explanation']
+    # def get_fields(self):
+    #     fields = super().get_fields()
+    #     if self.context.get(
+    #         'request') and self.context['request'].method == 'PUT' or self.context['request'].method == 'PAT':
+    #         fields['course'] = serializers.IntegerField()
+            
+    #     return fields
+    
     def update(self, instance, validated_data):
+        
+        if instance.approval_status == 'A' or instance.approval_status == 'R':
+            raise serializers.ValidationError('cat not change Accepted   and rejected request!')
+        
         instance.approval_status = validated_data.get('approval_status', instance.approval_status)
-        instance.save()
-        student_courses = StudentCourse.objects.filter(
-            course=instance.course, 
-            student=instance.student
-        )
-        for student_course in student_courses:
-            if instance.approval_status == 'A':
-                send_DeleteCourse_email.delay(instance.student.user.email)
-            elif instance.approval_status == 'R':
-                send_Reject_DeleteCourse_email.delay(instance.student.user.email)
-
+        
+        if instance.approval_status == 'R':
+            instance.save()
+        
+        elif instance.approval_status == 'A':
+            course = instance.course
+            
+            end_semester = course.semester_course.semester.end_semester
+            
+            if end_semester < timezone.now().date():
+                raise serializers.ValidationError('semester ended!')
+            
+            course.status = 'E'
+            try:
+                course.save()
+            except Exception as e:
+                pass
+            instance.save()
+            
         return instance
 
 class StudentDeleteSemesterRequestTeacherUpdateSerializer(serializers.ModelSerializer):

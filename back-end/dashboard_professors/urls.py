@@ -20,7 +20,9 @@ router.register('TeacherRole/Semester-Show',
 router.register('TeacherRole/my-Courses-Semester',
                 SemesterCourseViewSet,
                 basename='SemesterCourse')
-
+router.register('AdvisorRole/EmergencyRemovalConfirmation',
+                EmergencyRemovalConfirmationView,
+                basename='EmergencyRemovalConfirmation')
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -51,11 +53,6 @@ urlpatterns = [
         AddRemoveRequestView.as_view(),
         name = 'AddRemoveConfirmation'
         ),
-    path(
-        'AdvisorRole/EmergencyRemovalConfirmation/',
-        EmergencyRemovalConfirmationView.as_view(),
-        name = 'EmergencyRemovalConfirmation'
-        ),
     
     path('AdvisorRole/StudentDeleteConfirmation/',
         StudentDeleteSemesterConfirmationAPI.as_view(),
@@ -68,4 +65,3 @@ urlpatterns = [
         name = 'EmploymentEducationConfirmation'
         ),
 ]
-
