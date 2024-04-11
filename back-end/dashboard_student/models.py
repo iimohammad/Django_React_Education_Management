@@ -155,7 +155,6 @@ class EmergencyRemovalRequest(models.Model):
 
 
 class StudentDeleteSemesterRequest(models.Model):
-    student = models.OneToOneField('accounts.Student', on_delete=models.CASCADE,default=None)
     semester_registration_request = models.ForeignKey(
         SemesterRegistrationRequest, on_delete=models.PROTECT, null=True)
     teacher_approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES,

@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils import timezone
 from django.utils.html import format_html
 from import_export.admin import ImportExportActionModelAdmin
-
+from django.contrib.auth.forms import UserCreationForm
 import os
 admin_url = os.environ.get('Admin')
 from accounts.resource import (UserResource,
@@ -12,9 +12,18 @@ from accounts.resource import (UserResource,
                                EducationalAssistantResource)
 
 from .models import AdminUser, EducationalAssistant, Student, Teacher, User
+class CustomUserCreationForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        fields = ('username', 'email', 'first_name', 'last_name')
 
-
-class CustomUserAdmin(UserAdmin, ImportExportActionModelAdmin):
+class CustomUserAdmin(UserAdmin):
+    add_form = CustomUserCreationForm  # Use the custom creation form
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'email', 'password1', 'password2', 'first_name', 'last_name'),
+        }),
+    )
     list_display = ('id', 'username', 'email', 'user_number',
                     'gender', 'phone', 'is_staff')
     list_filter = ('gender', 'birthday', 'is_active', 'is_staff')
