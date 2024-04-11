@@ -10,6 +10,9 @@ from .tasks import (
     send_approved_revision,
     
     )
+import csv
+from rest_framework import status
+from rest_framework.response import Response
 
 from dashboard_student.models import (
     AddRemoveRequest,
@@ -196,8 +199,6 @@ class studentCourseSerializer(serializers.ModelSerializer):
 
 
 class RevisionRequestSerializers(serializers.ModelSerializer):
-    student = StudentSerializer()
-    course = studentCourseSerializer()
     class Meta:
         model = RevisionRequest
         fields = ['id' , 'student', 'teacher_approval_status', 'educational_assistant_approval_status',
@@ -258,3 +259,41 @@ class SemesterRegistrationRequestSerializers(serializers.ModelSerializer):
                 send_rejection_email.delay(instance.student.user.email)
         
         return instance
+    
+
+class EvaluationSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = StudentCourse
+        fields = ['id', 'semester_course','student',  'status', 'score']
+        read_only_fields = ['id','status']
+    
+
+class CSVFileSerializer(serializers.Serializer):
+    file = serializers.FileField()
+
+    def create(self, validated_data):
+        file_obj = validated_data.get('file')
+
+        if not file_obj:
+            raise serializers.ValidationError("No file uploaded")
+
+        try:
+            decoded_file = file_obj.read().decode('utf-8').splitlines()
+            csv_data = csv.DictReader(decoded_file)
+
+            for row in csv_data:
+                student_id = row.get('student_id')
+                score = row.get('score')
+
+                if not student_id or not score:
+                    raise serializers.ValidationError("Both student_id and score are required.")
+
+                student_course = StudentCourse.objects.filter(student_id=student_id).first()
+                if student_course:
+                    student_course.score = score
+                    student_course.save()
+
+            return {'message': 'Student scores updated successfully'}
+
+        except Exception as e:
+            raise serializers.ValidationError("An error occurred while processing the CSV file")

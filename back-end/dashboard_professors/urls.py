@@ -3,6 +3,9 @@ from rest_framework.routers import DefaultRouter
 from .views import  (
     AddRemoveRequestView,
     EmergencyRemovalConfirmationView,
+    EvaluateStudentsAPIView,
+    EvaluateStudentsViewSet,
+    RevisionRequestView,
     SemesterCourseViewSet,
     SemesterRegistrationConfirmationViewAPI,
     ShowMyStudentsVeiw, ShowSemestersView,
@@ -37,6 +40,25 @@ router.register('AdvisorRole/SemesterRegistrationConfirmation',
 router.register('AdvisorRole/EmploymentEducationConfirmation',
                 EmploymentEducationConfirmationAPI,
                 basename='EmploymentEducationConfirmation')
+
+
+router.register('AdvisorRole/AddRemoveConfirmation',
+                AddRemoveRequestView,
+                basename='AddRemoveConfirmation')
+
+router.register('AdvisorRole/ShowMyStudents/',
+                ShowMyStudentsVeiw,
+                basename='ShowMyStudents')
+
+router.register(
+    'evaluate',
+    EvaluateStudentsViewSet,
+    basename='evaluate-courses')
+
+router.register('revision-requests',
+                RevisionRequestView,
+                basename='revision-request')
+
 urlpatterns = [
     path('', include(router.urls)),
     
@@ -46,21 +68,12 @@ urlpatterns = [
         ),
 
    
-    path('AdvisorRole/ShowMyStudents/',
-        ShowMyStudentsVeiw.as_view(),
-        name = 'ShowMyStudents'
-        ),
+
     
     path('AdvisorRole/UnitSelectionConfirmation/',
         UnitSelectionRequestView.as_view(),
         name = 'UnitSelectionConfirmation'
         ),
+    path('evaluate-students/', EvaluateStudentsAPIView.as_view(), name='evaluate_students'),
 
-    path(
-        'AdvisorRole/AddRemoveConfirmation/',
-        AddRemoveRequestView.as_view(),
-        name = 'AddRemoveConfirmation'
-        ),
-    
-   
 ]
