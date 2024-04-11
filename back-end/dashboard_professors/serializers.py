@@ -254,9 +254,9 @@ class SemesterRegistrationRequestSerializers(serializers.ModelSerializer):
             'approval_status',
             instance.approval_status)
 
-        instance.teacher_comment_for_requested_courses = validated_data.get(
-            'teacher_comment_for_requested_courses',
-             instance.teacher_comment_for_requested_courses
+        instance.teacher_comment = validated_data.get(
+            'teacher_comment',
+             instance.teacher_comment
              )
         instance.save()
         
