@@ -120,21 +120,15 @@ class StudentCourseSerializer(serializers.ModelSerializer):
         fields = ['semester_course','status','score']
 
 class EmergencyRemovalConfirmationSerializers(serializers.ModelSerializer):
-    student = StudentSerializerNameLastname()
-    course = StudentCourseSerializer()
+    student = StudentSerializerNameLastname(read_only=True)
+    course = StudentCourseSerializer(read_only=True)
     class Meta:
         model = EmergencyRemovalRequest
         fields = ['id','student' ,'course', 'approval_status', 'created_at', 
                     'student_explanation']
         
         read_only_fields = ['id','student' , 'course', 'created_at', 'student_explanation']
-    # def get_fields(self):
-    #     fields = super().get_fields()
-    #     if self.context.get(
-    #         'request') and self.context['request'].method == 'PUT' or self.context['request'].method == 'PAT':
-    #         fields['course'] = serializers.IntegerField()
-            
-    #     return fields
+    
     
     def update(self, instance, validated_data):
         

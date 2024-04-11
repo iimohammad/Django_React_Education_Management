@@ -330,32 +330,7 @@ class AddRemoveRequestView(generics.UpdateAPIView):
         )
 
 
-class EmergencyRemovalConfirmationView(viewsets.GenericViewSet ,
-                                       mixins.ListModelMixin ,
-                                       mixins.RetrieveModelMixin ,
-                                       mixins.UpdateModelMixin ,
-                                       ):
 
-    """Need to change course in database and not allow if course has preeuqisite"""
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    versioning_class = DefualtVersioning
-    permission_classes = [IsAuthenticated , IsTeacher]
-    
-    def get_serializer_class(self):
-        if self.request.version == 'v1':
-            return EmergencyRemovalConfirmationSerializers
-        raise NotImplementedError("Unsupported version requested")
-
-    def get_queryset(self):
-        # Filter students assigned to the requesting teacher
-        teacher = Teacher.objects.get(user = self.request.user)
-        students = Student.objects.filter(advisor=teacher)
-
-        # Filter delete semester requests related to those students
-        return EmergencyRemovalRequest.objects.filter(
-            student__in=students
-        )
 
 
 class StudentDeleteSemesterConfirmationAPI(viewsets.GenericViewSet ,
@@ -388,12 +363,23 @@ class StudentDeleteSemesterConfirmationAPI(viewsets.GenericViewSet ,
 
 
 class EmploymentEducationConfirmationAPI(viewsets.ModelViewSet):
-    """Employment Education Confirmation API """
+    """Employment Education Confirmation API OK"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
-    versioning_class = DefualtVersioning  # Corrected typo in the class name
+    versioning_class = DefualtVersioning  
     permission_classes = [IsTeacher, IsAuthenticated]
-    queryset = EmploymentEducationRequest.objects.filter(approval_status='P')
+
+    def get_queryset(self):
+        # Filter students assigned to the requesting teacher
+        teacher = Teacher.objects.get(user = self.request.user)
+        students = Student.objects.filter(advisor=teacher)
+
+        # Filter delete semester requests related to those students
+        return EmploymentEducationRequest.objects.filter(
+            student__in=students,
+            approval_status='P',
+        )
+
 
     def get_serializer_class(self):
         if self.request.version == 'v1':
@@ -420,3 +406,37 @@ class EmploymentEducationConfirmationAPI(viewsets.ModelViewSet):
             send_approval_email_employment.delay(instance.student.user.email)
 
         return Response(serializer.data)
+
+
+class EmergencyRemovalConfirmationView(viewsets.ModelViewSet):
+
+    """Need to change course in database and not allow if course has preeuqisite OK"""
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefualtVersioning
+    permission_classes = [IsAuthenticated , IsTeacher]
+    
+    def get_serializer_class(self):
+        if self.request.version == 'v1':
+            return EmergencyRemovalConfirmationSerializers
+        raise NotImplementedError("Unsupported version requested")
+    
+
+    def get_queryset(self):
+        # Filter students assigned to the requesting teacher
+        teacher = Teacher.objects.get(user = self.request.user)
+        students = Student.objects.filter(advisor=teacher)
+
+        # Filter delete semester requests related to those students
+        return EmergencyRemovalRequest.objects.filter(
+            student__in=students
+        )
+    
+
+    def create(self, request, *args, **kwargs):
+        raise MethodNotAllowed('POST')
+
+    def destroy(self, request, *args, **kwargs):
+        raise MethodNotAllowed('DELETE')
+    
+    

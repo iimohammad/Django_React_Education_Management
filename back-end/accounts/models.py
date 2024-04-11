@@ -106,13 +106,13 @@ class Student(models.Model):
             return f"{self.user.first_name} {self.user.last_name}"
         return str(self.user)
 
-@receiver(post_save, sender=StudentCourse)
-def update_student_info(sender, instance, **kwargs):
-    student = instance.student
-    # Recalculate the student's GPA and total credits
-    # student.gpa = student.calculate_gpa()
-    student.total_credits = student.calculate_total_credits()
-    student.save()
+# @receiver(post_save, sender=StudentCourse)
+# def update_student_info(sender, instance, **kwargs):
+#     student = instance.student
+#     # Recalculate the student's GPA and total credits
+#     # student.gpa = student.calculate_gpa()
+#     student.total_credits = student.calculate_total_credits()
+#     student.save()
 
 
 

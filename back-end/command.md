@@ -23,7 +23,10 @@ celery -A config beat -l info
 ```bash
 celery -A config worker -l info
 ```
-
+Use Both of them by this command
+```bash
+celery -A config worker -B -l info
+```
 ```bash
     python3 manage.py runserver
 ```
