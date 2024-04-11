@@ -2,9 +2,7 @@ from django.contrib import admin
 from import_export.admin import ImportExportActionModelAdmin
 from django.utils.html import format_html
 
-import dotenv
 import os
-dotenv.read_dotenv()
 admin_url = os.environ.get('Admin')
 from dashboard_student.models import (SemesterRegistrationRequest,
                                       UnitSelectionRequest,

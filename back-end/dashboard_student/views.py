@@ -200,8 +200,7 @@ class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
         raise NotImplementedError("Unsupported version requested")
 
     def get_queryset(self):
-        query=  SemesterRegistrationRequest.objects.filter(student=self.request.user)
-        return query
+        return SemesterRegistrationRequest.objects.filter(student__user=self.request.user)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
