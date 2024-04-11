@@ -34,6 +34,9 @@ router.register('AdvisorRole/SemesterRegistrationConfirmation',
                 SemesterRegistrationConfirmationViewAPI,
                 basename='SemesterRegistrationRequest')
 
+router.register('AdvisorRole/EmploymentEducationConfirmation',
+                EmploymentEducationConfirmationAPI,
+                basename='EmploymentEducationConfirmation')
 urlpatterns = [
     path('', include(router.urls)),
     
@@ -59,9 +62,5 @@ urlpatterns = [
         name = 'AddRemoveConfirmation'
         ),
     
-    path(
-        'AdvisorRole/EmploymentEducationConfirmation/',
-        EmploymentEducationConfirmationAPI.as_view(),
-        name = 'EmploymentEducationConfirmation'
-        ),
+   
 ]
