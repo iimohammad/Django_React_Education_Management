@@ -19,6 +19,7 @@ UnitSelection_APPROVAL_CHOICES = [
 ]
 
 
+
 class SemesterRegistrationRequest(models.Model):
     student = models.ForeignKey('accounts.Student',  on_delete=models.CASCADE)
     approval_status = models.CharField(
