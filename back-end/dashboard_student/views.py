@@ -206,7 +206,6 @@ class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
             data = SemesterRegistrationRequest.objects.filter(student__user=self.request.user).values_list()
         except Exception as e:
             print(e)
-        print('*****************')
         print(data)
         return SemesterRegistrationRequest.objects.filter(student__user=self.request.user)
 
@@ -428,6 +427,7 @@ class EmploymentEducationRequestApiView(mixins.CreateModelMixin,
                                         mixins.DestroyModelMixin,
                                         mixins.ListModelMixin,
                                         viewsets.GenericViewSet,
+                                        mixins.UpdateModelMixin,
                                         ):
 
     """
@@ -465,7 +465,12 @@ class EmploymentEducationRequestApiView(mixins.CreateModelMixin,
             {'message': 'Resource deleted successfully.'},
             status=status.HTTP_204_NO_CONTENT
             )
-
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
 
 
 class AddRemoveRequestViewSet(UnitSelectionRequestAPIView):

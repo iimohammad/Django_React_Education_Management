@@ -76,7 +76,7 @@ class Student(models.Model):
     advisor = models.ForeignKey('Teacher', on_delete=models.SET_NULL, null=True)
     military_service_status = models.CharField(max_length=2, choices=MILITARY_CHOICES, default='EP')
     year_of_study = models.PositiveSmallIntegerField()
-    gpa_student = models.PositiveBigIntegerField(blank=True)
+    gpa_student = models.PositiveBigIntegerField(blank=True,null=True)
 
     @property
     def gpa(self):

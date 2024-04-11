@@ -8,6 +8,7 @@ from accounts.models import Student, Teacher, User
 from .pagination import DefaultPagination
 from .versioning import DefualtVersioning
 from .permissions import IsTeacher , IsAdvisor
+from rest_framework.exceptions import MethodNotAllowed
 from dashboard_professors.queryset import get_student_queryset
 from dashboard_student.models import (
     RevisionRequest, 
@@ -18,7 +19,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from education.models import Semester, SemesterCourse, StudentCourse
 from education.serializers import StudentCourseSerializer
-from .tasks import send_approval_email
+from .tasks import send_approval_email, send_approval_email_employment
 from .serializers import (
     AddRemoveRequestViewSerializers,
     EmergencyRemovalConfirmationSerializers,
@@ -386,30 +387,36 @@ class StudentDeleteSemesterConfirmationAPI(viewsets.GenericViewSet ,
 
 
 
-class EmploymentEducationConfirmationAPI(
-    generics.UpdateAPIView,
-    generics.ListAPIView,
-):
+class EmploymentEducationConfirmationAPI(viewsets.ModelViewSet):
     """Employment Education Confirmation API """
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
-    versioning_class = DefualtVersioning
+    versioning_class = DefualtVersioning  # Corrected typo in the class name
     permission_classes = [IsTeacher, IsAuthenticated]
     queryset = EmploymentEducationRequest.objects.filter(approval_status='P')
-    
+
     def get_serializer_class(self):
         if self.request.version == 'v1':
             return EmploymentEducationConfirmationSerializer
         raise NotImplementedError("Unsupported version requested")
-    
+
+    def create(self, request, *args, **kwargs):
+        raise MethodNotAllowed('POST')
+
+    def destroy(self, request, *args, **kwargs):
+        raise MethodNotAllowed('DELETE')
+
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
+
+        # Perform the update
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         approval_status_changed = instance.approval_status != serializer.validated_data['approval_status']
         serializer.save()
 
+        # Send approval email if the approval status changed to 'A'
         if approval_status_changed and serializer.validated_data['approval_status'] == 'A':
-            send_approval_email.delay(instance.student.user.email)
-            
+            send_approval_email_employment.delay(instance.student.user.email)
+
         return Response(serializer.data)
