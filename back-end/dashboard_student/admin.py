@@ -4,7 +4,7 @@ from django.utils.html import format_html
 
 import dotenv
 import os
-dotenv.read_dotenv()
+dotenv.load_dotenv()
 admin_url = os.environ.get('Admin')
 from dashboard_student.models import (SemesterRegistrationRequest,
                                       UnitSelectionRequest,
