@@ -1,4 +1,5 @@
 import csv
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets , mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -22,7 +23,9 @@ from education.serializers import StudentCourseSerializer
 from .tasks import send_approval_email, send_approval_email_employment
 from .serializers import (
     AddRemoveRequestViewSerializers,
+    CSVFileSerializer,
     EmergencyRemovalConfirmationSerializers,
+    EvaluationSerializers,
     RevisionRequestSerializers,
     SemesterCourseSerializer,
     SemesterRegistrationConfirmationSerializers,
@@ -37,6 +40,7 @@ from accounts.serializers import (
     UserProfileImageUpdateSerializer,
     TeacherSerializer,
 )
+from rest_framework.views import APIView
 from dashboard_student.models import (
     EmploymentEducationRequest,
     StudentDeleteSemesterRequest,
@@ -45,97 +49,79 @@ from dashboard_student.models import (
     UnitSelectionRequest,
     SemesterRegistrationRequest,
 )
-
+from rest_framework import views
 from rest_framework.generics import RetrieveAPIView, UpdateAPIView
 from rest_framework import generics
-from rest_framework.mixins import ListModelMixin
 
-
-# General Tasks
-class ShowProfileAPIView(RetrieveAPIView):
-    """Show Profile APIView"""
-    permission_classes = [IsAuthenticated] 
-    versioning_class = DefualtVersioning
-    def get_serializer_class(self, *args, **kwargs):
-        if self.request.version == 'v1':
-            return TeacherSerializer
-        
-        raise NotImplementedError("Unsupported version requested")
-
-    def get_object(self):
-        user = self.request.user
-
-        try:
-            # Get the teacher instance associated with the current user
-            teacher = Teacher.objects.get(user=user)
-            return teacher
-        except Teacher.DoesNotExist:
-            # Handle the case where the user is not a teacher
-            return None
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if instance is None:
-            return Response({'error': 'User is not a teacher'}, status=404)
-
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
-
-class UserProfileUpdateAPIView(UpdateAPIView):
-    """UserProfileUpdateAPIView"""
-    queryset = User.objects.all()
-    permission_classes = [IsAuthenticated, IsTeacher]
-    versioning_class = DefualtVersioning
-    
-    def get_serializer_class(self, *args, **kwargs):
-        if self.request.version == 'v1':
-            return UserProfileImageUpdateSerializer
-        raise NotImplementedError("Unsupported version requested")
-
-    def get_object(self):
-        return self.request.user
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data)
-
-
-# Tasks of Teachers
-class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
-    """ShowSemestersView"""
+class EvaluateStudentsViewSet(viewsets.ModelViewSet):
+    """OK"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning
     permission_classes = [IsAuthenticated, IsTeacher]
-    queryset = Semester.objects.all()
+    serializer_class = EvaluationSerializers
+
+    def get_queryset(self):
+        teacher = self.request.user.teacher
+        query = StudentCourse.objects.filter(
+            semester_course__instructor=teacher
+        )
+        return query
     
-    def get_serializer_class(self, *args, **kwargs):
-        if self.request.version == 'v1':
-            return ShowSemestersSerializers
-        raise NotImplementedError("Unsupported version requested")
+    def create(self, request, *args, **kwargs):
+        raise MethodNotAllowed('POST')
 
-    @action(detail=True, methods=['get'],
-            name='Show All Course of This Semester')
-    def all_semester_courses(self, request, pk=None):
-        semester = self.get_object()
-        serializer = self.get_serializer(semester)
-
-        # Retrieve courses associated with the semester
-        courses = SemesterCourse.objects.filter(semester=semester)
-        course_serializer = SemesterCourseSerializer(courses, many=True)
-
-        return Response({'semester': serializer.data,
-                        'courses': course_serializer.data})
+    def destroy(self, request, *args, **kwargs):
+        raise MethodNotAllowed('DELETE')
+    
 
 
-# Evaluate Students
+class EvaluateStudentsAPIView(APIView):
+    """OK"""
+    serializer_class = CSVFileSerializer
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def post(self, request):
+        if 'file' in request.FILES:
+            file_obj = request.FILES['file']
+            try:
+                decoded_file = file_obj.read().decode('utf-8').splitlines()
+                csv_data = csv.DictReader(decoded_file)
+
+                for row in csv_data:
+                    student_id = row.get('student_id')
+                    score = row.get('score')
+
+                    # Validate data before updating the model
+                    if not student_id or not score:
+                        return Response(
+                            {'error': 'Both student_id and score are required.'},
+                                         status=status.HTTP_400_BAD_REQUEST
+                                         )
+
+                    student_course = StudentCourse.objects.filter(
+                        student_id=student_id
+                        ).first()
+                    
+                    if student_course:
+                        student_course.score = score
+                        student_course.save()
+
+                return Response({'message': 'Student scores updated successfully'},
+                                 status=status.HTTP_200_OK)
+
+            except Exception as e:
+                return Response(
+                    {'error': 'An error occurred while processing the CSV file'},
+                      status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response({'error': 'No file uploaded'},
+                             status=status.HTTP_400_BAD_REQUEST)
+
+
 class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
-    """Semester CourseView Set"""
+    """Semester CourseView Set OK"""
     
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
@@ -153,77 +139,8 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = SemesterCourse.objects.filter(instructor=teacher)
         return queryset
 
-    @action(detail=True, methods=['post'], name='Evaluate Students')
-    def evaluate_students(self, request, pk=None):
-        semester_course = self.get_object()
-        data = request.data.get('student_scores', [])
 
-        for entry in data:
-            student_id = entry.get('student_id')
-            score = entry.get('score')
-            action = entry.get('action')
-
-            # Fetch the student course instance
-            student_course = StudentCourse.objects.filter(
-                semester_course=semester_course, student_id=student_id).first()
-
-            if action == 'add':
-                if student_course:
-                    # Update score if student course exists
-                    student_course.score = score
-                    student_course.save()
-            elif action == 'change':
-                # Update score if student course exists
-                if student_course:
-                    student_course.score = score
-                    student_course.save()
-
-        return Response(
-            {'message': 'Student scores updated successfully'}, status=status.HTTP_200_OK)
-
-    @action(detail=True, methods=['get'], name='Show Score Students')
-    def score_students(self, request, pk=None):
-        semester_course = self.get_object()
-        students = StudentCourse.objects.filter(
-            semester_course=semester_course)
-        serializer = StudentCourseSerializer(students, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['post'], name='Send CSV file Evaluation')
-    def evaluate_students_by_CSV(self, request, pk=None):
-        semester_course = self.get_object()
-        data_file = request.FILES.get('file')
-
-        if data_file:
-            # Assuming CSV file has 'student_id' and 'score' columns
-            csv_data = csv.DictReader(data_file)
-            for row in csv_data:
-                student_id = row.get('student_id')
-                score = row.get('score')
-
-                # Fetch or create StudentCourse instance
-                student_course, created = StudentCourse.objects.get_or_create(
-                    semester_course=semester_course,
-                    student_id=student_id,
-                    defaults={'score': score}
-                )
-
-                # If not created, update score
-                if not created:
-                    student_course.score = score
-                    student_course.save()
-
-            return Response(
-                {'message': 'Student scores updated successfully'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'error': 'No file uploaded'},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-
-class RevisionRequestView(viewsets.GenericViewSet,
-                          mixins.UpdateModelMixin,
-                          mixins.ListModelMixin,
-                          mixins.RetrieveModelMixin,):
+class RevisionRequestView(viewsets.ModelViewSet):
 
     """Revision Confirmation View"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -239,32 +156,18 @@ class RevisionRequestView(viewsets.GenericViewSet,
     def get_queryset(self):
         teacher = Teacher.objects.get(user = self.request.user)
         queryset = RevisionRequest.objects.filter(
-            course__semester_course__instructor = teacher).all()
+            course__semester_course__instructor = teacher)
         return queryset
     
+    def create(self, request, *args, **kwargs):
+        raise MethodNotAllowed('POST')
 
-# Adviser Tasks APIs
-class ShowMyStudentsVeiw(
-                        generics.GenericAPIView,
-                        ListModelMixin,
-                        ):
-    """Show My Students Veiw"""
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    versioning_class = DefualtVersioning
-    permission_classes = [IsAuthenticated, IsTeacher]
-    
-    def get_serializer_class(self):
-        if self.request.version == 'v1':
-            return StudentSerializer
-        raise NotImplementedError("Unsupported version requested")
-
-    def get_queryset(self):
-        return get_student_queryset(self.request)
+    def destroy(self, request, *args, **kwargs):
+        raise MethodNotAllowed('DELETE')
 
 
 class UnitSelectionRequestView(generics.UpdateAPIView):
-    """Unit Selection Request View"""
+    """Unit Selection Request View ----------Waiting for Unit Selection-------"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning
@@ -286,29 +189,11 @@ class UnitSelectionRequestView(generics.UpdateAPIView):
             ).all()
 
 
-class SemesterRegistrationConfirmationViewAPI(viewsets.GenericViewSet ,
-                                              mixins.ListModelMixin ,
-                                              mixins.RetrieveModelMixin ,
-                                              mixins.UpdateModelMixin ,
-                                              ):
-    """Semester Registration Confirmation View API OK"""
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    versioning_class = DefualtVersioning
-    permission_classes = [IsAuthenticated , IsTeacher]
-    def get_serializer_class(self):
-        if self.request.version == 'v1':
-            return SemesterRegistrationRequestSerializers
-        raise NotImplementedError("Unsupported version requested")
-
-    def get_queryset(self):
-        teacher = Teacher.objects.get(user = self.request.user)
-        return SemesterRegistrationRequest.objects.filter(student__advisor = teacher).all()
 
 
 
-class AddRemoveRequestView(generics.UpdateAPIView):
-    """Add Remove Confirmation View"""
+class AddRemoveRequestView(viewsets.ModelViewSet):
+    """Add Remove Confirmation View  --------Waiting for Unit Selection--------"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning
@@ -333,13 +218,9 @@ class AddRemoveRequestView(generics.UpdateAPIView):
 
 
 
-class StudentDeleteSemesterConfirmationAPI(viewsets.GenericViewSet ,
-                                            mixins.ListModelMixin ,
-                                            mixins.RetrieveModelMixin ,
-                                            mixins.UpdateModelMixin ,
-                                            ):
+class StudentDeleteSemesterConfirmationAPI(viewsets.ModelViewSet):
 
-    """Student Delete Semester Confirmation API need to change database"""
+    """Student Delete Semester Confirmation API need to change database OK"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning
@@ -357,9 +238,15 @@ class StudentDeleteSemesterConfirmationAPI(viewsets.GenericViewSet ,
 
         # Filter delete semester requests related to those students
         return StudentDeleteSemesterRequest.objects.filter(
-            semester_registration_request__student__in=students
+            semester_registration_request__student__in=students,
+            teacher_approval_status='P',
         )
 
+    def create(self, request, *args, **kwargs):
+        raise MethodNotAllowed('POST')
+
+    def destroy(self, request, *args, **kwargs):
+        raise MethodNotAllowed('DELETE')
 
 
 class EmploymentEducationConfirmationAPI(viewsets.ModelViewSet):
@@ -439,4 +326,105 @@ class EmergencyRemovalConfirmationView(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         raise MethodNotAllowed('DELETE')
     
+    # Adviser Tasks APIs
+class ShowMyStudentsVeiw(viewsets.ReadOnlyModelViewSet):
+    """Show My Students Veiw OK"""
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefualtVersioning
+    permission_classes = [IsAuthenticated, IsTeacher]
     
+    def get_serializer_class(self):
+        if self.request.version == 'v1':
+            return StudentSerializer
+        raise NotImplementedError("Unsupported version requested")
+
+    def get_queryset(self):
+        return get_student_queryset(self.request)
+
+class SemesterRegistrationConfirmationViewAPI(viewsets.GenericViewSet ,
+                                              mixins.ListModelMixin ,
+                                              mixins.RetrieveModelMixin ,
+                                              mixins.UpdateModelMixin ,
+                                              ):
+    """Semester Registration Confirmation View API OK"""
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefualtVersioning
+    permission_classes = [IsAuthenticated , IsTeacher]
+    def get_serializer_class(self):
+        if self.request.version == 'v1':
+            return SemesterRegistrationRequestSerializers
+        raise NotImplementedError("Unsupported version requested")
+
+    def get_queryset(self):
+        teacher = Teacher.objects.get(user = self.request.user)
+        return SemesterRegistrationRequest.objects.filter(student__advisor = teacher).all()
+
+# General Tasks
+class ShowProfileAPIView(RetrieveAPIView):
+    """Show Profile APIView OK"""
+    permission_classes = [IsAuthenticated] 
+    versioning_class = DefualtVersioning
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return TeacherSerializer
+        
+        raise NotImplementedError("Unsupported version requested")
+
+    def get_object(self):
+        user = self.request.user
+
+        try:
+            # Get the teacher instance associated with the current user
+            teacher = Teacher.objects.get(user=user)
+            return teacher
+        except Teacher.DoesNotExist:
+            # Handle the case where the user is not a teacher
+            return None
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance is None:
+            return Response({'error': 'User is not a teacher'}, status=404)
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+
+class UserProfileUpdateAPIView(UpdateAPIView):
+    """UserProfileUpdateAPIView OK"""
+    queryset = User.objects.all()
+    permission_classes = [IsAuthenticated, IsTeacher]
+    versioning_class = DefualtVersioning
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return UserProfileImageUpdateSerializer
+        raise NotImplementedError("Unsupported version requested")
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+
+# Tasks of Teachers
+class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
+    """ShowSemestersView OK"""
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefualtVersioning
+    permission_classes = [IsAuthenticated, IsTeacher]
+    queryset = Semester.objects.all()
+    
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return ShowSemestersSerializers
+        raise NotImplementedError("Unsupported version requested")
