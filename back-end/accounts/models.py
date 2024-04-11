@@ -15,8 +15,6 @@ from django.dispatch import receiver
 logger = logging.getLogger(__name__)
 
 
-
-
 class User(AbstractUser):
     class Gender(models.TextChoices):
         MALE = 'M', 'Male'
@@ -66,8 +64,8 @@ class Student(models.Model):
         ('EP', 'Education Pardon'),  # معافیت تحصیلی
         ('P', 'Passed'),  # گزرانده
         ('E', 'Exempted'),  # معاف
-        ('F', 'Finished')
     ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     entry_semester = models.CharField(max_length=100)
     entry_year = models.CharField(max_length=4)
@@ -81,14 +79,15 @@ class Student(models.Model):
         # Calculate GPA based on scores of registered courses
         registered_courses = self.studentcourse_set.all()
         if registered_courses.exists():
-            gpa = registered_courses.aggregate(Avg('score'))['score__avg']
+            gpa = registered_courses.aggregate(models.Avg('score'))['score__avg']
             return gpa
         return None
 
     @property
     def calculate_total_credits(self):
         # Calculate total credits taken by the student
-        total_credits = self.studentcourse_set.aggregate(Sum('semester_course__course__credit_num'))['semester_course__course__credit_num__sum']
+        total_credits = self.studentcourse_set.aggregate(models.Sum(\
+            'semester_course__course__credit_num'))['semester_course__course__credit_num__sum']
         if total_credits is not None:
             return total_credits
         return 0
