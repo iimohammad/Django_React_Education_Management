@@ -37,7 +37,7 @@ class SemesterRegistrationRequest(models.Model):
 
 
 class UnitSelectionRequest(models.Model):
-    student = models.OneToOneField('accounts.Student', on_delete=models.CASCADE)
+    student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE)
     semester_registration_request = models.OneToOneField(
         SemesterRegistrationRequest, on_delete=models.PROTECT
     )

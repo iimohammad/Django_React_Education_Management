@@ -93,7 +93,7 @@ class Student(models.Model):
             Sum('semester_course__course__credit_num'))['semester_course__course__credit_num__sum']
         
         # Include credits from unit selection requests
-        unit_selection_credits = self.studentunitselectionrequest_set.aggregate(
+        unit_selection_credits = self.unitselectionrequest_set.aggregate(
             Sum('request_course__semester_course__course__credit_num'))['request_course__semester_course__course__credit_num__sum']
         
         if total_credits is not None:
