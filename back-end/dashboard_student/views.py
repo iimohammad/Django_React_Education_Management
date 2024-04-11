@@ -188,7 +188,7 @@ class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefaultVersioning
-    permission_classes = [IsAuthenticated, IsStudent]
+    # permission_classes = [IsAuthenticated, IsStudent]
     search_fields = ['semester__name']
     ordering_fields = ['created_at', 'semester__name']
 

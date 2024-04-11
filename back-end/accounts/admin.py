@@ -10,7 +10,6 @@ from accounts.resource import (UserResource,
                                EducationalAssistantResource)
 
 from .models import AdminUser, EducationalAssistant, Student, Teacher, User
-from config import local_settings
 
 
 class CustomUserAdmin(UserAdmin, ImportExportActionModelAdmin):

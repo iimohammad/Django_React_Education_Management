@@ -11,7 +11,6 @@ from .validators import phone_validator , validate_national_code
 from django.db.models.signals import post_save
 from education.models import StudentCourse
 from django.dispatch import receiver
-from minio import Minio
 
 logger = logging.getLogger(__name__)
 

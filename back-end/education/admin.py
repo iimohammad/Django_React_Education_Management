@@ -2,7 +2,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from import_export.admin import ImportExportActionModelAdmin
-from config import local_settings
 
 from education.models import (
     Course,
