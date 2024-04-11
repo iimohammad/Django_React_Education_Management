@@ -147,9 +147,9 @@ class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = SemesterRegistrationRequest
         fields = ['id','approval_status', 'created_at','semester','requested_courses' ,
-                'teacher_comment_for_requested_courses']
+                'teacher_comment']
         read_only_fields = ['id','approval_status', 'created_at' , 'semester',
-                            'teacher_comment_for_requested_courses']
+                            'teacher_comment']
         
     def create(self, validated_data):
         user = self.context['user']
