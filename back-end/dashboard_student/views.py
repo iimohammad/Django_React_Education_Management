@@ -70,9 +70,9 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return Course.objects.filter(availablity='A').all()
 
-    @method_decorator(cache_page(60 * 5))
-    def dispatch(self, *args, **kwargs):
-        return super().dispatch(*args, **kwargs)
+    # @method_decorator(cache_page(60 * 5))
+    # def dispatch(self, *args, **kwargs):
+    #     return super().dispatch(*args, **kwargs)
 
 
 class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -95,9 +95,9 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
         last_semester = Semester.objects.order_by('-start_semester').first()
         return SemesterCourse.objects.filter(semester=last_semester).all()
 
-    @method_decorator(cache_page(60 * 5))
-    def dispatch(self, *args, **kwargs):
-        return super().dispatch(*args, **kwargs)
+    # @method_decorator(cache_page(60 * 5))
+    # def dispatch(self, *args, **kwargs):
+    #     return super().dispatch(*args, **kwargs)
 
 
 class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
@@ -118,7 +118,8 @@ class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         last_semester = Semester.objects.order_by('-start_semester').first()
         return StudentCourse.objects.filter(student__user=self.request.user,
-                                            semester_course__semester=last_semester).all()
+                                            semester_course__semester=last_semester
+                                            ).all()
 
 
 class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet):
@@ -140,7 +141,8 @@ class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet):
         return StudentCourse.objects.filter(
             student__user=self.request.user,
             score__isnull=False,
-            score__gte=10
+            score__gte=10,
+            status='R'
         )
 
 
@@ -161,7 +163,6 @@ class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         last_semester = Semester.objects.order_by('-start_semester').first()
-
         return StudentCourse.objects.filter(
             student__user=self.request.user,
             semester_course__semester=last_semester,
@@ -201,6 +202,12 @@ class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
         raise NotImplementedError("Unsupported version requested")
 
     def get_queryset(self):
+        try:
+            data = SemesterRegistrationRequest.objects.filter(student__user=self.request.user).values_list()
+        except Exception as e:
+            print(e)
+        print('*****************')
+        print(data)
         return SemesterRegistrationRequest.objects.filter(student__user=self.request.user)
 
     def perform_create(self, serializer):
@@ -234,7 +241,12 @@ class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
         )
 
 
-class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
+class UnitSelectionRequestAPIView(viewsets.GenericViewSet,
+                                  mixins.CreateModelMixin ,
+                                  mixins.DestroyModelMixin ,
+                                  mixins.ListModelMixin ,
+                                  mixins.RetrieveModelMixin ,
+                                  ):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefaultVersioning
@@ -247,27 +259,38 @@ class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
 
     ordering_fields = ['created_at', 'approval_status']
     versioning_class = DefaultVersioning
-
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['user'] = self.request.user
+        return context
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return UnitSelectionRequestSerializer
         raise NotImplementedError("Unsupported version requested")
+    
+    def get_queryset(self):
+        return UnitSelectionRequest.objects.filter(
+            semester_registration_request__student__user = self.request.user)
+    
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        if serializer.validated_data.get('request_course').course_capacity == 0:
-            # Queue the request in Redis
-            redis_conn = get_redis_connection('default')
-            redis_conn.lpush('unit_selection_queue', json.dumps(serializer.validated_data))
-            
-            # Send a message to the user
-            messages.info(request, "Your request has been queued.")
-            return Response({'detail': 'Your request has been queued.'}, status=status.HTTP_200_OK)
-        
-        return super().create(request, *args, **kwargs)
+        except Http404:
+            return Response(
+                {'detail': 'Object Not found.'}, status=status.HTTP_404_NOT_FOUND
+            )
 
+        if instance.approval_status != 'P':
+            return Response(
+                {'message': 'Your request has been answered and you can not delete it.'}
+                , status=status.HTTP_403_FORBIDDEN
+            )
+
+        instance.delete()
+        return Response(
+            {'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT
+        )
 
 class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
                                           mixins.RetrieveModelMixin,

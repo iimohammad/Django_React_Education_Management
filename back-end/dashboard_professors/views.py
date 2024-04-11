@@ -339,7 +339,7 @@ class EmergencyRemovalConfirmationView(viewsets.GenericViewSet ,
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning
-    permission_classes = [IsTeacher, IsAuthenticated]
+    permission_classes = [IsAuthenticated , IsTeacher]
     
     def get_serializer_class(self):
         if self.request.version == 'v1':
