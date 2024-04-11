@@ -174,19 +174,16 @@ class StudentDeleteSemesterRequestTeacherSerializer(serializers.ModelSerializer)
         
         teacher_approval_status = validated_data.get('teacher_approval_status')
         if teacher_approval_status == 'A' or teacher_approval_status == 'R':
-            # student_email = instance.semester_registration_request.student.user.email
+            student_email = instance.semester_registration_request.student.user.email
 
-            # if teacher_approval_status == 'A':
-            #     send_semester_delete_approval_email.delay(student_email)
+            if teacher_approval_status == 'A':
+                send_semester_delete_approval_email.delay(student_email)
 
-            # elif teacher_approval_status == 'R':
-            #     send_semester_delete_rejected_email.delay(student_email)
+            elif teacher_approval_status == 'R':
+                send_semester_delete_rejected_email.delay(student_email)
 
             instance.teacher_approval_status = teacher_approval_status
-            try:
-                instance.save()
-            except Exception as e:
-                pass
+            instance.save()
         return instance
 
 

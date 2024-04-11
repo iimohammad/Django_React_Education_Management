@@ -26,7 +26,7 @@ router.register('AdvisorRole/EmergencyRemovalConfirmation',
                 EmergencyRemovalConfirmationView,
                 basename='EmergencyRemovalConfirmation')
 
-router.register('AdvisorRole/StudentDeleteConfirmation',
+router.register('AdvisorRole/StudentDeleteSemesterConfirmation',
                 StudentDeleteSemesterConfirmationAPI,
                 basename='StudentDeleteSemesterConfirmation')
 

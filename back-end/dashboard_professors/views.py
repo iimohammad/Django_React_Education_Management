@@ -333,13 +333,9 @@ class AddRemoveRequestView(generics.UpdateAPIView):
 
 
 
-class StudentDeleteSemesterConfirmationAPI(viewsets.GenericViewSet ,
-                                            mixins.ListModelMixin ,
-                                            mixins.RetrieveModelMixin ,
-                                            mixins.UpdateModelMixin ,
-                                            ):
+class StudentDeleteSemesterConfirmationAPI(viewsets.ModelViewSet):
 
-    """Student Delete Semester Confirmation API need to change database"""
+    """Student Delete Semester Confirmation API need to change database OK"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning
@@ -357,9 +353,15 @@ class StudentDeleteSemesterConfirmationAPI(viewsets.GenericViewSet ,
 
         # Filter delete semester requests related to those students
         return StudentDeleteSemesterRequest.objects.filter(
-            semester_registration_request__student__in=students
+            semester_registration_request__student__in=students,
+            teacher_approval_status='P',
         )
 
+    def create(self, request, *args, **kwargs):
+        raise MethodNotAllowed('POST')
+
+    def destroy(self, request, *args, **kwargs):
+        raise MethodNotAllowed('DELETE')
 
 
 class EmploymentEducationConfirmationAPI(viewsets.ModelViewSet):
