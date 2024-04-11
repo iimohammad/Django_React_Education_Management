@@ -285,11 +285,19 @@ class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
         if self.request.version == 'v1':
             return StudentDeleteSemesterRequestSerializer
         raise NotImplementedError("Unsupported version requested")
+    
 
     def get_queryset(self):
-        return StudentDeleteSemesterRequest.objects.filter(
-            semester_registration_request__student__user = self.request.user
-            ).all()
+        return SemesterRegistrationRequest.objects.filter(student__user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(student=self.request.user.student)
+
+
+
+    def get_queryset(self):
+        return StudentDeleteSemesterRequest.objects.objects.filter(
+            student__user=self.request.user)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

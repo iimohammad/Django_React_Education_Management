@@ -37,7 +37,7 @@ class SemesterRegistrationRequest(models.Model):
 
 
 class UnitSelectionRequest(models.Model):
-    student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE, related_name='unit_selection_requests')
+    student = models.OneToOneField('accounts.Student', on_delete=models.CASCADE)
     semester_registration_request = models.OneToOneField(
         SemesterRegistrationRequest, on_delete=models.PROTECT
     )
@@ -49,34 +49,28 @@ class UnitSelectionRequest(models.Model):
         default=None
     )
 
-    def clean(self):
-        # Check if the course_capacity of the associated SemesterCourse is zero
-        if self.request_course.course_capacity == 0:
-            raise ValidationError(
-                'Cannot create a UnitSelectionRequest for a course with zero capacity.'
-            )
-
     def save(self, *args, **kwargs):
         self.clean()
+
         if self.student.category_of_student_grade:
-            # Define the maximum credit limit for each category
+        #     # Define the maximum credit limit for each category
             max_credit_limits = {
                 'A': 24,
                 'B': 20,
                 'C': 17,
                 'D': 14,
+
             }
             max_credit_limit = max_credit_limits.get(self.student.category_of_student_grade, 0)
+        #     requested_courses_credits_sum = self.student.unit_selection_request.aggregate(
+        #         total_credits=models.Sum('request_course__semestercourse__credit_num')
+        #     )['total_credits'] or 0
 
-            requested_courses_credits_sum = self.student.unitselectionrequest_set.aggregate(
-                total_credits=models.Sum('request_course__course__credit_num')
-            )['total_credits'] or 0
-
-            if requested_courses_credits_sum + self.request_course.course.credit_num > max_credit_limit:
-                raise ValidationError(
-                    f'Cannot request more courses. Maximum allowed credit limit for Category '
-                    f'{self.student.category_of_student_grade} students is {max_credit_limit}.'
-                )
+        # #     if requested_courses_credits_sum + self.request_course.course.credit_num > max_credit_limit:
+        # #         raise ValidationError(
+        # #             f'Cannot request more courses. Maximum allowed credit limit for Category '
+        # #             f'{self.student.category_of_student_grade} students is {max_credit_limit}.'
+        # #         )
 
         prerequisites = self.request_course.course.prerequisites.all()
         for prerequisite_course in prerequisites:
@@ -92,13 +86,12 @@ class UnitSelectionRequest(models.Model):
         if requisites and not self.student.studentcourse_set.filter(semester_course__course__in=requisites,
                                                                     status='R').exists():
             self.warning_message = 'Warning: Requisite course is not selected.'
-
         if UnitSelectionRequest.objects.filter(
                 semester_registration_request=self.semester_registration_request,
                 request_course=self.request_course
         ).exists():
             raise ValidationError(('Unit selection request for this course already exists.'))
-
+        
         if self.request_course.studentcourse_set.filter(student=self.student, score__gte=10).exists():
             raise ValidationError(('Cannot request a course that has already been passed.'))
 
@@ -162,6 +155,7 @@ class EmergencyRemovalRequest(models.Model):
 
 
 class StudentDeleteSemesterRequest(models.Model):
+    student = models.OneToOneField('accounts.Student', on_delete=models.CASCADE,default=None)
     semester_registration_request = models.ForeignKey(
         SemesterRegistrationRequest, on_delete=models.PROTECT, null=True)
     teacher_approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES,

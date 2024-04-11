@@ -92,3 +92,5 @@ class HavePermssionEmoloymentDegreeTime(BasePermission):
             if student.military_service_status != 'F':
                 return False
         return True
+    
+
