@@ -16,7 +16,7 @@ class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         fields = ('username', 'email', 'first_name', 'last_name')
 
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(UserAdmin, ImportExportActionModelAdmin):
     add_form = CustomUserCreationForm  # Use the custom creation form
     add_fieldsets = (
         (None, {
