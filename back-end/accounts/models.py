@@ -2,20 +2,21 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 import logging
 from education.models import Major
-from django.conf import settings
+from config.settings import (
+    MINIO_ENDPOINT,
+    MINIO_ACCESS_KEY,
+    MINIO_SECRET_KEY,
+)
 from .validators import phone_validator , validate_national_code
 from django.db.models.signals import post_save
 from education.models import StudentCourse
 from django.dispatch import receiver
+from minio import Minio
 
 logger = logging.getLogger(__name__)
 
-# minio_client = Minio(
-#     MINIO_SERVER_URL = settings.MINIO_SERVER_URL,
-#     access_key=settings.MINIO_ROOT_USER,
-#     secret_key=settings.MINIO_ROOT_PASSWORD,
-#     secure=settings.MINIO_SECURE
-# )
+
+
 
 class User(AbstractUser):
     class Gender(models.TextChoices):

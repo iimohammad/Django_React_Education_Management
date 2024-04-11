@@ -199,9 +199,11 @@ class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
         raise NotImplementedError("Unsupported version requested")
 
     def get_queryset(self):
-        return SemesterRegistrationRequest.objects.filter(
+        query=  SemesterRegistrationRequest.objects.filter(
             student__user=self.request.user
         ).all()
+        print(query)
+        return query
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -240,12 +242,12 @@ class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefaultVersioning
-    permission_classes = [
-        IsAuthenticated,
-        IsStudent, 
-        HavePermosionForUnitSelectionForLastSemester,
-        HavePermissionBasedOnUnitSelectionTime,
-    ]
+    # permission_classes = [
+    #     IsAuthenticated,
+    #     IsStudent, 
+    #     HavePermosionForUnitSelectionForLastSemester,
+    #     # HavePermissionBasedOnUnitSelectionTime,
+    # ]
 
     ordering_fields = ['created_at', 'approval_status']
     versioning_class = DefaultVersioning
@@ -280,7 +282,7 @@ class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefaultVersioning
-    permission_classes = [IsAuthenticated, IsStudent]
+    # permission_classes = [IsAuthenticated, IsStudent]
     ordering_fields = ['created_at', 'approval_status']
 
     def get_serializer_class(self, *args, **kwargs):
