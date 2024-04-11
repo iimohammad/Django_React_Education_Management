@@ -17,6 +17,7 @@ UnitSelection_APPROVAL_CHOICES = [
         ('R', 'Reserved'),
         ('C',"NeedChange"),
         ('P','Approved'),
+        ('D','DeletedSemester'),
     ]
 
 class SemesterRegistrationRequest(models.Model):
@@ -149,19 +150,19 @@ class EmergencyRemovalRequest(models.Model):
             f"{self.student.user.last_name} - "
             f"{self.course.semester_course.semester.name}"
         )
-    def save(self, *args, **kwargs):
-        existing_request = EmergencyRemovalRequest.objects.filter(
-            student=self.student,
-            course__semester_course__semester__start_date__lte=timezone.now(),
-            course__semester_course__semester__end_date__gte=timezone.now()
-        ).exists()
+    # def save(self, *args, **kwargs):
+    #     existing_request = EmergencyRemovalRequest.objects.filter(
+    #         student=self.student,
+    #         course__semester_course__semester__emergency__emergency_remove_start__lte=timezone.now(),
+    #         course__semester_course__semester__emergency__emergency_remove_end__gte=timezone.now()
+    #     ).exists()
 
-        if existing_request:
-            raise ValidationError(
-                "A student can only create one EmergencyRemovalRequest per semester."
-                )
+    #     if existing_request:
+    #         raise ValidationError(
+    #             "A student can only create one EmergencyRemovalRequest per semester."
+    #             )
 
-        super().save(*args, **kwargs)
+    #     super().save(*args, **kwargs)
 
 class StudentDeleteSemesterRequest(models.Model):
     semester_registration_request = models.ForeignKey(
@@ -171,8 +172,8 @@ class StudentDeleteSemesterRequest(models.Model):
     educational_assistant_approval_status = models.CharField(max_length=1, 
                                             choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
-    student_explanations = models.TextField()
-    educational_assistant_explanation = models.TextField()
+    student_explanations = models.TextField(null = True , blank = True)
+    educational_assistant_explanation = models.TextField(null = True , blank = True)
 
     def __str__(self):
         return (

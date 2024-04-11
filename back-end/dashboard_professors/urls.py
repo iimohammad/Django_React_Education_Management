@@ -17,10 +17,22 @@ router = DefaultRouter()
 router.register('TeacherRole/Semester-Show',
                 ShowSemestersView,
                 basename="SemesterShow")
+
 router.register('TeacherRole/my-Courses-Semester',
                 SemesterCourseViewSet,
                 basename='SemesterCourse')
 
+router.register('AdvisorRole/EmergencyRemovalConfirmation',
+                EmergencyRemovalConfirmationView,
+                basename='EmergencyRemovalConfirmation')
+
+router.register('AdvisorRole/StudentDeleteConfirmation',
+                StudentDeleteSemesterConfirmationAPI,
+                basename='StudentDeleteSemesterConfirmation')
+
+router.register('AdvisorRole/SemesterRegistrationConfirmation',
+                SemesterRegistrationConfirmationViewAPI,
+                basename='SemesterRegistrationRequest')
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -41,25 +53,10 @@ urlpatterns = [
         name = 'UnitSelectionConfirmation'
         ),
 
-    path('AdvisorRole/SemesterRegistrationConfirmation/',
-        SemesterRegistrationConfirmationViewAPI.as_view(),
-        name = 'SemesterRegistrationRequest'
-        ),
-
     path(
         'AdvisorRole/AddRemoveConfirmation/',
         AddRemoveRequestView.as_view(),
         name = 'AddRemoveConfirmation'
-        ),
-    path(
-        'AdvisorRole/EmergencyRemovalConfirmation/',
-        EmergencyRemovalConfirmationView.as_view(),
-        name = 'EmergencyRemovalConfirmation'
-        ),
-    
-    path('AdvisorRole/StudentDeleteConfirmation/',
-        StudentDeleteSemesterConfirmationAPI.as_view(),
-        name = 'StudentDeleteSemesterConfirmation'
         ),
     
     path(
@@ -68,4 +65,3 @@ urlpatterns = [
         name = 'EmploymentEducationConfirmation'
         ),
 ]
-

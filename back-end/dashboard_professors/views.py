@@ -28,7 +28,7 @@ from .serializers import (
     ShowSemestersSerializers,
     UnitSelectionRequestTeacherUpdateSerializer,
     EmploymentEducationConfirmationSerializer,
-    StudentDeleteSemesterRequestTeacherUpdateSerializer,
+    StudentDeleteSemesterRequestTeacherSerializer,
     SemesterRegistrationRequestSerializers,
 )
 from accounts.serializers import (
@@ -47,13 +47,6 @@ from dashboard_student.models import (
 from rest_framework.generics import RetrieveAPIView, UpdateAPIView
 from rest_framework import generics
 from rest_framework.mixins import ListModelMixin
-
-
-
-class BaseConfig():
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    versioning_class = DefualtVersioning
 
 
 # General Tasks
@@ -91,6 +84,7 @@ class UserProfileUpdateAPIView(UpdateAPIView):
     """UserProfileUpdateAPIView"""
     queryset = User.objects.all()
     permission_classes = [IsAuthenticated, IsTeacher]
+    versioning_class = DefualtVersioning
     
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
@@ -110,8 +104,11 @@ class UserProfileUpdateAPIView(UpdateAPIView):
 
 
 # Tasks of Teachers
-class ShowSemestersView(viewsets.ReadOnlyModelViewSet, BaseConfig):
+class ShowSemestersView(viewsets.ReadOnlyModelViewSet):
     """ShowSemestersView"""
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefualtVersioning
     permission_classes = [IsAuthenticated, IsTeacher]
     queryset = Semester.objects.all()
     
@@ -135,9 +132,12 @@ class ShowSemestersView(viewsets.ReadOnlyModelViewSet, BaseConfig):
 
 
 # Evaluate Students
-class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet, BaseConfig):
+class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
     """Semester CourseView Set"""
-
+    
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefualtVersioning
     permission_classes = [IsAuthenticated, IsTeacher]
     
     def get_serializer_class(self, *args, **kwargs):
@@ -224,6 +224,9 @@ class RevisionRequestView(viewsets.GenericViewSet,
                           mixins.RetrieveModelMixin,):
 
     """Revision Confirmation View"""
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefualtVersioning
     permission_classes = [IsAuthenticated, IsTeacher]
     
     def get_serializer_class(self, *args, **kwargs):
@@ -242,10 +245,11 @@ class RevisionRequestView(viewsets.GenericViewSet,
 class ShowMyStudentsVeiw(
                         generics.GenericAPIView,
                         ListModelMixin,
-                        BaseConfig
                         ):
     """Show My Students Veiw"""
-
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefualtVersioning
     permission_classes = [IsAuthenticated, IsTeacher]
     
     def get_serializer_class(self):
@@ -257,8 +261,11 @@ class ShowMyStudentsVeiw(
         return get_student_queryset(self.request)
 
 
-class UnitSelectionRequestView(generics.UpdateAPIView, BaseConfig):
+class UnitSelectionRequestView(generics.UpdateAPIView):
     """Unit Selection Request View"""
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefualtVersioning
     permission_classes = [IsTeacher, IsAuthenticated]
 
     
@@ -277,10 +284,16 @@ class UnitSelectionRequestView(generics.UpdateAPIView, BaseConfig):
             ).all()
 
 
-class SemesterRegistrationConfirmationViewAPI(generics.UpdateAPIView):
+class SemesterRegistrationConfirmationViewAPI(viewsets.GenericViewSet ,
+                                              mixins.ListModelMixin ,
+                                              mixins.RetrieveModelMixin ,
+                                              mixins.UpdateModelMixin ,
+                                              ):
     """Semester Registration Confirmation View API"""
-    permission_classes = [IsTeacher, IsAuthenticated] 
-    
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefualtVersioning
+    permission_classes = [IsAuthenticated , IsTeacher]
     def get_serializer_class(self):
         if self.request.version == 'v1':
             return SemesterRegistrationRequestSerializers
@@ -291,9 +304,11 @@ class SemesterRegistrationConfirmationViewAPI(generics.UpdateAPIView):
         return SemesterRegistrationRequest.objects.filter(student__advisor = teacher).all()
 
 
-class AddRemoveRequestView(generics.UpdateAPIView, BaseConfig):
+class AddRemoveRequestView(generics.UpdateAPIView):
     """Add Remove Confirmation View"""
-
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefualtVersioning
     permission_classes = [IsTeacher, IsAuthenticated]
     
     def get_serializer_class(self):
@@ -312,11 +327,16 @@ class AddRemoveRequestView(generics.UpdateAPIView, BaseConfig):
         )
 
 
-class EmergencyRemovalConfirmationView(generics.UpdateAPIView,
-                                       BaseConfig,
-                                       generics.ListAPIView,):
+class EmergencyRemovalConfirmationView(viewsets.GenericViewSet ,
+                                       mixins.ListModelMixin ,
+                                       mixins.RetrieveModelMixin ,
+                                       mixins.UpdateModelMixin ,
+                                       ):
 
     """Need to change course in database and not allow if course has preeuqisite"""
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefualtVersioning
     permission_classes = [IsTeacher, IsAuthenticated]
     
     def get_serializer_class(self):
@@ -335,18 +355,21 @@ class EmergencyRemovalConfirmationView(generics.UpdateAPIView,
         )
 
 
-class StudentDeleteSemesterConfirmationAPI(generics.UpdateAPIView,
-                                           BaseConfig,
-                                           generics.ListAPIView
-                                           ):
+class StudentDeleteSemesterConfirmationAPI(viewsets.GenericViewSet ,
+                                            mixins.ListModelMixin ,
+                                            mixins.RetrieveModelMixin ,
+                                            mixins.UpdateModelMixin ,
+                                            ):
 
     """Student Delete Semester Confirmation API need to change database"""
-
-    permission_classes = [IsTeacher, IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefualtVersioning
+    permission_classes = [IsAuthenticated , IsTeacher]
     
     def get_serializer_class(self):
         if self.request.version == 'v1':
-            return StudentDeleteSemesterRequestTeacherUpdateSerializer
+            return StudentDeleteSemesterRequestTeacherSerializer
         raise NotImplementedError("Unsupported version requested")
 
     def get_queryset(self):
@@ -363,20 +386,20 @@ class StudentDeleteSemesterConfirmationAPI(generics.UpdateAPIView,
 
 class EmploymentEducationConfirmationAPI(
     generics.UpdateAPIView,
-    BaseConfig,
-    generics.ListAPIView
+    generics.ListAPIView,
 ):
     """Employment Education Confirmation API """
-
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = DefaultPagination
+    versioning_class = DefualtVersioning
     permission_classes = [IsTeacher, IsAuthenticated]
-
+    queryset = EmploymentEducationRequest.objects.filter(approval_status='P')
+    
     def get_serializer_class(self):
         if self.request.version == 'v1':
             return EmploymentEducationConfirmationSerializer
         raise NotImplementedError("Unsupported version requested")
-
-    queryset = EmploymentEducationRequest.objects.filter(approval_status='P')
-
+    
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
