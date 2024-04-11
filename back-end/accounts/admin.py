@@ -4,9 +4,13 @@ from django.utils import timezone
 from django.utils.html import format_html
 from import_export.admin import ImportExportActionModelAdmin
 
-from accounts.resource import *
+from accounts.resource import (UserResource,
+                               TeacherResource,
+                               StudentResource,
+                               EducationalAssistantResource)
 
 from .models import AdminUser, EducationalAssistant, Student, Teacher, User
+from config import local_settings
 
 
 class CustomUserAdmin(UserAdmin, ImportExportActionModelAdmin):
@@ -57,15 +61,15 @@ admin.site.register(User, CustomUserAdmin)
 
 
 class TeacherAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('id', 'user', 'expertise', 'rank', 'department_link')
-    list_filter = ('rank',)
+    list_display = ('id', 'user_link', 'expertise', 'rank', 'department_link', 'can_be_advisor')
+    list_filter = ('rank', 'can_be_advisor')
     sortable_by = ('user',)
-    list_editable = ('rank',)
+    list_editable = ('rank', 'can_be_advisor')
     # readonly_fields = ('expertise',)
     ordering = ('user',)
     search_fields = ('user', 'expertise', 'department')
     search_help_text = "Search in: Username, Expertise, Department"
-    list_display_links = ('user', 'department_link')
+    list_display_links = ('id', 'user_link', 'department_link')
     resource_class = TeacherResource
     save_as = True
     list_per_page = 10
@@ -105,18 +109,18 @@ class TeacherAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
 
     promote_prof_rank.short_description = "Promote selected professors"
 
-    # def user_link(self, obj):
-    #     user_id = obj.user.id
-    #     user_url = f"http://127.0.0.1:8000/ITM/accounts/user/{user_id}/change/"
-    #     return format_html('<a href="{}">{}</a>', user_url, obj.user)
+    def user_link(self, obj):
+        user_id = obj.user.id
+        user_url = f"http://127.0.0.1:8000/{local_settings.Admin}accounts/user/{user_id}/change/"
+        return format_html('<a href="{}">{}</a>', user_url, obj.user)
 
     def department_link(self, obj):
         department_id = obj.department.id
-        department_url = f"http://127.0.0.1:8000/ITM/education/department/{department_id}/change/"
+        department_url = f"http://127.0.0.1:8000/{local_settings.Admin}education/department/{department_id}/change/"
         return format_html('<a href="{}">{}</a>',
                            department_url, obj.department)
 
-    # user_link.short_description = "User"
+    user_link.short_description = "User"
     department_link.short_description = "Department"
 
 
@@ -124,7 +128,7 @@ admin.site.register(Teacher, TeacherAdmin)
 
 
 class StudentAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('id', 'user', 'major_link', 'entry_year',
+    list_display = ('id', 'user_link', 'major_link', 'entry_year',
                     'entry_semester', 'gpa', 'military_service_status')
     list_filter = ('major', 'entry_year', 'military_service_status')
     sortable_by = ('user', 'entry_year', 'gpa')
@@ -133,18 +137,23 @@ class StudentAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     ordering = ('entry_year',)
     search_fields = ('user', 'entry_semester')
     search_help_text = "Search in: Username, Entry Semester"
-    list_display_links = ('user', 'major_link')
+    list_display_links = ('id', 'user_link', 'major_link')
     resource_class = StudentResource
     save_as = True
     list_per_page = 10
     list_max_show_all = 50
 
+    def user_link(self, obj):
+        user_id = obj.user.id
+        user_url = f"http://127.0.0.1:8000/{local_settings.Admin}accounts/user/{user_id}/change/"
+        return format_html('<a href="{}">{}</a>', user_url, obj.user)
+
     def major_link(self, obj):
         major_id = obj.major.id
-        major_url = f"http://127.0.0.1:8000/ITM/education/major/{major_id}/change/"
+        major_url = f"http://127.0.0.1:8000/{local_settings.Admin}education/major/{major_id}/change/"
         return format_html('<a href="{}">{}</a>', major_url, obj.major)
 
-    # user_link.short_description = "User"
+    user_link.short_description = "User"
     major_link.short_description = "Major"
 
 
@@ -153,24 +162,29 @@ admin.site.register(Student, StudentAdmin)
 
 class EducationalAssistantAdmin(
         ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('id', 'user', 'field_link')
+    list_display = ('id', 'user_link', 'field_link')
     list_filter = ('field',)
     sortable_by = ('user',)
     ordering = ('user',)
     search_fields = ('field',)
     search_help_text = "Search in: Field"
-    list_display_links = ('user', 'field_link')
+    list_display_links = ('id', 'user_link', 'field_link')
     resource_class = EducationalAssistantResource
     save_as = True
     list_per_page = 10
     list_max_show_all = 50
 
+    def user_link(self, obj):
+        user_id = obj.user.id
+        user_url = f"http://127.0.0.1:8000/{local_settings.Admin}accounts/user/{user_id}/change/"
+        return format_html('<a href="{}">{}</a>', user_url, obj.user)
+
     def field_link(self, obj):
         field_id = obj.field.id
-        field_url = f"http://127.0.0.1:8000/ITM/education/major/{field_id}/change/"
+        field_url = f"http://127.0.0.1:8000/{local_settings.Admin}education/major/{field_id}/change/"
         return format_html('<a href="{}">{}</a>', field_url, obj.field)
 
-    # user_link.short_description = "User"
+    user_link.short_description = "User"
     field_link.short_description = "Field"
 
 

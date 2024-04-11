@@ -32,7 +32,7 @@ router.register('unit_selection' , UnitSelectionRequestAPIView , basename='units
 router.register('revision_request' , RevisionRequestAPIView , basename='revisionrequest')
 router.register('emergency_remove_request' , EmergencyRemovalRequestAPIView , 
                 basename='emergencyremoverequest')
-router.register('delete_semester_request' , StudentDeleteSemesterRequestAPIView , 
+router.register('delete_semester_request' , StudentDeleteSemesterRequestAPIView ,
                 basename='deletesemesterrequest')
 
 router.register('employment_education_request' , EmploymentEducationRequestApiView , 

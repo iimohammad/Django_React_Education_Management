@@ -1,9 +1,16 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, viewsets, status, views
+from rest_framework import generics, viewsets, status, views , mixins
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from datetime import date
+from .tasks import (
+    send_revision_request_approval_email,
+    send_revision_request_rejection_email,
+    send_semester_deletion_approval_email,
+    send_semester_deletion_rejection_email,
+)
 
 from accounts.models import Student, Teacher, EducationalAssistant, User
 from education.models import Course, SemesterCourse, Major, Semester
@@ -11,7 +18,6 @@ from dashboard_student.models import (EmergencyRemovalRequest,
                                       StudentDeleteSemesterRequest,
                                       EmploymentEducationRequest,
                                       RevisionRequest)
-from rest_framework.decorators import action
 
 
 from accounts.models import Student, Teacher, EducationalAssistant
@@ -504,7 +510,11 @@ class EmergencyRemovalRequestViewSet(viewsets.ModelViewSet):
         return Response({"detail": "DELETE requests are not allowed."}, status=405)
 
 
-class StudentDeleteSemesterRequestViewSet(viewsets.ModelViewSet):
+class StudentDeleteSemesterRequestViewSet(viewsets.GenericViewSet ,
+                                          mixins.ListModelMixin ,
+                                          mixins.RetrieveModelMixin ,
+                                          mixins.UpdateModelMixin ,
+                                          ):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = StudentDeleteSemesterRequestFilter
     pagination_class = DefaultPagination
@@ -524,22 +534,7 @@ class StudentDeleteSemesterRequestViewSet(viewsets.ModelViewSet):
             educational_assistant_approval_status='P',
             semester_registration_request__student__major=educational_assistant.field
         )
-
         return queryset
-
-    def create(self, request, *args, **kwargs):
-        """
-        Disallow POST requests.
-        """
-        return Response({"detail": "POST requests are not allowed."}, status=405)
-
-    def destroy(self, request, *args, **kwargs):
-        """
-        Disallow DELETE requests.
-        """
-        return Response({"detail": "DELETE requests are not allowed."}, status=405)
-
-
 class EmploymentEducationRequestViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = EmploymentEducationRequestFilter
@@ -610,3 +605,17 @@ class RevisionRequestViewSet(viewsets.ModelViewSet):
         Disallow DELETE requests.
         """
         return Response({"detail": "DELETE requests are not allowed."}, status=405)
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        old_status = instance.educational_assistant_approval_status
+        new_status = serializer.validated_data.get('educational_assistant_approval_status', old_status)
+        
+        if old_status != new_status:
+            # Send email based on the new status
+            if new_status == 'A':
+                send_revision_request_approval_email.delay(instance.student.user.email)
+            elif new_status == 'R':
+                send_revision_request_rejection_email.delay(instance.student.user.email)
+
+        serializer.save()

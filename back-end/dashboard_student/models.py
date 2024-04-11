@@ -1,6 +1,8 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils import timezone
 
 APPROVAL_CHOICES = [
         ('P', 'Pending'),
@@ -8,9 +10,14 @@ APPROVAL_CHOICES = [
         ('R', 'Rejected'),
     ]
 
+
+
 UnitSelection_APPROVAL_CHOICES = [
-        ('R', 'Registered'),
+        ('A', 'Registered'),
         ('R', 'Reserved'),
+        ('C',"NeedChange"),
+        ('P','Approved'),
+        ('D','DeletedSemester'),
     ]
 
 class SemesterRegistrationRequest(models.Model):
@@ -23,11 +30,12 @@ class SemesterRegistrationRequest(models.Model):
     requested_courses = models.ManyToManyField(
         'education.Course' , verbose_name='Requested_courses' , 
         blank=True)
-    student_comment_for_requested_courses = models.TextField(null=True , blank = True)
+    teacher_comment = models.TextField(null=True , blank = True)
 
     def __str__(self):
         return f"{self.student.user.first_name} {self.student.user.last_name} - \
             {self.semester.name}"
+
 
 
 
@@ -100,17 +108,22 @@ class UnitSelectionRequest(models.Model):
 
 
 
-
-
-
-
-class AddRemoveRequest(models.Model):
+class QueuedRequest(models.Model):
+    student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE)
     semester_registration_request = models.ForeignKey(
-        SemesterRegistrationRequest , on_delete=models.PROTECT)
-    approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
-    created_at = models.DateTimeField(auto_now_add = True)
-    removed_courses = models.ManyToManyField('education.StudentCourse', related_name='removed_courses')
-    added_courses = models.ManyToManyField('education.SemesterCourse', related_name='added_courses')
+        SemesterRegistrationRequest, on_delete=models.PROTECT
+    )
+    request_course = models.ForeignKey(
+        'education.SemesterCourse',
+        on_delete=models.CASCADE
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+
+class AddRemoveRequest(UnitSelectionRequest):
+    pass
+
 
 class RevisionRequest(models.Model):
     student = models.ForeignKey('accounts.Student', on_delete=models.PROTECT)
@@ -121,21 +134,35 @@ class RevisionRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add = True)
     course = models.ForeignKey('education.StudentCourse', on_delete=models.PROTECT)
     text = models.TextField()
-    answer = models.TextField()
+    answer = models.TextField(null=True , blank = True)
 
 
 class EmergencyRemovalRequest(models.Model):
     student = models.ForeignKey('accounts.Student', on_delete=models.PROTECT)
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
-    created_at = models.DateTimeField(auto_now_add = True)
+    created_at = models.DateTimeField(auto_now_add=True)
     course = models.ForeignKey('education.StudentCourse', on_delete=models.PROTECT, null=True)
     student_explanation = models.TextField()
-    educational_assistant_explanation = models.TextField()
 
     def __str__(self):
-        return f"{self.student.user.first_name} {self.student.user.last_name} - \
-        {self.course.semester_course.semester.name}"
+        return (
+            f"{self.student.user.first_name} "
+            f"{self.student.user.last_name} - "
+            f"{self.course.semester_course.semester.name}"
+        )
+    # def save(self, *args, **kwargs):
+    #     existing_request = EmergencyRemovalRequest.objects.filter(
+    #         student=self.student,
+    #         course__semester_course__semester__emergency__emergency_remove_start__lte=timezone.now(),
+    #         course__semester_course__semester__emergency__emergency_remove_end__gte=timezone.now()
+    #     ).exists()
 
+    #     if existing_request:
+    #         raise ValidationError(
+    #             "A student can only create one EmergencyRemovalRequest per semester."
+    #             )
+
+    #     super().save(*args, **kwargs)
 
 class StudentDeleteSemesterRequest(models.Model):
     semester_registration_request = models.ForeignKey(
@@ -145,13 +172,15 @@ class StudentDeleteSemesterRequest(models.Model):
     educational_assistant_approval_status = models.CharField(max_length=1, 
                                             choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
-    student_explanations = models.TextField()
-    educational_assistant_explanation = models.TextField()
+    student_explanations = models.TextField(null = True , blank = True)
+    educational_assistant_explanation = models.TextField(null = True , blank = True)
 
     def __str__(self):
-        return f"{self.semester_registration_request.student.user.first_name} \
-                {self.semester_registration_request.student.user.last_name} - \
-                        {self.semester_registration_request.semester.name}"
+        return (
+            f"{self.semester_registration_request.student.user.first_name} "
+            f"{self.semester_registration_request.student.user.last_name} - "
+            f"{self.semester_registration_request.semester.name}"
+        )
 
 
 
@@ -160,6 +189,8 @@ class EmploymentEducationRequest(models.Model):
     approval_status = models.CharField(max_length=1, choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
     need_for = models.TextField()
+
     def __str__(self) -> str:
         return f"{self.student.user.first_name} {self.student.user.last_name}"
+    
     
