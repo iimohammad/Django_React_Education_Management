@@ -1,54 +1,57 @@
-# from django.contrib import admin
-# from import_export.admin import ImportExportActionModelAdmin
-# from django.utils.html import format_html
-# from config import local_settings
+from django.contrib import admin
+from import_export.admin import ImportExportActionModelAdmin
+from django.utils.html import format_html
 
-# from dashboard_student.models import (SemesterRegistrationRequest,
-#                                       UnitSelectionRequest,
-#                                       AddRemoveRequest,
-#                                       EmploymentEducationRequest,
-#                                       RevisionRequest,
-#                                       EmergencyRemovalRequest,
-#                                       StudentDeleteSemesterRequest,
-#                                       )
-# from dashboard_student.resource import (SemesterRegistrationRequestResource,
-#                                         UnitSelectionRequestResource,
-#                                         AddRemoveRequestResource,
-#                                         RevisionRequestResource,
-#                                         EmergencyRemovalRequestResource,
-#                                         StudentDeleteSemesterRequestResource,
-#                                         )
+import dotenv
+import os
+dotenv.read_dotenv()
+admin_url = os.environ.get('Admin')
+from dashboard_student.models import (SemesterRegistrationRequest,
+                                      UnitSelectionRequest,
+                                      AddRemoveRequest,
+                                      EmploymentEducationRequest,
+                                      RevisionRequest,
+                                      EmergencyRemovalRequest,
+                                      StudentDeleteSemesterRequest,
+                                      )
+from dashboard_student.resource import (SemesterRegistrationRequestResource,
+                                        UnitSelectionRequestResource,
+                                        AddRemoveRequestResource,
+                                        RevisionRequestResource,
+                                        EmergencyRemovalRequestResource,
+                                        StudentDeleteSemesterRequestResource,
+                                        )
 
 
-# class SemesterRegistrationRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-#     list_display = ('id', 'student_link', 'semester_link', 'approval_status')
-#     list_filter = ('approval_status',)
-#     list_editable = ('approval_status',)
-#     ordering = ('id',)
-#     search_fields = ('student', 'semester')
-#     search_help_text = "Search in: Student, Semester"
-#     resource_class = SemesterRegistrationRequestResource
-#     list_display_links = ('id', 'student_link', 'semester_link')
-#     save_as = True
-#     list_per_page = 10
-#     list_max_show_all = 50
+class SemesterRegistrationRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
+    list_display = ('id', 'student_link', 'semester_link', 'approval_status')
+    list_filter = ('approval_status',)
+    list_editable = ('approval_status',)
+    ordering = ('id',)
+    search_fields = ('student', 'semester')
+    search_help_text = "Search in: Student, Semester"
+    resource_class = SemesterRegistrationRequestResource
+    list_display_links = ('id', 'student_link', 'semester_link')
+    save_as = True
+    list_per_page = 10
+    list_max_show_all = 50
 
-#     def student_link(self, obj):
-#         student_id = obj.student.id
-#         student_url = f"http://127.0.0.1:8000/{local_settings.Admin}accounts/student/{student_id}/change/"
+    def student_link(self, obj):
+        student_id = obj.student.id
+        student_url = f"http://127.0.0.1:8000/{admin_url}accounts/student/{student_id}/change/"
 
-#         return format_html('<a href="{}">{}</a>', student_url, obj.student)
+        return format_html('<a href="{}">{}</a>', student_url, obj.student)
     
-#     def semester_link(self, obj):
-#         semester_id = obj.semester.id
-#         semester_url = f"http://127.0.0.1:8000/{local_settings.Admin}education/semester/{semester_id}/change/"
+    def semester_link(self, obj):
+        semester_id = obj.semester.id
+        semester_url = f"http://127.0.0.1:8000/{admin_url}education/semester/{semester_id}/change/"
 
-#         return format_html('<a href="{}">{}</a>', semester_url, obj.semester)
+        return format_html('<a href="{}">{}</a>', semester_url, obj.semester)
     
-#     student_link.short_description = "Student"
-#     semester_link.short_description = "Semester"
+    student_link.short_description = "Student"
+    semester_link.short_description = "Semester"
 
-# admin.site.register(SemesterRegistrationRequest, SemesterRegistrationRequestAdmin)
+admin.site.register(SemesterRegistrationRequest, SemesterRegistrationRequestAdmin)
 
 
 # class UnitSelectionRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
@@ -65,7 +68,7 @@
 
 #     def semester_registration_request_link(self, obj):
 #         semester_registration_request_id = obj.semester_registration_request.id
-#         semester_registration_request_url = f"http://127.0.0.1:8000/{local_settings.Admin}dashboard_student/\
+#         semester_registration_request_url = f"http://127.0.0.1:8000/{admin_url}dashboard_student/\
 #         semesterregistrationrequest/{semester_registration_request_id}/change/"
 
 #         return format_html('<a href="{}">{}</a>', semester_registration_request_url,

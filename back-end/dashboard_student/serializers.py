@@ -141,56 +141,32 @@ class SemesterRegistrationRequestSemesterSerializer(serializers.ModelSerializer)
         # read_only_fields = ['name']
 
 class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
-    # semester = SemesterRegistrationRequestSemesterSerializer()
-    # semester_name = serializers.CharField(source='semester.name')
-    requested_courses = SemesterCourseSerializer(many = True)
-
-    # class Meta:
-    #     model = SemesterRegistrationRequest
-    #     fields = ['id','approval_status', 'created_at','semester','requested_courses' ,
-    #             'teacher_comment']
-    #     read_only_fields = ['id','approval_status', 'created_at' , 'semester',
-    #                         'teacher_comment']
-        
     class Meta:
         model = SemesterRegistrationRequest
-        fields = ['id','approval_status', 'created_at','semester','requested_courses' ,
-                'teacher_comment']
-        # read_only_fields = ['id','approval_status', 'created_at' , 'semester',
-        #                     'teacher_comment']
+        fields = ['id', 'approval_status', 'created_at', 'semester', 'requested_courses', 'teacher_comment']
+        read_only_fields = ['id', 'approval_status', 'created_at','teacher_comment']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set 'student' field to read-only and use the current user
+        self.fields['student'] = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
+    def validate(self, attrs):
+        # Check if 'semester' is provided and valid
+        if 'semester' in attrs:
+            semester = attrs['semester']
+            # Perform any additional validation for 'semester' here if needed
+        else:
+            raise serializers.ValidationError("Semester is required.")
 
-    def create(self, validated_data):
-        user = self.context['user']
-        try:
-            semester_instance = Semester.objects.order_by(
-                '-start_semester').first()
-            if semester_instance.classes.classes_end < timezone.now().date():
-                raise serializers.ValidationError("This semester ended!")
-        except Semester.DoesNotExist:
-            raise serializers.ValidationError("Invalid semester")
-        
-        available_semester = Semester.objects.order_by('-start_semester').first()
-        
-        if semester_instance!=available_semester:
-            raise serializers.ValidationError("Invalid semester")
-        
-        existing_request = SemesterRegistrationRequest.objects.filter(
-            semester=semester_instance, student__user=user).exists()
-        if existing_request:
-            raise serializers.ValidationError(
-                "A registration request for this semester already exists")
-        
-        try:
-            student = Student.objects.get(user = user)
-        except Semester.DoesNotExist:
-            raise serializers.ValidationError("Invalid student")
-        
-        semester_registration_request = SemesterRegistrationRequest.objects.create(
-            semester=semester_instance, student = student)
+        # Check if 'requested_courses' is provided and valid
+        if 'requested_courses' in attrs:
+            requested_courses = attrs['requested_courses']
+            # Perform any additional validation for 'requested_courses' here if needed
+        else:
+            raise serializers.ValidationError("Requested courses are required.")
 
-        return semester_registration_request
+        return attrs
     
 
 class UnitSelectionSemesterRegistrationRequestSerializer(serializers.ModelSerializer):

@@ -4,6 +4,10 @@ from django.utils import timezone
 from django.utils.html import format_html
 from import_export.admin import ImportExportActionModelAdmin
 
+import dotenv
+import os
+dotenv.read_dotenv()
+admin_url = os.environ.get('Admin')
 from accounts.resource import (UserResource,
                                TeacherResource,
                                StudentResource,
