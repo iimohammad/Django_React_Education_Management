@@ -180,26 +180,11 @@ class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Set 'student' field to read-only and use the current user
         self.fields['student'] = serializers.PrimaryKeyRelatedField(read_only=True,
                                             default=serializers.CurrentUserDefault())
 
-    def validate(self, attrs):
-        # Check if 'semester' is provided and valid
-        if 'semester' in attrs:
-            semester = attrs['semester']
-            # Perform any additional validation for 'semester' here if needed
-        else:
-            raise serializers.ValidationError("Semester is required.")
-
-        # Check if 'requested_courses' is provided and valid
-        if 'requested_courses' in attrs:
-            requested_courses = attrs['requested_courses']
-            # Perform any additional validation for 'requested_courses' here if needed
-        else:
-            raise serializers.ValidationError("Requested courses are required.")
-
-        return attrs
+        
+    
 
 
 class UnitSelectionSemesterRegistrationRequestSerializer(serializers.ModelSerializer):
