@@ -20,12 +20,13 @@ from .models import (
     EmploymentEducationRequest,
     AddRemoveRequest,
     EmploymentEducationRequest,
-    UnitSelectionRequest
+    UnitSelectionRequest,
+    QueuedRequest,
 )
 
 from django.utils import timezone
 from rest_framework.exceptions import NotFound
-
+from django.core.exceptions import ValidationError
 
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
