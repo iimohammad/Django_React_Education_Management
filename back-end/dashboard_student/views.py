@@ -186,10 +186,11 @@ class StudentProfileViewset(generics.RetrieveAPIView):
 
 
 class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
+    """Semester Registration Request APIView Is OK"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefaultVersioning
-    # permission_classes = [IsAuthenticated, IsStudent]
+    permission_classes = [IsAuthenticated, IsStudent]
     search_fields = ['semester__name']
     ordering_fields = ['created_at', 'semester__name']
 
@@ -200,14 +201,11 @@ class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
         raise NotImplementedError("Unsupported version requested")
 
     def get_queryset(self):
-        query=  SemesterRegistrationRequest.objects.filter(student=self.request.user)
-        return query
+        return SemesterRegistrationRequest.objects.filter(student__user=self.request.user)
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context['user'] = self.request.user
-        return context
-
+    def perform_create(self, serializer):
+        serializer.save(student=self.request.user.student)
+    
     def destroy(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
@@ -287,11 +285,19 @@ class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
         if self.request.version == 'v1':
             return StudentDeleteSemesterRequestSerializer
         raise NotImplementedError("Unsupported version requested")
+    
 
     def get_queryset(self):
-        return StudentDeleteSemesterRequest.objects.filter(
-            semester_registration_request__student__user = self.request.user
-            ).all()
+        return SemesterRegistrationRequest.objects.filter(student__user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(student=self.request.user.student)
+
+
+
+    def get_queryset(self):
+        return StudentDeleteSemesterRequest.objects.objects.filter(
+            student__user=self.request.user)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
