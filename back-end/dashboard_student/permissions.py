@@ -89,7 +89,7 @@ class HavePermssionEmoloymentDegreeTime(BasePermission):
     def has_permission(self, request, view):
         if request.user.is_authenticated and hasattr(request.user, 'student'):
             student = request.user.student
-            if student.military_service_status != 'F':
+            if student.military_service_status == 'F':
                 return False
         return True
     
