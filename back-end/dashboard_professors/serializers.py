@@ -240,7 +240,7 @@ class SemesterRegistrationRequestSerializers(serializers.ModelSerializer):
     class Meta:
         model = SemesterRegistrationRequest
         fields = ['id', 'student', 'approval_status', 'created_at',
-                  'semester', 'requested_courses', 'teacher_comment_for_requested_courses']
+                  'semester', 'requested_courses', 'teacher_comment']
         read_only_fields = ['id', 'student', 'created_at', 'semester', 'requested_courses']
         
     def validate_approval_status(self, value):

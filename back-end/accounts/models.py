@@ -2,20 +2,21 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 import logging
 from education.models import Major
-from django.conf import settings
+from config.settings import (
+    MINIO_ENDPOINT,
+    MINIO_ACCESS_KEY,
+    MINIO_SECRET_KEY,
+)
 from .validators import phone_validator , validate_national_code
 from django.db.models.signals import post_save
 from education.models import StudentCourse
 from django.dispatch import receiver
+from django.db.models import Sum,Avg
 
 logger = logging.getLogger(__name__)
 
-# minio_client = Minio(
-#     MINIO_SERVER_URL = settings.MINIO_SERVER_URL,
-#     access_key=settings.MINIO_ROOT_USER,
-#     secret_key=settings.MINIO_ROOT_PASSWORD,
-#     secure=settings.MINIO_SECURE
-# )
+
+
 
 class User(AbstractUser):
     class Gender(models.TextChoices):
@@ -88,13 +89,22 @@ class Student(models.Model):
     @property
     def calculate_total_credits(self):
         # Calculate total credits taken by the student
-        total_credits = self.studentcourse_set.aggregate(Sum('semester_course__course__credit_num'))['semester_course__course__credit_num__sum']
+        total_credits = self.studentcourse_set.aggregate(
+            Sum('semester_course__course__credit_num'))['semester_course__course__credit_num__sum']
+        
+        # Include credits from unit selection requests
+        unit_selection_credits = self.studentunitselectionrequest_set.aggregate(
+            Sum('request_course__semester_course__course__credit_num'))['request_course__semester_course__course__credit_num__sum']
+        
         if total_credits is not None:
+            total_credits += unit_selection_credits or 0
             return total_credits
         return 0
 
     @property
     def category_of_student_grade(self):
+        if self.gpa is None:
+            return 'B'
         if self.gpa is not None:
             if self.gpa >= 17:
                 return 'A'

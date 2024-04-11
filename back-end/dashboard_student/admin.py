@@ -1,8 +1,9 @@
 from django.contrib import admin
 from import_export.admin import ImportExportActionModelAdmin
 from django.utils.html import format_html
-from config import local_settings
 
+import os
+admin_url = os.environ.get('Admin')
 from dashboard_student.models import (SemesterRegistrationRequest,
                                       UnitSelectionRequest,
                                       AddRemoveRequest,
@@ -35,13 +36,13 @@ class SemesterRegistrationRequestAdmin(ImportExportActionModelAdmin, admin.Model
 
     def student_link(self, obj):
         student_id = obj.student.id
-        student_url = f"http://127.0.0.1:8000/{local_settings.Admin}accounts/student/{student_id}/change/"
+        student_url = f"http://127.0.0.1:8000/{admin_url}accounts/student/{student_id}/change/"
 
         return format_html('<a href="{}">{}</a>', student_url, obj.student)
     
     def semester_link(self, obj):
         semester_id = obj.semester.id
-        semester_url = f"http://127.0.0.1:8000/{local_settings.Admin}education/semester/{semester_id}/change/"
+        semester_url = f"http://127.0.0.1:8000/{admin_url}education/semester/{semester_id}/change/"
 
         return format_html('<a href="{}">{}</a>', semester_url, obj.semester)
     
@@ -65,7 +66,7 @@ class UnitSelectionRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
 
     def semester_registration_request_link(self, obj):
         semester_registration_request_id = obj.semester_registration_request.id
-        semester_registration_request_url = f"http://127.0.0.1:8000/{local_settings.Admin}dashboard_student/\
+        semester_registration_request_url = f"http://127.0.0.1:8000/{admin_url}dashboard_student/\
         semesterregistrationrequest/{semester_registration_request_id}/change/"
 
         return format_html('<a href="{}">{}</a>', semester_registration_request_url,
@@ -90,7 +91,7 @@ class AddRemoveRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
 
     def semester_registration_request_link(self, obj):
         semester_registration_request_id = obj.semester_registration_request.id
-        semester_registration_request_url = f"http://127.0.0.1:8000/{local_settings.Admin}dashboard_student/\
+        semester_registration_request_url = f"http://127.0.0.1:8000/{admin_url}dashboard_student/\
         semesterregistrationrequest/{semester_registration_request_id}/change/"
 
         return format_html('<a href="{}">{}</a>', semester_registration_request_url,
@@ -116,13 +117,13 @@ class RevisionRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
 
     def student_link(self, obj):
         student_id = obj.student.id
-        student_url = f"http://127.0.0.1:8000/{local_settings.Admin}accounts/student/{student_id}/change/"
+        student_url = f"http://127.0.0.1:8000/{admin_url}accounts/student/{student_id}/change/"
 
         return format_html('<a href="{}">{}</a>', student_url, obj.student)
 
     def student_course_link(self, obj):
         student_course_id = obj.course.id
-        student_course_url = f"http://127.0.0.1:8000/{local_settings.Admin}education/studentcourse/\
+        student_course_url = f"http://127.0.0.1:8000/{admin_url}education/studentcourse/\
         {student_course_id}/change/"
 
         return format_html('<a href="{}">{}</a>', student_course_url, obj.course)
@@ -150,13 +151,13 @@ class EmergencyRemovalRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmi
 
     def student_link(self, obj):
         student_id = obj.student.id
-        student_url = f"http://127.0.0.1:8000/{local_settings.Admin}accounts/student/{student_id}/change/"
+        student_url = f"http://127.0.0.1:8000/{admin_url}accounts/student/{student_id}/change/"
 
         return format_html('<a href="{}">{}</a>', student_url, obj.student)
 
     def student_course_link(self, obj):
         student_course_id = obj.course.id
-        student_course_url = f"http://127.0.0.1:8000/{local_settings.Admin}education/studentcourse/\
+        student_course_url = f"http://127.0.0.1:8000/{admin_url}education/studentcourse/\
         {student_course_id}/change/"
 
         return format_html('<a href="{}">{}</a>', student_course_url, obj.course)
@@ -185,7 +186,7 @@ class StudentDeleteSemesterRequestAdmin(ImportExportActionModelAdmin, admin.Mode
 
     def semester_registration_request_link(self, obj):
         semester_registration_request_id = obj.semester_registration_request.id
-        semester_registration_request_url = f"http://127.0.0.1:8000/{local_settings.Admin}dashboard_student/\
+        semester_registration_request_url = f"http://127.0.0.1:8000/{admin_url}dashboard_student/\
         semesterregistrationrequest/{semester_registration_request_id}/change/"
 
         return format_html('<a href="{}">{}</a>', semester_registration_request_url,

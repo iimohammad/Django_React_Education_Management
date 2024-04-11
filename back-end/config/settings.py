@@ -9,7 +9,7 @@ dotenv.read_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+    
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
@@ -288,7 +288,6 @@ LOGGING = {
 
 
 # MinIO Configuration
-MINIO_ROOT_USER = os.environ.get('MINIO_ROOT_USER')
-MINIO_ROOT_PASSWORD = os.environ.get('MINIO_ROOT_PASSWORD')
-MINIO_SERVER_URL = os.environ.get('MINIO_SERVER_URL')
-MINIO_SECURE = False  
+MINIO_ENDPOINT = 'http://127.0.0.1:9000'
+MINIO_ACCESS_KEY = 'ZTG1e9zxdppm3Yc2y5lH'
+MINIO_SECRET_KEY = 'dxLFJQpU2un2y0rWwGfSle2qS4HKoSQKnmOeKZLj'
