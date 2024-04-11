@@ -183,8 +183,20 @@ class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
         self.fields['student'] = serializers.PrimaryKeyRelatedField(read_only=True,
                                             default=serializers.CurrentUserDefault())
 
-        
-    
+    def validate(self, data):
+        student = self.context['request'].user.student
+        semester = data['semester']
+
+        existing_requests = SemesterRegistrationRequest.objects.filter(
+            student=student, semester=semester, approval_status__in=['P', 'A']
+        ).exists()
+
+        if existing_requests:
+            raise serializers.ValidationError(
+                "A request with 'P' or 'A' status already exists for this semester."
+                )
+
+        return data
 
 
 class UnitSelectionSemesterRegistrationRequestSerializer(serializers.ModelSerializer):
