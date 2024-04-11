@@ -149,9 +149,9 @@ class Day(models.Model):
     def __str__(self):
         return str(self.name)
     
-    # @receiver(post_migrate)
-    # def on_migrate(sender, **kwargs):
-    #     create_week_days(sender, **kwargs)
+    @receiver(post_migrate)
+    def on_migrate(sender, **kwargs):
+        create_week_days(sender, **kwargs)
 
 class SemesterCourse(models.Model):
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
