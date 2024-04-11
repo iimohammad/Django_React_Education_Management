@@ -94,7 +94,7 @@ class Student(models.Model):
         
         # Include credits from unit selection requests
         unit_selection_credits = self.unitselectionrequest_set.aggregate(
-            Sum('request_course__semester_course__course__credit_num'))['request_course__semester_course__course__credit_num__sum']
+            Sum('request_course__course__credit_num'))['request_course__course__credit_num__sum']
         
         if total_credits is not None:
             total_credits += unit_selection_credits or 0
@@ -129,7 +129,7 @@ def update_student_info(sender, instance, **kwargs):
     student = instance.student
     # Recalculate the student's GPA and total credits
     # student.gpa = student.calculate_gpa()
-    student.total_credits = student.calculate_total_credits()
+    student.total_credits = student.calculate_total_credits
     student.save()
 
 
