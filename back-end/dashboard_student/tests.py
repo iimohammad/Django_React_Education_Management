@@ -238,16 +238,24 @@ class StudentProfileViewsetTest(APITestCase):
         serializer = ProfileStudentSerializer(instance=self.student)
         self.assertEqual(response.data, serializer.data)
 
+
 class SemesterRegistrationRequestAPITestCase(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='testuser', password='testpassword')
-        self.student = Student.objects.create(user=self.user)
+        self.student = Student.objects.create(
+            user=self.user,
+            entry_semester='Spring',  # Provide entry semester
+            entry_year=2022,          # Provide entry year
+            major='Computer Science', # Provide major
+            advisor='Dr. Smith',      # Provide advisor
+            year_of_study=1           # Provide year of study
+        )
         self.semester = Semester.objects.create(name='Test Semester')
         self.course1 = SemesterCourse.objects.create(name='Course 1', semester=self.semester)
         self.course2 = SemesterCourse.objects.create(name='Course 2', semester=self.semester)
 
     def test_create_semester_registration_request(self):
-        url = reverse('semester-registration-request-list')  # Replace 'semester-registration-request-list' with your actual URL name
+        url = reverse('semester-registration-request-list')
         data = {
             'student': self.student.id,
             'semester': self.semester.id,
@@ -277,13 +285,14 @@ class SemesterRegistrationRequestAPITestCase(APITestCase):
         )
         url = reverse('semester_registration', kwargs={'pk': semester_registration_request.id})
         updated_data = {
-            'approval_status': 'A' 
+            'approval_status': 'A'
         }
         self.client.force_login(self.user)
         response = self.client.patch(url, updated_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         semester_registration_request.refresh_from_db()
         self.assertEqual(semester_registration_request.approval_status, 'A')
+
 
 
 class UnitSelectionRequestAPITestCase(APITestCase):
@@ -368,8 +377,15 @@ class StudentDeleteSemesterRequestAPITest(APITestCase):
 
 class StudentDeleteSemesterRequestAPITest(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='test_user', password='test_password')
-        self.student = Student.objects.create(user=self.user)
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.student = Student.objects.create(
+            user=self.user,
+            entry_semester='Spring',  # Provide entry semester
+            entry_year=2022,          # Provide entry year
+            major='Computer Science', # Provide major
+            advisor='Dr. Smith',      # Provide advisor
+            year_of_study=1           # Provide year of study
+        )
         self.semester = Semester.objects.create(name='Test Semester')
         self.semester_registration_request = SemesterRegistrationRequest.objects.create(
             student=self.student, semester=self.semester)
@@ -381,6 +397,7 @@ class StudentDeleteSemesterRequestAPITest(APITestCase):
             'student_explanations': 'Test explanation',
             'educational_assistant_explanation': 'Test assistant explanation'
         }
+        self.client.force_authenticate(user=self.user)
         response = self.client.post(self.url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(StudentDeleteSemesterRequest.objects.count(), 1)
