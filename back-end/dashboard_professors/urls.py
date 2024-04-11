@@ -13,6 +13,7 @@ from .views import  (
 
 )
 
+
 router = DefaultRouter()
 router.register('TeacherRole/Semester-Show',
                 ShowSemestersView,
