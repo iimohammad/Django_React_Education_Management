@@ -290,7 +290,7 @@ class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
 
     def get_queryset(self):
         return StudentDeleteSemesterRequest.objects.filter(
-            semester_registration_request__student__user=self.request.user
+            semester_registration_request__student__user = self.request.user
             ).all()
 
     def get_serializer_context(self):

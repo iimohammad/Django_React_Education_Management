@@ -146,8 +146,8 @@ class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SemesterRegistrationRequest
-        fields = ['id','approval_status', 'created_at','semester','requested_courses'
-                  ,'teacher_comment_for_requested_courses']
+        fields = ['id','approval_status', 'created_at','semester','requested_courses' ,
+                'teacher_comment_for_requested_courses']
         read_only_fields = ['id','approval_status', 'created_at' , 'semester',
                             'teacher_comment_for_requested_courses']
         
@@ -249,7 +249,7 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         return unit_selection_request
 
 class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
-    semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()
+    # semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()
     class Meta:
         model = StudentDeleteSemesterRequest
         fields = ['id','semester_registration_request', 'teacher_approval_status',
@@ -267,7 +267,7 @@ class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
 
         if self.context.get('request') and self.context['request'].method == 'POST':
             fields['semester_registration_request'] = serializers.PrimaryKeyRelatedField(
-                queryset=StudentDeleteSemesterRequest.objects.all())
+                queryset=SemesterRegistrationRequest.objects.all())
         return fields
     def create(self, validated_data):
         semester_registration_request = validated_data.pop('semester_registration_request')
@@ -275,7 +275,7 @@ class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
         semester= None
         try:
             semester_registration_request = StudentDeleteSemesterRequest.objects.get(
-                pk=semester_registration_request.pk, 
+                pk=semester_registration_request.pk,
                 student__user = user)
         except StudentDeleteSemesterRequest.DoesNotExist:
             raise serializers.ValidationError("Invalid SemesterRegistrationRequest")

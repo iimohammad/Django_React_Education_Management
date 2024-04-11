@@ -17,6 +17,7 @@ UnitSelection_APPROVAL_CHOICES = [
         ('R', 'Reserved'),
         ('C',"NeedChange"),
         ('P','Approved'),
+        ('D','DeletedSemester'),
     ]
 
 class SemesterRegistrationRequest(models.Model):
@@ -171,8 +172,8 @@ class StudentDeleteSemesterRequest(models.Model):
     educational_assistant_approval_status = models.CharField(max_length=1, 
                                             choices=APPROVAL_CHOICES, default='P')
     created_at = models.DateTimeField(auto_now_add = True)
-    student_explanations = models.TextField()
-    educational_assistant_explanation = models.TextField()
+    student_explanations = models.TextField(null = True , blank = True)
+    educational_assistant_explanation = models.TextField(null = True , blank = True)
 
     def __str__(self):
         return (
