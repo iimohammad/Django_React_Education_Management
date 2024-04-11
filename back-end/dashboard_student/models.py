@@ -99,10 +99,10 @@ class UnitSelectionRequest(models.Model):
             semester_registration_request=self.semester_registration_request,
             request_course=self.request_course
         ).exists():
-            raise ValidationError(_('Unit selection request for this course already exists.'))
+            raise ValidationError(('Unit selection request for this course already exists.'))
 
         if self.request_course.studentcourse_set.filter(student=self.student, score__gte=10).exists():
-            raise ValidationError(_('Cannot request a course that has already been passed.'))
+            raise ValidationError(('Cannot request a course that has already been passed.'))
 
         super().save(*args, **kwargs)
 
