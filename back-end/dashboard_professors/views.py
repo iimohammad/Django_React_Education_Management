@@ -26,6 +26,7 @@ from .serializers import (
     SemesterCourseSerializer,
     SemesterRegistrationConfirmationSerializers,
     ShowSemestersSerializers,
+    StudentSerializer,
     UnitSelectionRequestTeacherUpdateSerializer,
     EmploymentEducationConfirmationSerializer,
     StudentDeleteSemesterRequestTeacherSerializer,
@@ -289,7 +290,7 @@ class SemesterRegistrationConfirmationViewAPI(viewsets.GenericViewSet ,
                                               mixins.RetrieveModelMixin ,
                                               mixins.UpdateModelMixin ,
                                               ):
-    """Semester Registration Confirmation View API"""
+    """Semester Registration Confirmation View API OK"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning
@@ -302,6 +303,7 @@ class SemesterRegistrationConfirmationViewAPI(viewsets.GenericViewSet ,
     def get_queryset(self):
         teacher = Teacher.objects.get(user = self.request.user)
         return SemesterRegistrationRequest.objects.filter(student__advisor = teacher).all()
+
 
 
 class AddRemoveRequestView(generics.UpdateAPIView):
