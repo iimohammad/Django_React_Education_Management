@@ -143,6 +143,8 @@ class RevisionRequest(models.Model):
     course = models.ForeignKey('education.StudentCourse', on_delete=models.PROTECT)
     text = models.TextField()
     answer = models.TextField(null=True, blank=True)
+    score = models.DecimalField(
+        max_digits=4, decimal_places=2, blank=True, null=True)
 
 
 class EmergencyRemovalRequest(models.Model):
