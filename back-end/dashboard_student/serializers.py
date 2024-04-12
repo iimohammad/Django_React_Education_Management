@@ -253,11 +253,6 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         if find_remain_credit(student)==0:
             raise serializers.ValidationError("You can not add more courses")
 
-        current_date = timezone.now().date()
-        
-        if current_date < semester.unit_selection.unit_selection_start or \
-                current_date > semester.unit_selection.unit_selection_end:
-            raise serializers.ValidationError("Invalid semester unit selection time")
         
         # check for request_course department
         course_department = request_course.course.department

@@ -8,10 +8,7 @@ from config.settings import (
     MINIO_SECRET_KEY,
 )
 from .validators import phone_validator , validate_national_code
-from django.db.models.signals import post_save
-from education.models import StudentCourse
-from django.dispatch import receiver
-from django.db.models import Sum,Avg
+
 
 logger = logging.getLogger(__name__)
 
