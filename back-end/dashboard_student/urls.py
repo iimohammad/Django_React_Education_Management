@@ -20,7 +20,7 @@ router = DefaultRouter()
 
 
 router.register('courses' , CourseViewSet , basename='courses')
-router.register('semester_courses' , SemesterCourseViewSet , basename='semestercourse')
+router.register('semester_courses' , SemesterCourseViewSet , basename='semestercourses')
 router.register('student_courses' , StudentCoursesViewSet , basename='studentcourses')
 router.register('passed_courses' , StudentPassedCoursesViewSet , 
                 basename='studentpassescourses')

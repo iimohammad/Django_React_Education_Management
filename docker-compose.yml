@@ -3,17 +3,16 @@ version: '3'
 services:
   backend:
     build:
-      context: ./backend
+      context: ./back-end
     volumes:
-      - ./backend:/app
+      - ./back-end:/app
     expose:
       - "8000"
     depends_on:
       - db
       - rabbitmq
-      - minio
     env_file:
-      - ./backend/.env
+      - ./back-end/config/.env
 
   nginx:
     build:
@@ -21,12 +20,12 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - backend
+      - backend  # Changed from 'back-end' to 'backend'
 
   db:
     image: postgres
     env_file:
-      - ./backend/.env
+      - ./back-end/config/.env
 
   rabbitmq:
     image: rabbitmq:management
@@ -34,40 +33,26 @@ services:
       - "5672:5672"
       - "15672:15672"
 
-  minio:
-    image: minio/minio
-    container_name: minio
-    ports:
-      - "9000:9000"
-    environment:
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-    volumes:
-      - minio_data:/data
-
   celery_worker:
     build:
-      context: ./backend
+      context: ./back-end
     command: celery -A your_project_name worker -l info
     volumes:
-      - ./backend:/app
+      - ./back-end:/app
     depends_on:
       - backend
       - rabbitmq
     env_file:
-      - ./backend/.env
+      - ./back-end/config/.env
 
   celery_beat:
     build:
-      context: ./backend
-    command: celery -A your_project_name beat -l info
+      context: ./back-end
+    command: celery -A config beat -l info
     volumes:
-      - ./backend:/app
+      - ./back-end:/app
     depends_on:
       - backend
       - rabbitmq
     env_file:
-      - ./backend/.env
-
-volumes:
-  minio_data:
+      - ./back-end/config/.env

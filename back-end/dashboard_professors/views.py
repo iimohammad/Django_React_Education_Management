@@ -170,31 +170,28 @@ class RevisionRequestView(viewsets.GenericViewSet ,
         raise MethodNotAllowed('DELETE')
 
 
-class UnitSelectionRequestView(generics.UpdateAPIView):
+class UnitSelectionRequestView(viewsets.GenericViewSet ,
+                            mixins.ListModelMixin ,
+                            mixins.UpdateModelMixin ,
+                            mixins.RetrieveModelMixin ,
+                            ):
     """Unit Selection Request View ----------Waiting for Unit Selection-------"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning
-    permission_classes = [IsTeacher, IsAuthenticated]
+    permission_classes = [IsAuthenticated , IsTeacher ]
 
     
     def get_serializer_class(self):
         if self.request.version == 'v1':
             return UnitSelectionRequestTeacherUpdateSerializer
         raise NotImplementedError("Unsupported version requested")
-    
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
 
     def get_queryset(self):
         teacher = Teacher.objects.get(user = self.request.user)
         return UnitSelectionRequest.objects.filter(
             semester_registration_request__student__advisor = teacher
-            ).all()
-
-
-
-
+            )
 
 class AddRemoveRequestView(viewsets.ModelViewSet):
     """Add Remove Confirmation View  --------Waiting for Unit Selection--------"""
