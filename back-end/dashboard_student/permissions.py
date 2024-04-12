@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission
 from accounts.models import Student
-from education.models import Semester, SemesterUnitSelection
+from education.models import Semester, SemesterAddRemove, SemesterUnitSelection
 from .models import SemesterRegistrationRequest,AddRemoveRequest
 from django.utils import timezone
 

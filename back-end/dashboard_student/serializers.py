@@ -224,8 +224,8 @@ class UnitSelectionSemesterRegistrationRequestSerializer(serializers.ModelSerial
 
 
 class UnitSelectionRequestSerializer(serializers.ModelSerializer):
-    semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()
-    request_course = SemesterCourseSerializer(many=True)
+    # semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()
+    # request_course = SemesterCourseSerializer(many=True)
 
     class Meta:
         model = UnitSelectionRequest
@@ -236,13 +236,14 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+        
         if self.context.get('request') and self.context['request'].method == 'POST':
             fields['added_courses'] = serializers.PrimaryKeyRelatedField(
                 queryset=SemesterCourse.objects.all())
             
             fields['semester_registration_request'] = serializers.PrimaryKeyRelatedField(
-                queryset=AddRemoveRequest.objects.all())
-
+                queryset=SemesterRegistrationRequest.objects.filter(student=self.context['request'].user.student)
+            )
         return fields
 
     def create(self, validated_data):
@@ -264,9 +265,9 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         
         current_date = timezone.now().date()
         
-        if current_date < semester.unit_selection.unit_selection_start or \
-                current_date > semester.unit_selection.unit_selection_end:
-            raise serializers.ValidationError("Invalid semester unit selection time")
+        # if current_date < semester.unit_selection.unit_selection_start or \
+        #         current_date > semester.unit_selection.unit_selection_end:
+        #     raise serializers.ValidationError("Invalid semester unit selection time")
         
         
         request_course = validated_data.get('request_course')
@@ -281,7 +282,8 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         
         # check for request_course department
         if request_course.course.department != department:
-            raise serializers.ValidationError("Invalid requested course, course not in your department!")
+            raise serializers.ValidationError(
+                "Invalid requested course, course not in your department!")
         
         # check for exist of unit_selection_request
         unit_selection_request = AddRemoveRequest.objects.filter(
@@ -346,19 +348,7 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("requisite not met!")
             
         
-        # if request_course.semester_course.remain_course_capacity == 0:
-        #     # Queue the request in Redis
-        #     redis_conn = get_redis_connection('default')
-        #     redis_conn.lpush('unit_selection_queue', json.dumps(serializer.validated_data))
-                    
-        #     # Send a message to the user
-        #     messages.info(request, "Your request has been queued.")
-        #     return Response({'detail': 'Your request has been queued.'}, status=status.HTTP_200_OK)
-        #     # QueuedRequest.objects.create(
-        #     #     student=student,
-        #     #     **validated_data
-        #     # )
-        #     # raise ValidationError("Course capacity is zero, request is queued.")
+        
         unit_selection_request.request_course.add(request_course)
         unit_selection_request.save()
         StudentCourse.objects.create(
@@ -366,7 +356,12 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
                     semester_course = request_course ,
                     )
         
-        return response.Response({'detail': 'the course added succesfully!'}, status=status.HTTP_200_OK)
+        return response.Response(
+            {'detail': 'the course added succesfully!'}
+            , status=status.HTTP_200_OK
+            )
+    
+    
 class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
     semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()
     class Meta:
