@@ -65,6 +65,15 @@ class DepartmentSerializer(serializers.ModelSerializer):
                   'department_location']
 
 
+class DepartmentCourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
+        fields = ['id', 'department_name', 'department_code', 'year_established',
+                  'department_location']
+        read_only_fields = ['department_name', 'department_code', 'year_established',
+                  'department_location']
+
+
 class SemesterUnitSelectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = SemesterUnitSelection
@@ -127,12 +136,28 @@ class SemesterSerializer(serializers.ModelSerializer):
         return semester
 
 
+class SemesterCourseeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Semester
+        fields = ['id', 'name', 'start_semester', 'end_semester', 'semester_type']
+        read_only_fields = ['name', 'start_semester', 'end_semester', 'semester_type']
+
+
 class MajorSerializer(serializers.ModelSerializer):
     department = DepartmentSerializer()
 
     class Meta:
         model = Major
         fields = ['id', 'major_name', 'major_code', 'department',
+                  'number_of_credits', 'level', 'education_group']
+
+
+class MajorCourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Major
+        fields = ['id', 'major_name', 'major_code', 'department',
+                  'number_of_credits', 'level', 'education_group']
+        read_only_fields = ['major_name', 'major_code', 'department',
                   'number_of_credits', 'level', 'education_group']
 
 
@@ -171,6 +196,24 @@ class StudentSerializer(serializers.ModelSerializer):
                 ))
     
         return fields
+
+
+class StudentRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = [
+            'id',
+            'user',
+            'entry_semester',
+            'gpa',
+            'entry_year',
+            'major',
+            'advisor',
+            'military_service_status',
+            'year_of_study',
+        ]
+        read_only_fields = ['user', 'entry_semester', 'gpa', 'entry_year', 'major',
+                            'advisor', 'military_service_status', 'year_of_study']
 
 
 class TeacherSerializer(serializers.ModelSerializer):
@@ -231,10 +274,13 @@ class SemesterCourseSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    department = DepartmentCourseSerializer()
+    major = MajorCourseSerializer()
+
     class Meta:
         model = Course
         fields = ['id', 'course_name', 'course_code', 'department',
-                  'major', 'credit_num']
+                  'major', 'credit_num', 'course_type', 'availablity']
     
     def get_fields(self):
         fields = super().get_fields()
@@ -255,7 +301,19 @@ class CourseSerializer(serializers.ModelSerializer):
         return fields
 
 
+class CourseCourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ['id', 'course_name', 'course_code', 'department',
+                  'major', 'credit_num', 'course_type', 'availablity']
+        read_only_fields = ['course_name', 'course_code', 'department',
+                  'major', 'credit_num', 'course_type', 'availablity']
+
+
 class SemesterCourseSerializer(serializers.ModelSerializer):
+    semester = SemesterCourseeSerializer()
+    course = CourseCourseSerializer()
+
     class Meta:
         model = SemesterCourse
         fields = ['id', 'semester', 'course', 'class_days', 'class_time_start',
@@ -290,18 +348,26 @@ class SemesterCourseSerializer(serializers.ModelSerializer):
 
         return fields
 
-
+#
+# !!!!!!!!!!!!!!
+#
 class EmergencyRemovalRequestSerializer(serializers.ModelSerializer):
+    student = StudentRequestSerializer()
+    course = CourseCourseSerializer()
+
     class Meta:
         model = EmergencyRemovalRequest
         fields = ['id', 'student', 'approval_status', 'created_at',
                   'course', 'student_explanation']
         read_only_fields = ['id', 'student', 'created_at', 'course', 'student_explanation']
+
+
 class SemesterRegistrationRequestSemesterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Semester
         fields = ['name']
         read_only_fields = ['name']
+
 
 class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
     semester = SemesterRegistrationRequestSemesterSerializer()
@@ -309,8 +375,7 @@ class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
         model = SemesterRegistrationRequest
         fields = ['id','approval_status', 'created_at','semester' ]
         read_only_fields = ['id','approval_status', 'created_at' , 'semester',]
-        
-    
+
 
 class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
     semester_registration_request = SemesterRegistrationRequestSerializer()
@@ -373,16 +438,22 @@ class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
         return instance
     
 class EmploymentEducationRequestSerializer(serializers.ModelSerializer):
+    student = StudentRequestSerializer()
+
     class Meta:
         model = EmploymentEducationRequest
         fields = ['id', 'student', 'approval_status', 'created_at']
         read_only_fields = ['id', 'student', 'created_at']
+
+
 class RevisionUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
             'first_name',
             'last_name']
+
+
 class RevisionTeacherSerializer(serializers.ModelSerializer):
     user = RevisionUserSerializer()
 
@@ -390,14 +461,19 @@ class RevisionTeacherSerializer(serializers.ModelSerializer):
         model = Teacher
         fields = ['user']
 
+
 class RevisionCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ['course_name', 'course_code','credit_num']
+
+
 class RevsionSemesterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Semester
         fields = ['name']
+
+
 class RevisionSemesterCourseSerializer(serializers.ModelSerializer):
     semester = RevsionSemesterSerializer()
     course = RevisionCourseSerializer()
@@ -406,12 +482,15 @@ class RevisionSemesterCourseSerializer(serializers.ModelSerializer):
         model = SemesterCourse
         fields = ['semester', 'course', 'instructor',]
         read_only_fields = ['semester', 'course', 'instructor',]
+
+
 class StudentCourseSerializer(serializers.ModelSerializer):
     semester_course = RevisionSemesterCourseSerializer()
+
     class Meta:
         model = StudentCourse
-        fields = ['semester_course','status','score']
-        read_only_fields = ['semester_course','status','score']
+        fields = ['id', 'semester_course','status','score']
+        read_only_fields = ['id', 'semester_course','status','score']
 
 
 class RevisionRequestSerializer(serializers.ModelSerializer):

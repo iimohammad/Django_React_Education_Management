@@ -21,6 +21,9 @@ from dashboard_student.resource import (SemesterRegistrationRequestResource,
                                         )
 
 
+admin.site.register(EmploymentEducationRequest)
+
+
 class SemesterRegistrationRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     list_display = ('id', 'student_link', 'semester_link', 'approval_status')
     list_filter = ('approval_status',)
@@ -65,11 +68,10 @@ class UnitSelectionRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     list_max_show_all = 50
 
     def semester_registration_request_link(self, obj):
-        semester_registration_request_id = obj.semester_registration_request.id
-        semester_registration_request_url = f"http://127.0.0.1:8000/{admin_url}dashboard_student/\
-        semesterregistrationrequest/{semester_registration_request_id}/change/"
+        srr_id = obj.semester_registration_request.id
+        srr_url = f"http://127.0.0.1:8000/{admin_url}dashboard_student/semesterregistrationrequest/{srr_id}/change/"
 
-        return format_html('<a href="{}">{}</a>', semester_registration_request_url,
+        return format_html('<a href="{}">{}</a>', srr_url,
                            obj.semester_registration_request)
     
     semester_registration_request_link.short_description = "Semester Registration Request"
@@ -90,11 +92,10 @@ class AddRemoveRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     list_max_show_all = 50
 
     def semester_registration_request_link(self, obj):
-        semester_registration_request_id = obj.semester_registration_request.id
-        semester_registration_request_url = f"http://127.0.0.1:8000/{admin_url}dashboard_student/\
-        semesterregistrationrequest/{semester_registration_request_id}/change/"
+        srr_id = obj.semester_registration_request.id
+        srr_url = f"http://127.0.0.1:8000/{admin_url}dashboard_student/semesterregistrationrequest/{srr_id}/change/"
 
-        return format_html('<a href="{}">{}</a>', semester_registration_request_url,
+        return format_html('<a href="{}">{}</a>', srr_url,
                            obj.semester_registration_request)
     
     semester_registration_request_link.short_description = "Semester Registration Request"
@@ -123,8 +124,7 @@ class RevisionRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
 
     def student_course_link(self, obj):
         student_course_id = obj.course.id
-        student_course_url = f"http://127.0.0.1:8000/{admin_url}education/studentcourse/\
-        {student_course_id}/change/"
+        student_course_url = f"http://127.0.0.1:8000/{admin_url}education/studentcourse/{student_course_id}/change/"
 
         return format_html('<a href="{}">{}</a>', student_course_url, obj.course)
 
@@ -157,8 +157,7 @@ class EmergencyRemovalRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmi
 
     def student_course_link(self, obj):
         student_course_id = obj.course.id
-        student_course_url = f"http://127.0.0.1:8000/{admin_url}education/studentcourse/\
-        {student_course_id}/change/"
+        student_course_url = f"http://127.0.0.1:8000/{admin_url}education/studentcourse/{student_course_id}/change/"
 
         return format_html('<a href="{}">{}</a>', student_course_url, obj.course)
 
@@ -185,11 +184,10 @@ class StudentDeleteSemesterRequestAdmin(ImportExportActionModelAdmin, admin.Mode
     list_max_show_all = 50
 
     def semester_registration_request_link(self, obj):
-        semester_registration_request_id = obj.semester_registration_request.id
-        semester_registration_request_url = f"http://127.0.0.1:8000/{admin_url}dashboard_student/\
-        semesterregistrationrequest/{semester_registration_request_id}/change/"
+        srr_id = obj.semester_registration_request.id
+        srr_url = f"http://127.0.0.1:8000/{admin_url}dashboard_student/semesterregistrationrequest/{srr_id}/change/"
 
-        return format_html('<a href="{}">{}</a>', semester_registration_request_url,
+        return format_html('<a href="{}">{}</a>', srr_url,
                            obj.semester_registration_request)
     
     semester_registration_request_link.short_description = "Semester Registration Request"
