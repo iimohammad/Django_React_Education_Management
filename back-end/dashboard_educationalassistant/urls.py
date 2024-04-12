@@ -12,10 +12,8 @@ from .views import (
     ShowProfileAPIView,
     EducationalAssistantProfileUpdateView,
     RevisionRequestViewSet,
-    StudentPassedCoursesAPIView,
-    StudentsPassedCoursesAPIView,
-    StudentRegisteredCoursesAPIView,
-    StudentsRegisteredCoursesAPIView,
+    StudentRegisteredCoursesViewSet,
+    StudentPassedCoursesViewSet,
     )
 
 router = DefaultRouter()
@@ -29,15 +27,11 @@ router.register("semester_removals", StudentDeleteSemesterRequestViewSet, basena
 router.register("education_employments", EmploymentEducationRequestViewSet,
                 basename="education_employments")
 router.register("revision_requests", RevisionRequestViewSet, basename="revision_requests")
+router.register("passed_courses", StudentPassedCoursesViewSet, basename="passed_courses")
+router.register("registered_courses", StudentRegisteredCoursesViewSet, basename="registered_courses")
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('passed_courses/', StudentPassedCoursesAPIView.as_view(), name='passed_courses'),
-    path('passed_courses/<int:student_id>/', StudentsPassedCoursesAPIView.as_view(),
-         name='student_passed_courses'),
-    path('registered_courses/', StudentRegisteredCoursesAPIView.as_view(), name='registered_courses'),
-    path('registered_courses/<int:student_id>/', StudentsRegisteredCoursesAPIView.as_view(),
-         name='student_registered_courses'),
     path('show_profile/', ShowProfileAPIView.as_view(), name= 'show_assistant_profile'),
     path('edit_profile/', EducationalAssistantProfileUpdateView.as_view(),
          name= 'edit_assistant_profile'),
