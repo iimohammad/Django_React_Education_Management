@@ -111,7 +111,8 @@ class StudentCourseFilter(FilterSet):
         fields = {
             'semester_course__course__course_name': ['contains'],
             'semester_course__semester__name': ['contains'],
-
+            'student__user__national_code': ['exact'],
+            'student__user__user_number': ['exact'],
             'status': ['exact'],
         }
 

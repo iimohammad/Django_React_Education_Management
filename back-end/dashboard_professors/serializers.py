@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
+import decimal
 from .tasks import (
     send_approval_email, 
     send_rejection_email,
@@ -136,7 +137,7 @@ class EmergencyRemovalConfirmationSerializers(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         
         if instance.approval_status == 'A' or instance.approval_status == 'R':
-            raise serializers.ValidationError('cat not change Accepted   and rejected request!')
+            raise serializers.ValidationError('cant not change Accepted and rejected request!')
         
         instance.approval_status = validated_data.get('approval_status', instance.approval_status)
         
@@ -170,9 +171,7 @@ class StudentDeleteSemesterRequestTeacherSerializer(serializers.ModelSerializer)
                     'student_explanations']
         
     def update(self, instance, validated_data):
-        if instance.teacher_approval_status == 'A' or instance.teacher_approval_status == 'R' or \
-            instance.educational_assistant_approval_status =='A' or \
-                instance.educational_assistant_approval_status =='R':
+        if instance.teacher_approval_status == 'A' or instance.teacher_approval_status == 'R':
             raise serializers.ValidationError('can not change answered request!')
         
         teacher_approval_status = validated_data.get('teacher_approval_status')
@@ -196,27 +195,66 @@ class studentCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentCourse
         fields = ['semester_course']
+class MajorSerializer(serializers.ModelSerializer):
 
+    class Meta:
+        model = Major
+        fields = ['major_name']
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name','user_number']
+class StudentSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    major = MajorSerializer()
+
+    class Meta:
+        model = Student
+        fields = [
+            'user',
+            'major',
+        ]
+class RevisionRequeststudentCourseSerializer(serializers.ModelSerializer):
+    semester_course = SemesterCourseSerializer()
+    class Meta:
+        model = StudentCourse
+        fields = ['semester_course' , 'status' , 'score']
 class RevisionRequestSerializers(serializers.ModelSerializer):
+    student = StudentSerializer()
+    course = RevisionRequeststudentCourseSerializer()
     class Meta:
         model = RevisionRequest
         fields = ['id' , 'student', 'teacher_approval_status', 'educational_assistant_approval_status',
-                    'created_at', 'course', 'text' , 'answer']
+                    'created_at', 'course', 'text' , 'answer' , 'score']
         
         read_only_fields = ['id' , 'student', 'educational_assistant_approval_status',
                     'created_at', 'text']
         
+
     def update(self, instance, validated_data):
+        if instance.educational_assistant_approval_status != 'P' or \
+            instance.teacher_approval_status != 'P':
+            raise serializers.ValidationError('can not modify answered request')
+        
         instance.teacher_approval_status = validated_data.get(
             'teacher_approval_status', instance.teacher_approval_status)
+        
         instance.answer = validated_data.get('answer', instance.answer)
-        instance.save()
         if instance.teacher_approval_status == 'A':
+            score = validated_data.get('score')
+            try:
+                score = decimal.Decimal(score)
+            except Exception as e:
+                raise serializers.ValidationError('invalid score!')
+            if score>20 or score<0:
+                raise serializers.ValidationError('invalid score!')
+            instance.score =score
             send_approved_revision.delay(instance.student.user.email)
         elif instance.teacher_approval_status == 'R':
             send_rejected_revision.delay(instance.student.user.email)
 
+        instance.save()
         return instance
 
 class EmploymentEducationConfirmationSerializer(serializers.ModelSerializer):

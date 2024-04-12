@@ -48,6 +48,7 @@ if IsAdmin():
              name='dashboard_professors'),
         path('dashboard_educationalassistant/', include('dashboard_educationalassistant.urls'),
              name='dashboard_educationalassistant'),
+             
     ]
 if IsStudent():
 

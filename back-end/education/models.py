@@ -216,6 +216,5 @@ class StudentCourse(models.Model):
 
     def __str__(self):
         return f"{self.student.user.first_name} {self.student.user.last_name} - \
-        {self.semester_course.semester.name}"
+        {self.semester_course.semester.name} - {self.semester_course.course.course_name}"
     
-

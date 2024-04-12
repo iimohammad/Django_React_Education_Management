@@ -140,7 +140,11 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset
 
 
-class RevisionRequestView(viewsets.ModelViewSet):
+class RevisionRequestView(viewsets.GenericViewSet ,
+                          mixins.ListModelMixin ,
+                          mixins.UpdateModelMixin ,
+                          mixins.RetrieveModelMixin ,
+                          ):
 
     """Revision Confirmation View"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -166,31 +170,28 @@ class RevisionRequestView(viewsets.ModelViewSet):
         raise MethodNotAllowed('DELETE')
 
 
-class UnitSelectionRequestView(generics.UpdateAPIView):
+class UnitSelectionRequestView(viewsets.GenericViewSet ,
+                            mixins.ListModelMixin ,
+                            mixins.UpdateModelMixin ,
+                            mixins.RetrieveModelMixin ,
+                            ):
     """Unit Selection Request View ----------Waiting for Unit Selection-------"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning
-    permission_classes = [IsTeacher, IsAuthenticated]
+    permission_classes = [IsAuthenticated , IsTeacher ]
 
     
     def get_serializer_class(self):
         if self.request.version == 'v1':
             return UnitSelectionRequestTeacherUpdateSerializer
         raise NotImplementedError("Unsupported version requested")
-    
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
 
     def get_queryset(self):
         teacher = Teacher.objects.get(user = self.request.user)
         return UnitSelectionRequest.objects.filter(
             semester_registration_request__student__advisor = teacher
-            ).all()
-
-
-
-
+            )
 
 class AddRemoveRequestView(viewsets.ModelViewSet):
     """Add Remove Confirmation View  --------Waiting for Unit Selection--------"""
@@ -218,7 +219,11 @@ class AddRemoveRequestView(viewsets.ModelViewSet):
 
 
 
-class StudentDeleteSemesterConfirmationAPI(viewsets.ModelViewSet):
+class StudentDeleteSemesterConfirmationAPI(viewsets.GenericViewSet,
+                                           mixins.ListModelMixin ,
+                                           mixins.RetrieveModelMixin ,
+                                           mixins.UpdateModelMixin ,
+                                           ):
 
     """Student Delete Semester Confirmation API need to change database OK"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -241,12 +246,6 @@ class StudentDeleteSemesterConfirmationAPI(viewsets.ModelViewSet):
             semester_registration_request__student__in=students,
             teacher_approval_status='P',
         )
-
-    def create(self, request, *args, **kwargs):
-        raise MethodNotAllowed('POST')
-
-    def destroy(self, request, *args, **kwargs):
-        raise MethodNotAllowed('DELETE')
 
 
 class EmploymentEducationConfirmationAPI(viewsets.ModelViewSet):

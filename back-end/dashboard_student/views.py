@@ -72,9 +72,9 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return Course.objects.filter(availablity='A').all()
 
-    # @method_decorator(cache_page(60 * 5))
-    # def dispatch(self, *args, **kwargs):
-    #     return super().dispatch(*args, **kwargs)
+    @method_decorator(cache_page(60 * 5))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
 
 
 class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -97,9 +97,9 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
         last_semester = Semester.objects.order_by('-start_semester').first()
         return SemesterCourse.objects.filter(semester=last_semester).all()
 
-    # @method_decorator(cache_page(60 * 5))
-    # def dispatch(self, *args, **kwargs):
-    #     return super().dispatch(*args, **kwargs)
+    @method_decorator(cache_page(60 * 5))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
 
 
 class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
@@ -246,12 +246,12 @@ class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefaultVersioning
-    # permission_classes = [
-    #     IsAuthenticated,
-    #     IsStudent, 
-    #     HavePermosionForUnitSelectionForLastSemester,
-    #     # HavePermissionBasedOnUnitSelectionTime,
-    # ]
+    permission_classes = [
+        IsAuthenticated,
+        IsStudent, 
+        HavePermosionForUnitSelectionForLastSemester,
+        HavePermissionBasedOnUnitSelectionTime,
+    ]
 
     ordering_fields = ['created_at', 'approval_status']
     versioning_class = DefaultVersioning
@@ -303,16 +303,12 @@ class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
     
 
     def get_queryset(self):
-        return SemesterRegistrationRequest.objects.filter(student__user=self.request.user)
+        return StudentDeleteSemesterRequest.objects.filter(
+            semester_registration_request__student__user=self.request.user)
 
-    def perform_create(self, serializer):
-        serializer.save(student=self.request.user.student)
+    # def perform_create(self, serializer):
+    #     serializer.save(student=self.request.user.student)
 
-
-
-    def get_queryset(self):
-        return StudentDeleteSemesterRequest.objects.objects.filter(
-            student__user=self.request.user)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -321,7 +317,7 @@ class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.approval_status != 'P':
+        if instance.teacher_approval_status != 'P' or instance.educational_assistant_approval_status != 'P':
             return Response(
                 {'message': 'your request has been answered and you can not delete it.'}
                 , status=status.HTTP_403_FORBIDDEN)
@@ -467,69 +463,11 @@ class EmploymentEducationRequestApiView(mixins.CreateModelMixin,
 
 
 
-class AddRemoveRequestViewSet(viewsets.GenericViewSet,
-                                  mixins.CreateModelMixin ,
-                                #   mixins.DestroyModelMixin ,
-                                  mixins.ListModelMixin ,
-                                  mixins.RetrieveModelMixin ,
-                                  ):
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    versioning_class = DefaultVersioning
-    # permission_classes = [
-    #     IsAuthenticated,
-    #     IsStudent, 
-    #     HavePermosionForUnitSelectionForLastSemester,
-    #     # HavePermissionBasedOnUnitSelectionTime,
-    # ]
-
-    ordering_fields = ['created_at', 'approval_status']
-    versioning_class = DefaultVersioning
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context['user'] = self.request.user
-        return context
-    def get_serializer_class(self, *args, **kwargs):
-        if self.request.version == 'v1':
-            return UnitSelectionRequestSerializer
-        raise NotImplementedError("Unsupported version requested")
+class AddRemoveRequestViewSet(UnitSelectionRequestAPIView):
     
-    def get_queryset(self):
-        return AddRemoveRequest.objects.filter(
-            semester_registration_request__student__user = self.request.user)
-    
-    # def destroy(self, request, *args, **kwargs):
-    #     try:
-    #         instance = self.get_object()
-
-    #     except Http404:
-    #         return Response(
-    #             {'detail': 'Object Not found.'}, status=status.HTTP_404_NOT_FOUND
-    #         )
-
-    #     if instance.approval_status != 'P':
-    #         return Response(
-    #             {'message': 'Your request has been answered and you can not delete it.'}
-    #             , status=status.HTTP_403_FORBIDDEN
-    #         )
-
-    #     instance.delete()
-    #     return Response(
-    #         {'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT
-    #     )
-    @action(detail=True, methods=['post'], url_path='remove_course/(?P<course_code>[^/.]+)')
-    def remove_course(self, request, pk=None, course_code=None):
-        add_remove_request = self.get_object()
+    permission_classes = [
+        IsAuthenticated,
+        IsStudent, 
+        HavePermosionForUnitSelectionForLastSemester,
         
-        try:
-            course_code = int(course_code)
-            course_to_remove = add_remove_request.request_course.get(course__course_code=course_code)
-        except (ValueError, SemesterCourse.DoesNotExist):
-            return Response({"error": "Invalid course ID or course not found"}, status=status.HTTP_404_NOT_FOUND)
-        try:
-            StudentCourse.objects.get(semester_course = course_to_remove ,
-                                        student__user = self.request.user).delete()
-            add_remove_request.request_course.add(course_to_remove)
-        except Exception as e:
-            pass
-        return Response({"message": "Course removed from request successfully"}, status=status.HTTP_200_OK)
+    ]
