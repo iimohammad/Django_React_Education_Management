@@ -60,7 +60,7 @@ services:
   celery_beat:
     build:
       context: ./backend
-    command: celery -A your_project_name beat -l info
+    command: celery -A config beat -l info
     volumes:
       - ./backend:/app
     depends_on:
@@ -69,5 +69,4 @@ services:
     env_file:
       - ./backend/.env
 
-volumes:
-  minio_data:
+
