@@ -76,30 +76,12 @@ class Student(models.Model):
     advisor = models.ForeignKey('Teacher', on_delete=models.SET_NULL, null=True)
     military_service_status = models.CharField(max_length=2, choices=MILITARY_CHOICES, default='EP')
     year_of_study = models.PositiveSmallIntegerField()
+    gpa_student = models.PositiveBigIntegerField(blank=True,null=True)
 
     @property
     def gpa(self):
-        # Calculate GPA based on scores of registered courses
-        registered_courses = self.studentcourse_set.all()
-        if registered_courses.exists():
-            gpa = registered_courses.aggregate(Avg('score'))['score__avg']
-            return gpa
-        return None
+        return self.gpa_student
 
-    @property
-    def calculate_total_credits(self):
-        # Calculate total credits taken by the student
-        total_credits = self.studentcourse_set.aggregate(
-            Sum('semester_course__course__credit_num'))['semester_course__course__credit_num__sum']
-        
-        # Include credits from unit selection requests
-        unit_selection_credits = self.studentunitselectionrequest_set.aggregate(
-            Sum('request_course__semester_course__course__credit_num'))['request_course__semester_course__course__credit_num__sum']
-        
-        if total_credits is not None:
-            total_credits += unit_selection_credits or 0
-            return total_credits
-        return 0
 
     @property
     def category_of_student_grade(self):
@@ -124,13 +106,13 @@ class Student(models.Model):
             return f"{self.user.first_name} {self.user.last_name}"
         return str(self.user)
 
-@receiver(post_save, sender=StudentCourse)
-def update_student_info(sender, instance, **kwargs):
-    student = instance.student
-    # Recalculate the student's GPA and total credits
-    # student.gpa = student.calculate_gpa()
-    student.total_credits = student.calculate_total_credits()
-    student.save()
+# @receiver(post_save, sender=StudentCourse)
+# def update_student_info(sender, instance, **kwargs):
+#     student = instance.student
+#     # Recalculate the student's GPA and total credits
+#     # student.gpa = student.calculate_gpa()
+#     student.total_credits = student.calculate_total_credits()
+#     student.save()
 
 
 
