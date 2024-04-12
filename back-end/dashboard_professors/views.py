@@ -222,7 +222,11 @@ class AddRemoveRequestView(viewsets.ModelViewSet):
 
 
 
-class StudentDeleteSemesterConfirmationAPI(viewsets.ModelViewSet):
+class StudentDeleteSemesterConfirmationAPI(viewsets.GenericViewSet,
+                                           mixins.ListModelMixin ,
+                                           mixins.RetrieveModelMixin ,
+                                           mixins.UpdateModelMixin ,
+                                           ):
 
     """Student Delete Semester Confirmation API need to change database OK"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -245,12 +249,6 @@ class StudentDeleteSemesterConfirmationAPI(viewsets.ModelViewSet):
             semester_registration_request__student__in=students,
             teacher_approval_status='P',
         )
-
-    def create(self, request, *args, **kwargs):
-        raise MethodNotAllowed('POST')
-
-    def destroy(self, request, *args, **kwargs):
-        raise MethodNotAllowed('DELETE')
 
 
 class EmploymentEducationConfirmationAPI(viewsets.ModelViewSet):

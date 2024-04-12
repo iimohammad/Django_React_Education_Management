@@ -303,10 +303,11 @@ class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
     
 
     def get_queryset(self):
-        return SemesterRegistrationRequest.objects.filter(student__user=self.request.user)
+        return StudentDeleteSemesterRequest.objects.filter(
+            semester_registration_request__student__user=self.request.user)
 
-    def perform_create(self, serializer):
-        serializer.save(student=self.request.user.student)
+    # def perform_create(self, serializer):
+    #     serializer.save(student=self.request.user.student)
 
 
     def get_serializer_context(self):
@@ -316,7 +317,7 @@ class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.approval_status != 'P':
+        if instance.teacher_approval_status != 'P' or instance.educational_assistant_approval_status != 'P':
             return Response(
                 {'message': 'your request has been answered and you can not delete it.'}
                 , status=status.HTTP_403_FORBIDDEN)

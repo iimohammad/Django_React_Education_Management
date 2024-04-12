@@ -171,9 +171,7 @@ class StudentDeleteSemesterRequestTeacherSerializer(serializers.ModelSerializer)
                     'student_explanations']
         
     def update(self, instance, validated_data):
-        if instance.teacher_approval_status == 'A' or instance.teacher_approval_status == 'R' or \
-            instance.educational_assistant_approval_status =='A' or \
-                instance.educational_assistant_approval_status =='R':
+        if instance.teacher_approval_status == 'A' or instance.teacher_approval_status == 'R':
             raise serializers.ValidationError('can not change answered request!')
         
         teacher_approval_status = validated_data.get('teacher_approval_status')

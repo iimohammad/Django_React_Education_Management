@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import serializers , response , status
 from dashboard_student.utils import calculate_credit_Course_Semester, find_remain_credit, gpa_catergory
 from education.models import (
@@ -352,7 +353,7 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         instance.delete()
 
 class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
-    semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()
+    # semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()
     class Meta:
         model = StudentDeleteSemesterRequest
         fields = ['id', 'semester_registration_request', 'teacher_approval_status',
@@ -363,45 +364,32 @@ class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
                             'educational_assistant_approval_status', 'created_at',
                             'educational_assistant_explanation']
 
-    def get_fields(self):
-        fields = super().get_fields()
-
-        if self.context.get('request') and self.context['request'].method == 'POST':
-            fields['semester_registration_request'] = serializers.PrimaryKeyRelatedField(
-                queryset=SemesterRegistrationRequest.objects.all())
-        return fields
-
     def create(self, validated_data):
-        semester_registration_request = validated_data.pop('semester_registration_request')
         user = self.context['user']
-        semester = None
+        semester = Semester.objects.order_by('-start_semester').first()
         try:
-            semester_registration_request = StudentDeleteSemesterRequest.objects.get(
-                pk=semester_registration_request.pk,
-                student__user=user)
-        except StudentDeleteSemesterRequest.DoesNotExist:
+            semester_registration_request = SemesterRegistrationRequest.objects.get(
+                semester = semester ,
+                student__user = user
+            )
+        except Exception as e:
             raise serializers.ValidationError("Invalid SemesterRegistrationRequest")
 
         existing_request = StudentDeleteSemesterRequest.objects.filter(
             semester_registration_request=semester_registration_request,
-            semester_registration_request__student__user=user).exists()
+            semester_registration_request__student__user=user ,
+            ).filter(Q(teacher_approval_status = 'P') | Q(educational_assistant_approval_status = 'P')).exists()
+        
         if existing_request:
             raise serializers.ValidationError(
-                "A unitselection request for this semester already exists")
+                "A request for this semester already exists")
 
-        try:
-            student = Student.objects.get(user=user)
-        except Student.DoesNotExist:
-            raise serializers.ValidationError("Invalid student")
-
-        semester = StudentDeleteSemesterRequest.objects.get(
-            pk=semester_registration_request.pk).semester
         current_date = timezone.now().date()
 
         if (current_date < semester.start_semester or
                 current_date > semester.end_semester
         ):
-            raise serializers.ValidationError("Unvalide semester")
+            raise serializers.ValidationError("Unavailable semester")
 
         student_delete_semester_request = StudentDeleteSemesterRequest.objects.create(
             semester_registration_request=semester_registration_request,

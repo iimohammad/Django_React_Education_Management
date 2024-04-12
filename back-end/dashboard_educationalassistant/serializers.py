@@ -313,7 +313,7 @@ class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
     
 
 class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
-    # semester_registration_request = SemesterRegistrationRequestSerializer()
+    semester_registration_request = SemesterRegistrationRequestSerializer()
     class Meta:
         model = StudentDeleteSemesterRequest
         fields = ['id', 'semester_registration_request', 'teacher_approval_status',
@@ -321,31 +321,48 @@ class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
                   'student_explanations', 'educational_assistant_explanation']
         read_only_fields = ['id', 'semester_registration_request', 'teacher_approval_status',
                             'created_at', 'student_explanations']
-        
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context.get('request') and (self.context['request'].method == 'PATCH' 
+                                            or self.context['request'].method == 'PUT'):
+            fields['semester_registration_request'] = serializers.PrimaryKeyRelatedField(
+                queryset = SemesterRegistrationRequest.objects.all())
+    
+        return fields
     def update(self, instance, validated_data):
-        if instance.teacher_approval_status == 'A' or instance.teacher_approval_status == 'R' or \
-            instance.educational_assistant_approval_status =='A' or \
+        if instance.educational_assistant_approval_status =='A' or \
                 instance.educational_assistant_approval_status =='R':
             raise serializers.ValidationError('can not change answered request!')
-        
+        educational_assistant_approval_status = validated_data.get('educational_assistant_approval_status')
         educational_assistant_explanation = validated_data.get('educational_assistant_explanation')
         semester_registration_request = validated_data.get('semester_registration_request')
-            # student_email = instance.semester_registration_request.student.user.email
-        if educational_assistant_explanation == 'A':
+        print('________________')
+        print('________________')
+        print(semester_registration_request)
+        
+        # student_email = instance.semester_registration_request.student.user.email
+        if educational_assistant_approval_status == 'A':
             try:
                 with transaction.atomic():
+                    instance.educational_assistant_approval_status = educational_assistant_approval_status
                     instance.educational_assistant_explanation = educational_assistant_explanation
                     semester = semester_registration_request.semester
                     student = semester_registration_request.student
                     StudentCourse.objects.filter(student = student ,
-                                                semester_course__semester = semester).update(status = 'S')
+                                                semester_course__semester = semester ,
+                                                status= 'R' ,
+                                                ).update(status = 'S')
+                    
                     UnitSelectionRequest.objects.filter(
                         semester_registration_request = semester_registration_request).update(
                             approval_status = 'D')
                 instance.save()
+                # send_semester_delete_approval_email.delay(student_email)
             except Exception as e:
-                pass
-            # send_semester_delete_approval_email.delay(student_email)
+                print('__________')
+                print('__________')
+                print(e)
+                
             
         elif educational_assistant_explanation == 'R':
             try:
