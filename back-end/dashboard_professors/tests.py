@@ -167,7 +167,6 @@ class RevisionRequestView(viewsets.ModelViewSet):
 
 
 class UnitSelectionRequestView(generics.UpdateAPIView):
-    """Unit Selection Request View ----------Waiting for Unit Selection-------"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning
@@ -190,7 +189,6 @@ class UnitSelectionRequestView(generics.UpdateAPIView):
 
 
 class AddRemoveRequestView(viewsets.ModelViewSet):
-    """Add Remove Confirmation View  --------Waiting for Unit Selection--------"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning
@@ -290,7 +288,6 @@ class EmploymentEducationConfirmationAPI(viewsets.ModelViewSet):
 
 class EmergencyRemovalConfirmationView(viewsets.ModelViewSet):
 
-    """Need to change course in database and not allow if course has prerequisite OK"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefualtVersioning
