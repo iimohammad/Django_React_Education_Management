@@ -6,7 +6,7 @@ from import_export.admin import ImportExportActionModelAdmin
 
 import dotenv
 import os
-dotenv.load_dotenv()
+dotenv.read_dotenv()
 admin_url = os.environ.get('Admin')
 from accounts.resource import (UserResource,
                                TeacherResource,
