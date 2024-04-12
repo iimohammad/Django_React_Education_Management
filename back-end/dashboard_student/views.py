@@ -240,13 +240,7 @@ class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
             {'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT
         )
 
-
-class UnitSelectionRequestAPIView(viewsets.GenericViewSet,
-                                  mixins.CreateModelMixin ,
-                                #   mixins.DestroyModelMixin ,
-                                  mixins.ListModelMixin ,
-                                  mixins.RetrieveModelMixin ,
-                                  ):
+class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefaultVersioning
@@ -259,10 +253,12 @@ class UnitSelectionRequestAPIView(viewsets.GenericViewSet,
 
     ordering_fields = ['created_at', 'approval_status']
     versioning_class = DefaultVersioning
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['user'] = self.request.user
         return context
+    
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return UnitSelectionRequestSerializer
@@ -272,41 +268,13 @@ class UnitSelectionRequestAPIView(viewsets.GenericViewSet,
         return UnitSelectionRequest.objects.filter(
             semester_registration_request__student__user = self.request.user)
     
-    # def destroy(self, request, *args, **kwargs):
-    #     try:
-    #         instance = self.get_object()
-
-    #     except Http404:
-    #         return Response(
-    #             {'detail': 'Object Not found.'}, status=status.HTTP_404_NOT_FOUND
-    #         )
-
-    #     if instance.approval_status != 'P':
-    #         return Response(
-    #             {'message': 'Your request has been answered and you can not delete it.'}
-    #             , status=status.HTTP_403_FORBIDDEN
-    #         )
-
-    #     instance.delete()
-    #     return Response(
-    #         {'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT
-    #     )
-    @action(detail=True, methods=['post'], url_path='remove_course/(?P<course_code>[^/.]+)')
-    def remove_course(self, request, pk=None, course_code=None):
-        unit_selection_request = self.get_object()
-        
-        try:
-            course_code = int(course_code)
-            course_to_remove = unit_selection_request.request_course.get(course__course_code=course_code)
-        except (ValueError, SemesterCourse.DoesNotExist):
-            return Response({"error": "Invalid course ID or course not found"}, status=status.HTTP_404_NOT_FOUND)
-        try:
-            StudentCourse.objects.get(semester_course = course_to_remove ,
-                                        student__user = self.request.user).delete()
-            unit_selection_request.request_course.remove(course_to_remove)
-        except Exception as e:
-            pass
-        return Response({"message": "Course removed from request successfully"}, status=status.HTTP_200_OK)
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        serializer.delete(instance)
+        return Response(
+            {"message": "UnitSelectionRequest deleted successfully"},
+              status=status.HTTP_204_NO_CONTENT)
 
 class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
                                           mixins.RetrieveModelMixin,

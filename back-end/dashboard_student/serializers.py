@@ -224,93 +224,44 @@ class UnitSelectionSemesterRegistrationRequestSerializer(serializers.ModelSerial
 
 
 class UnitSelectionRequestSerializer(serializers.ModelSerializer):
-    # semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()
-    # request_course = SemesterCourseSerializer(many=True)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.context.get('request') and self.context['request'].method == 'POST':
+            self.fields['approval_status'].default = 'A'
 
     class Meta:
         model = UnitSelectionRequest
         fields = ['id', 'semester_registration_request', 'approval_status',
-                'created_at', 'request_course']
-
-        read_only_fields = ['id', 'approval_status', 'created_at']
-
-    def get_fields(self):
-        fields = super().get_fields()
-        
-        if self.context.get('request') and self.context['request'].method == 'POST':
-            fields['added_courses'] = serializers.PrimaryKeyRelatedField(
-                queryset=SemesterCourse.objects.all())
-            
-            fields['semester_registration_request'] = serializers.PrimaryKeyRelatedField(
-                queryset=SemesterRegistrationRequest.objects.filter(student=self.context['request'].user.student)
-            )
-        return fields
+                  'created_at', 'request_course']
+        read_only_fields = ['id', 'created_at', 'approval_status']
 
     def create(self, validated_data):
-        
         user = self.context['user']
-        try:
-            student = Student.objects.get(user=user)
-        except Student.DoesNotExist:
-            raise serializers.ValidationError("Invalid student")
+        student = Student.objects.get(user=user)
         department = student.major.department
         
         semester_registration_request = validated_data.get('semester_registration_request')
         
-        if semester_registration_request.student != student or semester_registration_request.approval_status != 'A':
-            raise serializers.ValidationError("Invalid semester registration request")
+        request_course = validated_data.get('request_course')
         
         semester = semester_registration_request.semester
         
-        
         current_date = timezone.now().date()
         
-        # if current_date < semester.unit_selection.unit_selection_start or \
-        #         current_date > semester.unit_selection.unit_selection_end:
-        #     raise serializers.ValidationError("Invalid semester unit selection time")
-        
-        
-        request_course = validated_data.get('request_course')
-        
-        # check for none request_course
-        if request_course == None:
-            raise serializers.ValidationError("Invalid requested course")
-        
-        # check for request_course semester
-        if request_course.semester != semester:
-            raise serializers.ValidationError("Invalid requested course")
+        if current_date < semester.unit_selection.unit_selection_start or \
+                current_date > semester.unit_selection.unit_selection_end:
+            raise serializers.ValidationError("Invalid semester unit selection time")
         
         # check for request_course department
-        if request_course.course.department != department:
+        course_department = request_course.course.department
+        if course_department != department:
             raise serializers.ValidationError(
-                "Invalid requested course, course not in your department!")
-        
-        # check for exist of unit_selection_request
-        unit_selection_request = AddRemoveRequest.objects.filter(
-                        semester_registration_request = semester_registration_request ,
-                        ).first()
-        
-        # create unit_selection_request
-        if unit_selection_request == None:
-            try:
-                unit_selection_request = AddRemoveRequest.objects.create(
-                        semester_registration_request = semester_registration_request ,
-                        )
-            except Exception as e:
-                pass
-            
-        try:
-            exists = unit_selection_request.request_course.filter(id=request_course.id).exists()
-        except Exception as e:
-            pass
-        
-        if exists or StudentCourse.objects.filter(
-            semester_course = request_course ,
-            student = student).exists():
-            raise serializers.ValidationError("Course already requested!")
+                "Invalid requested course, course not in your department!"
+            )
         
         basic_course = request_course.course
-        #Prerequisite
+        # #Prerequisite
+
         try:
             prerequisite = Prerequisite.objects.filter(course = basic_course)
         except Exception as e:
@@ -318,18 +269,18 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         for prerequisite_course in prerequisite:
             try:
                 exists = StudentCourse.objects.filter(
-                                                    student = student,
-                                                    semester_course__course = prerequisite_course.prerequisite ,
-                                                    score__gte = 10 ,
-                                                    status = 'R'
-                                                    ).exists()
+                student = student,
+                semester_course__course = prerequisite_course.prerequisite,
+                score__gte = 10 ,
+                status = 'R'
+                ).exists()
             except Exception as e:
                 pass
             if not exists:
                 raise serializers.ValidationError("prerequisite not met!")
         
+
         #requisite
-        
         try:
             requisite = Requisite.objects.filter(course = basic_course)
         except Exception as e:
@@ -346,22 +297,54 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
                 pass
             if not exists:
                 raise serializers.ValidationError("requisite not met!")
-            
+
+        # Create the UnitSelectionRequest instance
+        unit_selection_request = UnitSelectionRequest.objects.create(
+            semester_registration_request=semester_registration_request,
+            approval_status='P',  
+            request_course=request_course
+        )
         
+
         
-        unit_selection_request.request_course.add(request_course)
-        unit_selection_request.save()
+        # Add to Student Courses
         StudentCourse.objects.create(
                     student = student ,
                     semester_course = request_course ,
+                    status='R',
                     )
+
+
+        return unit_selection_request
+
+
+    def delete(self, instance):
+        user = self.context['user']
+        student = Student.objects.get(user=user)
         
-        return response.Response(
-            {'detail': 'the course added succesfully!'}
-            , status=status.HTTP_200_OK
-            )
-    
-    
+        semester_registration_request = instance.semester_registration_request
+        request_course = instance.request_course
+        semester = semester_registration_request.semester
+        
+        current_date = timezone.now().date()
+        
+        if current_date < semester.unit_selection.unit_selection_start or \
+                current_date > semester.unit_selection.unit_selection_end:
+            raise serializers.ValidationError("Invalid semester unit selection time")
+        
+        # Get the queryset of StudentCourse instances to delete
+        student_courses_to_delete = StudentCourse.objects.filter(
+            student=student,
+            semester_course=request_course,
+            status='R',
+        )
+        
+        # Delete the selected StudentCourse instances
+        student_courses_to_delete.delete()
+        
+        # Now, delete the corresponding UnitSelectionRequest instance
+        instance.delete()
+
 class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
     semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()
     class Meta:

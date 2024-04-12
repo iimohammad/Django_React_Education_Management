@@ -175,20 +175,20 @@ class SemesterCourse(models.Model):
     def __str__(self):
         return f"{self.course.course_name} - {self.semester.name}"
 
-@receiver(post_save, sender=UnitSelectionRequest)
-def update_course_capacity(sender, instance, created, **kwargs):
-    if created:
-        # Increment or decrement the course_capacity based on the request_course
-        if instance.request_course:
-            instance.request_course.course_capacity -= 1
-            instance.request_course.save()
+# @receiver(post_save, sender=UnitSelectionRequest)
+# def update_course_capacity(sender, instance, created, **kwargs):
+#     if created:
+#         # Increment or decrement the course_capacity based on the request_course
+#         if instance.request_course:
+#             instance.request_course.course_capacity -= 1
+#             instance.request_course.save()
 
 
-@receiver(post_delete, sender=UnitSelectionRequest)
-def increase_course_capacity(sender, instance, **kwargs):
-    if instance.request_course:
-        instance.request_course.course_capacity += 1  
-        instance.request_course.save()
+# @receiver(post_delete, sender=UnitSelectionRequest)
+# def increase_course_capacity(sender, instance, **kwargs):
+#     if instance.request_course:
+#         instance.request_course.course_capacity += 1  
+#         instance.request_course.save()
 
 class StudentCourse(models.Model):
     FINALREGISTERED = 'F'

@@ -38,16 +38,23 @@ class SemesterRegistrationRequest(models.Model):
 
 
 class UnitSelectionRequest(models.Model):
-    semester_registration_request = models.OneToOneField(
+    semester_registration_request = models.ForeignKey(
         SemesterRegistrationRequest, on_delete=models.PROTECT
     )
     approval_status = models.CharField(max_length=1, choices=UnitSelection_APPROVAL_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
-    request_course = models.ManyToManyField(
+    request_course = models.OneToOneField(
         'education.SemesterCourse',
-        blank=True,
+        on_delete=models.PROTECT,
+        related_name='unit_selection_request',
     )
 
+    def __str__(self):
+        student_user = self.semester_registration_request.student.user
+        return f"UnitSelectionRequest created by {student_user}"
+
+    class Meta:
+        unique_together = ['semester_registration_request', 'request_course']
     # def save(self, *args, **kwargs):
     #     self.clean()
 
