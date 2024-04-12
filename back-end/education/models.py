@@ -219,17 +219,3 @@ class StudentCourse(models.Model):
         {self.semester_course.semester.name}"
     
 
-# @receiver(post_save, sender=StudentCourse)
-# def update_course_capacity(sender, instance, created, **kwargs):
-#     if created:
-#         # Increment or decrement the course_capacity based on the request_course
-#         if instance.request_course:
-#             instance.request_course.course_capacity -= 1
-#             instance.request_course.save()
-
-
-# @receiver(post_delete, sender=StudentCourse)
-# def increase_course_capacity(sender, instance, **kwargs):
-#     if instance.request_course:
-#         instance.request_course.course_capacity += 1  
-#         instance.request_course.save()
