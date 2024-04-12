@@ -198,3 +198,4 @@ admin.site.register(StudentDeleteSemesterRequest,
                     StudentDeleteSemesterRequestAdmin)
 
 
+admin.site.register(EmploymentEducationRequest)
