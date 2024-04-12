@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers , response , status
 from education.models import (
     Day,
     Major,
@@ -9,7 +9,9 @@ from education.models import (
     Semester,
     Department,
     Course,
-    StudentCourse
+    StudentCourse,
+    Prerequisite,
+    Requisite,
 )
 from accounts.models import Student, Teacher, User
 from .models import (
@@ -24,9 +26,10 @@ from .models import (
     QueuedRequest,
 )
 
-from django.utils import timezone
 from rest_framework.exceptions import NotFound
+from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.db.models import Count
 
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -112,7 +115,7 @@ class SemesterCourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SemesterCourse
-        fields = ['semester', 'course', 'class_days', 'class_time_start', 'class_time_end',
+        fields = ['id','semester', 'course', 'class_days', 'class_time_start', 'class_time_end',
                   'instructor', 'course_capacity', 'remain_course_capacity']
 
 
@@ -208,32 +211,37 @@ class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
                 )
 
         return data
-
+class UnitselectionSemesterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Semester
+        fields = ['name']
 
 class UnitSelectionSemesterRegistrationRequestSerializer(serializers.ModelSerializer):
+    semester = UnitselectionSemesterSerializer()
     class Meta:
         model = SemesterRegistrationRequest
-        fields = ['id']
+        fields = ['semester']
 
 
 class UnitSelectionRequestSerializer(serializers.ModelSerializer):
     semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()
-    requested_course = SemesterCourseSerializer()
+    request_course = SemesterCourseSerializer(many=True)
 
     class Meta:
         model = UnitSelectionRequest
         fields = ['id', 'semester_registration_request', 'approval_status',
-                  'created_at', 'requested_course']
+                'created_at', 'request_course']
 
         read_only_fields = ['id', 'approval_status', 'created_at']
 
     def get_fields(self):
         fields = super().get_fields()
         if self.context.get('request') and self.context['request'].method == 'POST':
-            fields['requested_course'] = serializers.PrimaryKeyRelatedField(
+            fields['added_courses'] = serializers.PrimaryKeyRelatedField(
                 queryset=SemesterCourse.objects.all())
+            
             fields['semester_registration_request'] = serializers.PrimaryKeyRelatedField(
-                queryset=SemesterRegistrationRequest.objects.all())
+                queryset=AddRemoveRequest.objects.all())
 
         return fields
 
@@ -244,54 +252,121 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
             student = Student.objects.get(user=user)
         except Student.DoesNotExist:
             raise serializers.ValidationError("Invalid student")
-
+        department = student.major.department
+        
         semester_registration_request = validated_data.get('semester_registration_request')
+        
+        if semester_registration_request.student != student or semester_registration_request.approval_status != 'A':
+            raise serializers.ValidationError("Invalid semester registration request")
+        
         semester = semester_registration_request.semester
-    
+        
+        
         current_date = timezone.now().date()
         
         if current_date < semester.unit_selection.unit_selection_start or \
                 current_date > semester.unit_selection.unit_selection_end:
             raise serializers.ValidationError("Invalid semester unit selection time")
         
-        if validated_data['request_course'].course_capacity == 0:
-                # def create(self, request, *args, **kwargs):
-            #     serializer = self.get_serializer(data=request.data)
-            #     serializer.is_valid(raise_exception=True)
-                
-            #     if serializer.validated_data.get('request_course').course_capacity == 0:
-            #         # Queue the request in Redis
-            #         redis_conn = get_redis_connection('default')
-            #         redis_conn.lpush('unit_selection_queue', json.dumps(serializer.validated_data))
-                    
-            #         # Send a message to the user
-            #         messages.info(request, "Your request has been queued.")
-            #         return Response({'detail': 'Your request has been queued.'}, status=status.HTTP_200_OK)
-                
-            #     return super().create(request, *args, **kwargs)
-            QueuedRequest.objects.create(
-                student=student,
-                **validated_data
-            )
-            raise ValidationError("Course capacity is zero, request is queued.")
-
-        unit_selection_request = UnitSelectionRequest.objects.create(
-            student=student,
-            **validated_data
-        )
-
+        
         request_course = validated_data.get('request_course')
-        if request_course:
-            student_course_data = {
-                'student': student,
-                'semester_course': request_course,
-                'status': StudentCourse.REGISTERED,
-            }
-            StudentCourse.objects.create(**student_course_data)
-
-        return unit_selection_request
-
-
+        
+        # check for none request_course
+        if request_course == None:
+            raise serializers.ValidationError("Invalid requested course")
+        
+        # check for request_course semester
+        if request_course.semester != semester:
+            raise serializers.ValidationError("Invalid requested course")
+        
+        # check for request_course department
+        if request_course.course.department != department:
+            raise serializers.ValidationError("Invalid requested course, course not in your department!")
+        
+        # check for exist of unit_selection_request
+        unit_selection_request = AddRemoveRequest.objects.filter(
+                        semester_registration_request = semester_registration_request ,
+                        ).first()
+        
+        # create unit_selection_request
+        if unit_selection_request == None:
+            try:
+                unit_selection_request = AddRemoveRequest.objects.create(
+                        semester_registration_request = semester_registration_request ,
+                        )
+            except Exception as e:
+                pass
+            
+        try:
+            exists = unit_selection_request.request_course.filter(id=request_course.id).exists()
+        except Exception as e:
+            pass
+        
+        if exists or StudentCourse.objects.filter(
+            semester_course = request_course ,
+            student = student).exists():
+            raise serializers.ValidationError("Course already requested!")
+        
+        basic_course = request_course.course
+        #Prerequisite
+        try:
+            prerequisite = Prerequisite.objects.filter(course = basic_course)
+        except Exception as e:
+            pass
+        for prerequisite_course in prerequisite:
+            try:
+                exists = StudentCourse.objects.filter(
+                                                    student = student,
+                                                    semester_course__course = prerequisite_course.prerequisite ,
+                                                    score__gte = 10 ,
+                                                    status = 'R'
+                                                    ).exists()
+            except Exception as e:
+                pass
+            if not exists:
+                raise serializers.ValidationError("prerequisite not met!")
+        
+        #requisite
+        
+        try:
+            requisite = Requisite.objects.filter(course = basic_course)
+        except Exception as e:
+            pass
+        for requisite_course in requisite:
+            try:
+                exists = StudentCourse.objects.filter(student = student,
+                                                    semester_course__course = requisite_course.requisite ,
+                                                    semester_course__semester = semester ,
+                                                    status = 'R' ,
+                                                    ).exists()
+                
+            except Exception as e:
+                pass
+            if not exists:
+                raise serializers.ValidationError("requisite not met!")
+            
+        
+        # if request_course.semester_course.remain_course_capacity == 0:
+        #     # Queue the request in Redis
+        #     redis_conn = get_redis_connection('default')
+        #     redis_conn.lpush('unit_selection_queue', json.dumps(serializer.validated_data))
+                    
+        #     # Send a message to the user
+        #     messages.info(request, "Your request has been queued.")
+        #     return Response({'detail': 'Your request has been queued.'}, status=status.HTTP_200_OK)
+        #     # QueuedRequest.objects.create(
+        #     #     student=student,
+        #     #     **validated_data
+        #     # )
+        #     # raise ValidationError("Course capacity is zero, request is queued.")
+        unit_selection_request.request_course.add(request_course)
+        unit_selection_request.save()
+        StudentCourse.objects.create(
+                    student = student ,
+                    semester_course = request_course ,
+                    )
+        
+        return response.Response({'detail': 'the course added succesfully!'}, status=status.HTTP_200_OK)
 class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
     semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()
     class Meta:

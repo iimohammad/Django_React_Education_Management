@@ -180,7 +180,7 @@ def update_course_capacity(sender, instance, created, **kwargs):
     if created:
         # Increment or decrement the course_capacity based on the request_course
         if instance.request_course:
-            instance.request_course.course_capacity -= 1  
+            instance.request_course.course_capacity -= 1
             instance.request_course.save()
 
 
@@ -224,9 +224,9 @@ class StudentCourse(models.Model):
         return False
 
 
-    def __str__(self):
-        return f"{self.semester_course.course.course_name} \
-        - {self.semester_course.semester.name}"
+    # def __str__(self):
+    #     return f"{self.semester_course.course.course_name} \
+    #     - {self.semester_course.semester.name}"
 
     class Meta:
         unique_together = [["student", "semester_course"]]

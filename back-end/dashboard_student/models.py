@@ -38,65 +38,63 @@ class SemesterRegistrationRequest(models.Model):
 
 
 class UnitSelectionRequest(models.Model):
-    student = models.ForeignKey('accounts.Student', on_delete=models.CASCADE)
     semester_registration_request = models.OneToOneField(
         SemesterRegistrationRequest, on_delete=models.PROTECT
     )
     approval_status = models.CharField(max_length=1, choices=UnitSelection_APPROVAL_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
-    request_course = models.OneToOneField(
+    request_course = models.ManyToManyField(
         'education.SemesterCourse',
-        on_delete=models.CASCADE,
-        default=None
+        blank=True,
     )
 
-    def save(self, *args, **kwargs):
-        self.clean()
+    # def save(self, *args, **kwargs):
+    #     self.clean()
 
-        if self.student.category_of_student_grade:
-        #     # Define the maximum credit limit for each category
-            max_credit_limits = {
-                'A': 24,
-                'B': 20,
-                'C': 17,
-                'D': 14,
+    #     if self.student.category_of_student_grade:
+    #     #     # Define the maximum credit limit for each category
+    #         max_credit_limits = {
+    #             'A': 24,
+    #             'B': 20,
+    #             'C': 17,
+    #             'D': 14,
 
-            }
-            max_credit_limit = max_credit_limits.get(self.student.category_of_student_grade, 0)
-        #     requested_courses_credits_sum = self.student.unit_selection_request.aggregate(
-        #         total_credits=models.Sum('request_course__semestercourse__credit_num')
-        #     )['total_credits'] or 0
+    #         }
+    #         max_credit_limit = max_credit_limits.get(self.student.category_of_student_grade, 0)
+    #         requested_courses_credits_sum = self.student.unit_selection_request.aggregate(
+    #             total_credits=models.Sum('request_course__semestercourse__credit_num')
+    #         )['total_credits'] or 0
 
-        # #     if requested_courses_credits_sum + self.request_course.course.credit_num > max_credit_limit:
-        # #         raise ValidationError(
-        # #             f'Cannot request more courses. Maximum allowed credit limit for Category '
-        # #             f'{self.student.category_of_student_grade} students is {max_credit_limit}.'
-        # #         )
+    #         if requested_courses_credits_sum + self.request_course.course.credit_num > max_credit_limit:
+    #             raise ValidationError(
+    #                 f'Cannot request more courses. Maximum allowed credit limit for Category '
+    #                 f'{self.student.category_of_student_grade} students is {max_credit_limit}.'
+    #             )
 
-        prerequisites = self.request_course.course.prerequisites.all()
-        for prerequisite_course in prerequisites:
-            if not self.student.studentcourse_set.filter(
-                    semester_course__course=prerequisite_course,
-                    score__gte=10
-            ).exists():
-                raise ValidationError(
-                    f'Cannot request {self.request_course.course} because prerequisite course {prerequisite_course} has not been passed.'
-                )
+    #     prerequisites = self.request_course.course.prerequisites.all()
+    #     for prerequisite_course in prerequisites:
+    #         if not self.student.studentcourse_set.filter(
+    #                 semester_course__course=prerequisite_course,
+    #                 score__gte=10
+    #         ).exists():
+    #             raise ValidationError(
+    #                 f'Cannot request {self.request_course.course} because prerequisite course {prerequisite_course} has not been passed.'
+    #             )
 
-        requisites = self.request_course.course.requisites.all()
-        if requisites and not self.student.studentcourse_set.filter(semester_course__course__in=requisites,
-                                                                    status='R').exists():
-            self.warning_message = 'Warning: Requisite course is not selected.'
-        if UnitSelectionRequest.objects.filter(
-                semester_registration_request=self.semester_registration_request,
-                request_course=self.request_course
-        ).exists():
-            raise ValidationError(('Unit selection request for this course already exists.'))
+    #     requisites = self.request_course.course.requisites.all()
+    #     if requisites and not self.student.studentcourse_set.filter(semester_course__course__in=requisites,
+    #                                                                 status='R').exists():
+    #         self.warning_message = 'Warning: Requisite course is not selected.'
+    #     if UnitSelectionRequest.objects.filter(
+    #             semester_registration_request=self.semester_registration_request,
+    #             request_course=self.request_course
+    #     ).exists():
+    #         raise ValidationError(('Unit selection request for this course already exists.'))
         
-        if self.request_course.studentcourse_set.filter(student=self.student, score__gte=10).exists():
-            raise ValidationError(('Cannot request a course that has already been passed.'))
+    #     if self.request_course.studentcourse_set.filter(student=self.student, score__gte=10).exists():
+    #         raise ValidationError(('Cannot request a course that has already been passed.'))
 
-        super().save(*args, **kwargs)
+    #     super().save(*args, **kwargs)
 
 
 class QueuedRequest(models.Model):
@@ -112,8 +110,19 @@ class QueuedRequest(models.Model):
 
 
 class AddRemoveRequest(UnitSelectionRequest):
-    pass
-
+    semester_registration_request = models.OneToOneField(
+        SemesterRegistrationRequest, on_delete=models.PROTECT
+    )
+    approval_status = models.CharField(max_length=1, choices=UnitSelection_APPROVAL_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    added_courses = models.ManyToManyField(
+        'education.SemesterCourse',
+        blank=True,
+    )
+    removed_courses = models.ManyToManyField(
+        'education.SemesterCourse',
+        blank=True,
+    )
 
 class RevisionRequest(models.Model):
     student = models.ForeignKey('accounts.Student', on_delete=models.PROTECT)
