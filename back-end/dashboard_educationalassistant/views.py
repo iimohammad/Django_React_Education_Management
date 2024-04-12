@@ -136,7 +136,7 @@ class ShowProfileAPIView(generics.RetrieveAPIView):
         return Response(serializer.data)
 
 
-class EducationalAssistantProfileUpdateView(generics.UpdateAPIView):
+class EducationalAssistantProfileUpdateView(generics.RetrieveUpdateAPIView):
     queryset = User.objects.all()
     permission_classes = [IsAuthenticated, IsEducationalAssistant]
     versioning_class = DefualtVersioning
@@ -145,7 +145,6 @@ class EducationalAssistantProfileUpdateView(generics.UpdateAPIView):
         if self.request.version == 'v1':
             return UserSerializer
     def get_object(self):
-
         return self.request.user
 
     def update(self, request, *args, **kwargs):
@@ -157,16 +156,16 @@ class EducationalAssistantProfileUpdateView(generics.UpdateAPIView):
         return Response(serializer.data)
 
 
-class EducationalAssistantChangeProfileView(generics.RetrieveUpdateAPIView):
-    queryset = EducationalAssistant.objects.all()
-    permission_classes = [IsAuthenticated, IsEducationalAssistant]
-    versioning_class = DefualtVersioning
+# class EducationalAssistantChangeProfileView(generics.RetrieveUpdateAPIView):
+#     queryset = EducationalAssistant.objects.all()
+#     permission_classes = [IsAuthenticated, IsEducationalAssistant]
+#     versioning_class = DefualtVersioning
     
-    def get_serializer_class(self, *args, **kwargs):
-        if self.request.version == 'v1':
-            return EducationalAssistantSerializer
-    def get_object(self):
-        return self.request.user.educationalassistant
+#     def get_serializer_class(self, *args, **kwargs):
+#         if self.request.version == 'v1':
+#             return EducationalAssistantSerializer
+#     def get_object(self):
+#         return self.request.user.educationalassistant
 
 
 class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet):
@@ -231,40 +230,38 @@ class StudentRegisteredCoursesViewSet(viewsets.ReadOnlyModelViewSet):
         raise NotImplementedError("Unsupported version requested")
 
     def get_queryset(self):
-        today = date.today()
+        last_semester = Semester.objects.order_by('-start_semester').first()
         major = self.request.user.educationalassistant.field
         return StudentCourse.objects.filter(
             student__major=major,
-            score__isnull=True,
             status='R',
-            semester_course__semester__start_semester__lte=today,
-            semester_course__semester__end_semester__gte=today,
+            semester_course__semester=last_semester,
             )
     
-    def retrieve(self, request, pk, format=None):
-        try:
-            today = date.today()
-            major = self.request.user.educationalassistant.field
-            registered_courses = StudentCourse.objects.filter(
-                student__id=pk,
-                score__isnull=True,
-                student__major=major,
-                status=StudentCourse.REGISTERED,
-                semester_course__semester__start_semester__lte=today,
-                semester_course__semester__end_semester__gte=today
-            )
-            if not registered_courses.exists():
-                raise StudentCourse.DoesNotExist("Student not found or no registered courses.")
+    # def retrieve(self, request, pk, format=None):
+    #     try:
+    #         today = date.today()
+    #         major = self.request.user.educationalassistant.field
+    #         registered_courses = StudentCourse.objects.filter(
+    #             student__id=pk,
+    #             score__isnull=True,
+    #             student__major=major,
+    #             status=StudentCourse.REGISTERED,
+    #             semester_course__semester__start_semester__lte=today,
+    #             semester_course__semester__end_semester__gte=today
+    #         )
+    #         if not registered_courses.exists():
+    #             raise StudentCourse.DoesNotExist("Student not found or no registered courses.")
 
-            serializer = StudentCourseSerializer(registered_courses, many=True)
+    #         serializer = StudentCourseSerializer(registered_courses, many=True)
 
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except StudentCourse.DoesNotExist as e:
+    #         return Response(serializer.data, status=status.HTTP_200_OK)
+    #     except StudentCourse.DoesNotExist as e:
 
-            return Response(
-                {"detail": f"{str(e)}"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+    #         return Response(
+    #             {"detail": f"{str(e)}"},
+    #             status=status.HTTP_404_NOT_FOUND,
+    #         )
 
 
 class CourseViewSet(viewsets.ModelViewSet):
