@@ -110,8 +110,19 @@ class QueuedRequest(models.Model):
 
 
 class AddRemoveRequest(UnitSelectionRequest):
-    pass
-
+    semester_registration_request = models.OneToOneField(
+        SemesterRegistrationRequest, on_delete=models.PROTECT
+    )
+    approval_status = models.CharField(max_length=1, choices=UnitSelection_APPROVAL_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    added_courses = models.ManyToManyField(
+        'education.SemesterCourse',
+        blank=True,
+    )
+    removed_courses = models.ManyToManyField(
+        'education.SemesterCourse',
+        blank=True,
+    )
 
 class RevisionRequest(models.Model):
     student = models.ForeignKey('accounts.Student', on_delete=models.PROTECT)
