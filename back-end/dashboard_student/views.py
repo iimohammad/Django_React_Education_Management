@@ -4,6 +4,7 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.decorators import action
 from .permissions import (
     IsStudent, 
@@ -241,6 +242,7 @@ class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
         )
 
 class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
+    """UnitSelectionRequestAPIView is OK excpt GPA """
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefaultVersioning
@@ -276,6 +278,12 @@ class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
             {"message": "UnitSelectionRequest deleted successfully"},
               status=status.HTTP_204_NO_CONTENT)
 
+    def update(self, request, *args, **kwargs):
+        raise MethodNotAllowed('PUT')
+
+    def partial_update(self, request, *args, **kwargs):
+        raise MethodNotAllowed('PATCH')
+    
 class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
                                           mixins.RetrieveModelMixin,
                                           mixins.DestroyModelMixin,
@@ -458,53 +466,6 @@ class EmploymentEducationRequestApiView(mixins.CreateModelMixin,
         return Response(serializer.data)
 
 
-# class AddRemoveRequestViewSet(UnitSelectionRequestAPIView):
-#     """
-#         Student Can Change Courses During the Add Remove Time
-#     """
-#     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-#     pagination_class = DefaultPagination
-#     versioning_class = DefaultVersioning
-#     permission_classes = [
-#         IsStudent,
-#         IsAuthenticated,
-#         HavePermissionBasedOnAddAndRemoveTime,
-#         HavePermssionEmoloymentDegreeTime
-#     ]
-
-
-#     def get_serializer_class(self, *args, **kwargs):
-#         if self.request.version == 'v1':
-#             return AddRemoveRequestSerializer
-#         raise NotImplementedError("Unsupported version requested")
-
-#     def get_queryset(self):
-#         return AddRemoveRequest.objects.filter(student__user=self.request.user)
-
-#     def get_serializer_context(self):
-#         context = super().get_serializer_context()
-#         context['user'] = self.request.user
-#         return context
-
-#     def create(self, request, *args, **kwargs):
-#         serializer = self.get_serializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-        
-#         if serializer.validated_data.get('request_course').course_capacity == 0:
-#             # Queue the request in Redis
-#             redis_conn = get_redis_connection('default')
-#             redis_conn.lpush(
-#                 'unit_selection_queue',
-#                 json.dumps(serializer.validated_data))
-            
-#             # Send a message to the user
-#             messages.info(request, "Your request has been queued.")
-#             return Response(
-#                 {'detail': 'Your request has been queued.'},
-#                  status=status.HTTP_200_OK
-#                  )
-        
-#         return super().create(request, *args, **kwargs)
 
 class AddRemoveRequestViewSet(viewsets.GenericViewSet,
                                   mixins.CreateModelMixin ,

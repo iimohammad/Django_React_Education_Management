@@ -1,4 +1,5 @@
 from rest_framework import serializers , response , status
+from dashboard_student.utils import calculate_credit_Course_Semester, find_remain_credit, gpa_catergory
 from education.models import (
     Day,
     Major,
@@ -239,6 +240,7 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         user = self.context['user']
         student = Student.objects.get(user=user)
         department = student.major.department
+        # print(gpa_catergory(student.gpa))
         
         semester_registration_request = validated_data.get('semester_registration_request')
         
@@ -246,6 +248,10 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         
         semester = semester_registration_request.semester
         
+
+        if find_remain_credit(student)==0:
+            raise serializers.ValidationError("You can not add more courses")
+
         current_date = timezone.now().date()
         
         if current_date < semester.unit_selection.unit_selection_start or \
@@ -314,7 +320,7 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
                     status='R',
                     )
 
-
+        
         return unit_selection_request
 
 
