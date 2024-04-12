@@ -316,21 +316,22 @@ class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
                             'created_at', 'student_explanations']
         
     def update(self, instance, validated_data):
-        if instance.teacher_approval_status == 'A' or instance.teacher_approval_status == 'R' or \
-            instance.educational_assistant_approval_status =='A' or \
+        if instance.educational_assistant_approval_status =='A' or \
                 instance.educational_assistant_approval_status =='R':
             raise serializers.ValidationError('can not change answered request!')
         
         educational_assistant_explanation = validated_data.get('educational_assistant_explanation')
+        educational_assistant_approval_status = validated_data.get('educational_assistant_approval_status')
         semester_registration_request = validated_data.get('semester_registration_request')
             # student_email = instance.semester_registration_request.student.user.email
-        if educational_assistant_explanation == 'A':
+        if educational_assistant_approval_status == 'A':
             try:
                 with transaction.atomic():
                     instance.educational_assistant_explanation = educational_assistant_explanation
+                    instance.educational_assistant_approval_status = educational_assistant_approval_status
                     semester = semester_registration_request.semester
                     student = semester_registration_request.student
-                    StudentCourse.objects.filter(student = student ,
+                    StudentCourse.objects.filter(student = student,
                                                 semester_course__semester = semester).update(status = 'S')
                     UnitSelectionRequest.objects.filter(
                         semester_registration_request = semester_registration_request).update(
@@ -340,7 +341,7 @@ class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
                 pass
             # send_semester_delete_approval_email.delay(student_email)
             
-        elif educational_assistant_explanation == 'R':
+        elif educational_assistant_approval_status == 'R':
             try:
                 instance.save()
             #   send_semester_delete_rejected_email.delay(student_email)

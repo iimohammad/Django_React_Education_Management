@@ -73,10 +73,11 @@ class StudentViewSet(viewsets.ReadOnlyModelViewSet):
                      ]
     ordering_fields = ['entry_semester']
     versioning_class = DefualtVersioning
-    
+
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return StudentSerializer
+
     def get_queryset(self):
         educational_assistant = self.request.user.educationalassistant
 

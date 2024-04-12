@@ -21,6 +21,9 @@ from dashboard_student.resource import (SemesterRegistrationRequestResource,
                                         )
 
 
+admin.site.register(EmploymentEducationRequest)
+
+
 class SemesterRegistrationRequestAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     list_display = ('id', 'student_link', 'semester_link', 'approval_status')
     list_filter = ('approval_status',)

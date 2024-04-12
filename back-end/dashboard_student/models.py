@@ -109,7 +109,7 @@ class QueuedRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
-class AddRemoveRequest(UnitSelectionRequest):
+class AddRemoveRequest(models.Model):
     semester_registration_request = models.OneToOneField(
         SemesterRegistrationRequest, on_delete=models.PROTECT
     )
@@ -118,11 +118,14 @@ class AddRemoveRequest(UnitSelectionRequest):
     added_courses = models.ManyToManyField(
         'education.SemesterCourse',
         blank=True,
+        related_name='added_courses',
     )
     removed_courses = models.ManyToManyField(
         'education.SemesterCourse',
         blank=True,
+        related_name='removed_courses',
     )
+
 
 class RevisionRequest(models.Model):
     student = models.ForeignKey('accounts.Student', on_delete=models.PROTECT)
