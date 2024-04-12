@@ -21,8 +21,5 @@ COPY . .
 EXPOSE 8000
 
 # Run Django migrations when the container starts
-COPY ./entrypoint.sh/
+COPY ./entrypoint.sh /
 ENTRYPOINT ["sh","/entrypoint.sh"]
-
-# Command to run the Django app
-# CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

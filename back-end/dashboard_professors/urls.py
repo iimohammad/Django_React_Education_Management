@@ -47,9 +47,13 @@ router.register('AdvisorRole/AddRemoveConfirmation',
                 AddRemoveRequestView,
                 basename='AddRemoveConfirmation')
 
-router.register('AdvisorRole/ShowMyStudents/',
+router.register('AdvisorRole/ShowMyStudents',
                 ShowMyStudentsVeiw,
                 basename='ShowMyStudents')
+
+router.register('AdvisorRole/UnitSelectionConfirmation',
+                UnitSelectionRequestView,
+                basename='UnitSelectionConfirmation')
 
 router.register(
     'evaluate',
@@ -60,20 +64,14 @@ router.register('revision-requests',
                 RevisionRequestView,
                 basename='revision-request')
 
+
+
 urlpatterns = [
     path('', include(router.urls)),
     
     path('show-profile/',
         ShowProfileAPIView.as_view(),
         name='show_profile'
-        ),
-
-   
-
-    
-    path('AdvisorRole/UnitSelectionConfirmation/',
-        UnitSelectionRequestView.as_view(),
-        name = 'UnitSelectionConfirmation'
         ),
     path('evaluate-students/', EvaluateStudentsAPIView.as_view(), name='evaluate_students'),
 

@@ -160,5 +160,4 @@ cython_debug/
 .idea/
 config/local_settings.py
 *.jpg
-*.png
 .env
