@@ -4,7 +4,10 @@ from .models import StudentCourse
 
 @receiver(post_save, sender=StudentCourse)
 def update_student_gpa(sender, instance, created, **kwargs):
-    if instance.score is not None and (created or 'score' not in instance._state.fields_cache or instance._state.fields_cache['score'].original != instance.score):
+    if instance.score is not None and (
+        created or 'score' not in instance._state.fields_cache or
+        instance._state.fields_cache['score'].original != instance.score
+        ):
         student = instance.student
         student_courses = StudentCourse.objects.filter(student=student)
         total_score = sum(course.score for course in student_courses if course.score is not None)
