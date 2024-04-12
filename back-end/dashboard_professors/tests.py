@@ -1,14 +1,17 @@
-import json
-from django.urls import reverse
-from django.contrib.auth import get_user_model
+import csv
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, mixins
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from dashboard_student.models import RevisionRequest
-from accounts.models import Teacher , Student
+from accounts.models import Teacher , Student, User
 from education.models import Department , Semester , StudentCourse , \
                             Course , SemesterCourse ,Major
-User = get_user_model()
+
 
 
 # Create your tests here.

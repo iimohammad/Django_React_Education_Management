@@ -506,6 +506,8 @@ class StudentDeleteSemesterRequestViewSet(viewsets.GenericViewSet ,
             semester_registration_request__student__major=educational_assistant.field
         )
         return queryset
+
+
 class EmploymentEducationRequestViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = EmploymentEducationRequestFilter
