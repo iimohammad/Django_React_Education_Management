@@ -195,5 +195,3 @@ class StudentDeleteSemesterRequestAdmin(ImportExportActionModelAdmin, admin.Mode
 admin.site.register(StudentDeleteSemesterRequest,
                     StudentDeleteSemesterRequestAdmin)
 
-
-admin.site.register(EmploymentEducationRequest)
