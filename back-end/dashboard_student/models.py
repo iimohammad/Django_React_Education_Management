@@ -118,12 +118,12 @@ class AddRemoveRequest(models.Model):
     added_courses = models.ManyToManyField(
         'education.SemesterCourse',
         blank=True,
-        related_name='added_courses',
+         related_name='added_to_requests'
     )
     removed_courses = models.ManyToManyField(
         'education.SemesterCourse',
         blank=True,
-        related_name='removed_courses',
+        related_name='removed_from_requests'
     )
 
 
