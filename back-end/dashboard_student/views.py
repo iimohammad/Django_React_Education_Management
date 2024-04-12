@@ -4,6 +4,8 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.exceptions import MethodNotAllowed
+from rest_framework.decorators import action
 from .permissions import (
     IsStudent, 
     HavePermosionForUnitSelectionForLastSemester,
@@ -206,7 +208,6 @@ class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
             data = SemesterRegistrationRequest.objects.filter(student__user=self.request.user).values_list()
         except Exception as e:
             print(e)
-        print('*****************')
         print(data)
         return SemesterRegistrationRequest.objects.filter(student__user=self.request.user)
 
@@ -240,13 +241,8 @@ class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
             {'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT
         )
 
-
-class UnitSelectionRequestAPIView(viewsets.GenericViewSet,
-                                  mixins.CreateModelMixin ,
-                                  mixins.DestroyModelMixin ,
-                                  mixins.ListModelMixin ,
-                                  mixins.RetrieveModelMixin ,
-                                  ):
+class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
+    """UnitSelectionRequestAPIView is OK excpt GPA """
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefaultVersioning
@@ -259,10 +255,12 @@ class UnitSelectionRequestAPIView(viewsets.GenericViewSet,
 
     ordering_fields = ['created_at', 'approval_status']
     versioning_class = DefaultVersioning
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['user'] = self.request.user
         return context
+    
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return UnitSelectionRequestSerializer
@@ -273,25 +271,19 @@ class UnitSelectionRequestAPIView(viewsets.GenericViewSet,
             semester_registration_request__student__user = self.request.user)
     
     def destroy(self, request, *args, **kwargs):
-        try:
-            instance = self.get_object()
-
-        except Http404:
-            return Response(
-                {'detail': 'Object Not found.'}, status=status.HTTP_404_NOT_FOUND
-            )
-
-        if instance.approval_status != 'P':
-            return Response(
-                {'message': 'Your request has been answered and you can not delete it.'}
-                , status=status.HTTP_403_FORBIDDEN
-            )
-
-        instance.delete()
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        serializer.delete(instance)
         return Response(
-            {'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT
-        )
+            {"message": "UnitSelectionRequest deleted successfully"},
+              status=status.HTTP_204_NO_CONTENT)
 
+    def update(self, request, *args, **kwargs):
+        raise MethodNotAllowed('PUT')
+
+    def partial_update(self, request, *args, **kwargs):
+        raise MethodNotAllowed('PATCH')
+    
 class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
                                           mixins.RetrieveModelMixin,
                                           mixins.DestroyModelMixin,
@@ -428,6 +420,7 @@ class EmploymentEducationRequestApiView(mixins.CreateModelMixin,
                                         mixins.DestroyModelMixin,
                                         mixins.ListModelMixin,
                                         viewsets.GenericViewSet,
+                                        mixins.UpdateModelMixin,
                                         ):
 
     """
@@ -465,53 +458,78 @@ class EmploymentEducationRequestApiView(mixins.CreateModelMixin,
             {'message': 'Resource deleted successfully.'},
             status=status.HTTP_204_NO_CONTENT
             )
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
 
 
 
-class AddRemoveRequestViewSet(UnitSelectionRequestAPIView):
-    """
-        Student Can Change Courses During the Add Remove Time
-    """
+class AddRemoveRequestViewSet(viewsets.GenericViewSet,
+                                  mixins.CreateModelMixin ,
+                                #   mixins.DestroyModelMixin ,
+                                  mixins.ListModelMixin ,
+                                  mixins.RetrieveModelMixin ,
+                                  ):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
     versioning_class = DefaultVersioning
-    permission_classes = [
-        IsStudent,
-        IsAuthenticated,
-        HavePermissionBasedOnAddAndRemoveTime,
-        HavePermssionEmoloymentDegreeTime
-    ]
+    # permission_classes = [
+    #     IsAuthenticated,
+    #     IsStudent, 
+    #     HavePermosionForUnitSelectionForLastSemester,
+    #     # HavePermissionBasedOnUnitSelectionTime,
+    # ]
 
-
-    def get_serializer_class(self, *args, **kwargs):
-        if self.request.version == 'v1':
-            return AddRemoveRequestSerializer
-        raise NotImplementedError("Unsupported version requested")
-
-    def get_queryset(self):
-        return AddRemoveRequest.objects.filter(student__user=self.request.user)
-
+    ordering_fields = ['created_at', 'approval_status']
+    versioning_class = DefaultVersioning
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['user'] = self.request.user
         return context
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.version == 'v1':
+            return UnitSelectionRequestSerializer
+        raise NotImplementedError("Unsupported version requested")
+    
+    def get_queryset(self):
+        return AddRemoveRequest.objects.filter(
+            semester_registration_request__student__user = self.request.user)
+    
+    # def destroy(self, request, *args, **kwargs):
+    #     try:
+    #         instance = self.get_object()
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+    #     except Http404:
+    #         return Response(
+    #             {'detail': 'Object Not found.'}, status=status.HTTP_404_NOT_FOUND
+    #         )
+
+    #     if instance.approval_status != 'P':
+    #         return Response(
+    #             {'message': 'Your request has been answered and you can not delete it.'}
+    #             , status=status.HTTP_403_FORBIDDEN
+    #         )
+
+    #     instance.delete()
+    #     return Response(
+    #         {'message': 'Resource deleted successfully.'}, status=status.HTTP_204_NO_CONTENT
+    #     )
+    @action(detail=True, methods=['post'], url_path='remove_course/(?P<course_code>[^/.]+)')
+    def remove_course(self, request, pk=None, course_code=None):
+        add_remove_request = self.get_object()
         
-        if serializer.validated_data.get('request_course').course_capacity == 0:
-            # Queue the request in Redis
-            redis_conn = get_redis_connection('default')
-            redis_conn.lpush(
-                'unit_selection_queue',
-                json.dumps(serializer.validated_data))
-            
-            # Send a message to the user
-            messages.info(request, "Your request has been queued.")
-            return Response(
-                {'detail': 'Your request has been queued.'},
-                 status=status.HTTP_200_OK
-                 )
-        
-        return super().create(request, *args, **kwargs)
+        try:
+            course_code = int(course_code)
+            course_to_remove = add_remove_request.request_course.get(course__course_code=course_code)
+        except (ValueError, SemesterCourse.DoesNotExist):
+            return Response({"error": "Invalid course ID or course not found"}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            StudentCourse.objects.get(semester_course = course_to_remove ,
+                                        student__user = self.request.user).delete()
+            add_remove_request.request_course.add(course_to_remove)
+        except Exception as e:
+            pass
+        return Response({"message": "Course removed from request successfully"}, status=status.HTTP_200_OK)

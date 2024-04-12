@@ -1,10 +1,11 @@
 from __future__ import absolute_import, unicode_literals
+import os
 from celery import shared_task
 from django.core.mail import send_mail
 from config import settings
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-
+from django.core.mail import EmailMessage
 @shared_task
 def Confirm_Student_Courses(email,firstname,lastname):
     subject = 'Course Confirmation'
@@ -24,7 +25,7 @@ def EmergencyRemove(email,firstname,lastname,status):
 
 
 @shared_task
-def send_approval_email(recipient_email):
+def send_approval_email_employment(recipient_email):
     subject = 'Employment'
     message = 'Your employment request has been approved.'
 
@@ -33,19 +34,20 @@ def send_approval_email(recipient_email):
 
     generate_pdf(pdf_file_path)
 
+    # Create EmailMessage object
+    email = EmailMessage(subject, message, settings.DEFAULT_FROM_EMAIL, [recipient_email])
+
+    # Attach the PDF file to the email
     with open(pdf_file_path, 'rb') as attachment:
-        send_mail(
-            subject, message,
-            settings.DEFAULT_FROM_EMAIL,
-            [recipient_email],
-            fail_silently=False,
-            attachments=[('approval.pdf', attachment.read(), 'application/pdf')])
+        email.attach('approval.pdf', attachment.read(), 'application/pdf')
+
+    # Send the email
+    email.send()
 
 def generate_pdf(file_path):
     c = canvas.Canvas(file_path, pagesize=letter)
     c.drawString(100, 750, "Hello, This is your Employment Degree")
     c.save()
-
 
 
 @shared_task

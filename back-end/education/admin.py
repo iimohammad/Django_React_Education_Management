@@ -3,7 +3,6 @@ from django.contrib import admin
 from django.utils.html import format_html
 from import_export.admin import ImportExportActionModelAdmin
 import os
-
 admin_url = os.environ.get('Admin')
 from education.models import (
     Course,
@@ -280,23 +279,23 @@ class SemesterCourseAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
 admin.site.register(SemesterCourse, SemesterCourseAdmin)
 
 
-class StudentCourseAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
-    list_display = ('id', 'student', 'get_semester_course_name', 'status', 'score')
-    list_filter = ('status',)
-    sortable_by = ('score',)
-    list_editable = ('status',)
-    search_fields = ('student',)
-    search_help_text = "Search in: Student's Username"
-    resource_class = StudentCourseResource
-    save_as = True
-    list_per_page = 10
-    list_max_show_all = 50
+# class StudentCourseAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
+#     list_display = ('id', 'student', 'get_semester_course_name', 'status', 'score')
+#     list_filter = ('status',)
+#     sortable_by = ('score',)
+#     list_editable = ('status',)
+#     search_fields = ('student',)
+#     search_help_text = "Search in: Student's Username"
+#     resource_class = StudentCourseResource
+#     save_as = True
+#     list_per_page = 10
+#     list_max_show_all = 50
 
-    def get_semester_course_name(self, obj):
-        return obj.semester_course.course.course_name
+#     def get_semester_course_name(self, obj):
+#         return obj.semester_course.course.course_name
 
-    get_semester_course_name.short_description = 'Course Name'
+#     get_semester_course_name.short_description = 'Course Name'
 
-admin.site.register(StudentCourse, StudentCourseAdmin)
+admin.site.register(StudentCourse)
 
 admin.site.register(Day)
