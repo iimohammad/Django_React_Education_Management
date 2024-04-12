@@ -171,55 +171,6 @@
         }
       },
       {
-        "model": "education.Day",
-        "pk": 0,
-        "fields": {
-            "name":"saturday"
-        }
-      },
-      {
-        "model": "education.Day",
-        "pk": 1,
-        "fields": {
-            "name":"sunday"
-        }
-      },
-      {
-        "model": "education.Day",
-        "pk": 2,
-        "fields": {
-            "name":"monday"
-        }
-      },
-      {
-        "model": "education.Day",
-        "pk": 3,
-        "fields": {
-            "name":"tuesday"
-        }
-      },
-      {
-        "model": "education.Day",
-        "pk": 4,
-        "fields": {
-            "name":"wednesday"
-        }
-      },
-      {
-        "model": "education.Day",
-        "pk": 5,
-        "fields": {
-            "name":"thursday"
-        }
-      },
-      {
-        "model": "education.Day",
-        "pk": 6,
-        "fields": {
-            "name":"friday"
-        }
-      },
-      {
         "model": "education.SemesterCourse",
         "pk": 0,
         "fields": {

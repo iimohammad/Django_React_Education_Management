@@ -3,10 +3,8 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils import timezone
 from django.utils.html import format_html
 from import_export.admin import ImportExportActionModelAdmin
-
-import dotenv
+from django.contrib.auth.forms import UserCreationForm
 import os
-dotenv.read_dotenv()
 admin_url = os.environ.get('Admin')
 from accounts.resource import (UserResource,
                                TeacherResource,
@@ -14,9 +12,18 @@ from accounts.resource import (UserResource,
                                EducationalAssistantResource)
 
 from .models import AdminUser, EducationalAssistant, Student, Teacher, User
-
+class CustomUserCreationForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        fields = ('username', 'email', 'first_name', 'last_name')
 
 class CustomUserAdmin(UserAdmin, ImportExportActionModelAdmin):
+    add_form = CustomUserCreationForm  # Use the custom creation form
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'email', 'password1', 'password2', 'first_name', 'last_name'),
+        }),
+    )
     list_display = ('id', 'username', 'email', 'user_number',
                     'gender', 'phone', 'is_staff')
     list_filter = ('gender', 'birthday', 'is_active', 'is_staff')
@@ -114,12 +121,12 @@ class TeacherAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
 
     def user_link(self, obj):
         user_id = obj.user.id
-        user_url = f"http://127.0.0.1:8000/{local_settings.Admin}accounts/user/{user_id}/change/"
+        user_url = f"http://127.0.0.1:8000/{admin_url}accounts/user/{user_id}/change/"
         return format_html('<a href="{}">{}</a>', user_url, obj.user)
 
     def department_link(self, obj):
         department_id = obj.department.id
-        department_url = f"http://127.0.0.1:8000/{local_settings.Admin}education/department/{department_id}/change/"
+        department_url = f"http://127.0.0.1:8000/{admin_url}education/department/{department_id}/change/"
         return format_html('<a href="{}">{}</a>',
                            department_url, obj.department)
 
@@ -148,12 +155,12 @@ class StudentAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
 
     def user_link(self, obj):
         user_id = obj.user.id
-        user_url = f"http://127.0.0.1:8000/{local_settings.Admin}accounts/user/{user_id}/change/"
+        user_url = f"http://127.0.0.1:8000/{admin_url}accounts/user/{user_id}/change/"
         return format_html('<a href="{}">{}</a>', user_url, obj.user)
 
     def major_link(self, obj):
         major_id = obj.major.id
-        major_url = f"http://127.0.0.1:8000/{local_settings.Admin}education/major/{major_id}/change/"
+        major_url = f"http://127.0.0.1:8000/{admin_url}education/major/{major_id}/change/"
         return format_html('<a href="{}">{}</a>', major_url, obj.major)
 
     user_link.short_description = "User"
@@ -179,12 +186,12 @@ class EducationalAssistantAdmin(
 
     def user_link(self, obj):
         user_id = obj.user.id
-        user_url = f"http://127.0.0.1:8000/{local_settings.Admin}accounts/user/{user_id}/change/"
+        user_url = f"http://127.0.0.1:8000/{admin_url}accounts/user/{user_id}/change/"
         return format_html('<a href="{}">{}</a>', user_url, obj.user)
 
     def field_link(self, obj):
         field_id = obj.field.id
-        field_url = f"http://127.0.0.1:8000/{local_settings.Admin}education/major/{field_id}/change/"
+        field_url = f"http://127.0.0.1:8000/{admin_url}education/major/{field_id}/change/"
         return format_html('<a href="{}">{}</a>', field_url, obj.field)
 
     user_link.short_description = "User"
