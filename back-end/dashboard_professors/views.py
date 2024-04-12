@@ -140,7 +140,11 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset
 
 
-class RevisionRequestView(viewsets.ModelViewSet):
+class RevisionRequestView(viewsets.GenericViewSet ,
+                          mixins.ListModelMixin ,
+                          mixins.UpdateModelMixin ,
+                          mixins.RetrieveModelMixin ,
+                          ):
 
     """Revision Confirmation View"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]

@@ -605,17 +605,3 @@ class RevisionRequestViewSet(viewsets.ModelViewSet):
         Disallow DELETE requests.
         """
         return Response({"detail": "DELETE requests are not allowed."}, status=405)
-
-    def perform_update(self, serializer):
-        instance = serializer.instance
-        old_status = instance.educational_assistant_approval_status
-        new_status = serializer.validated_data.get('educational_assistant_approval_status', old_status)
-        
-        if old_status != new_status:
-            # Send email based on the new status
-            if new_status == 'A':
-                send_revision_request_approval_email.delay(instance.student.user.email)
-            elif new_status == 'R':
-                send_revision_request_rejection_email.delay(instance.student.user.email)
-
-        serializer.save()
