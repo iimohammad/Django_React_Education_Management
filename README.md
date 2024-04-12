@@ -38,7 +38,7 @@ This project is a University Education System designed to manage various compone
 - Frontend UI: http://localhost:3000/
 
 ## Our Team
-![Team Image](team.png)
+![Team Image](Team.png)
 
 
 ## License
