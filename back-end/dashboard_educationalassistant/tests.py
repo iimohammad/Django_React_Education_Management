@@ -61,4 +61,4 @@ class EmploymentEducationRequestTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(EmploymentEducationRequest.objects.count(), 1)
 
-    # Add more test cases as needed
+   
