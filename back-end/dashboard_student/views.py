@@ -309,11 +309,6 @@ class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
         serializer.save(student=self.request.user.student)
 
 
-
-    def get_queryset(self):
-        return StudentDeleteSemesterRequest.objects.objects.filter(
-            student__user=self.request.user)
-
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['user'] = self.request.user

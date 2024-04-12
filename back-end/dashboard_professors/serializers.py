@@ -137,7 +137,7 @@ class EmergencyRemovalConfirmationSerializers(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         
         if instance.approval_status == 'A' or instance.approval_status == 'R':
-            raise serializers.ValidationError('cat not change Accepted   and rejected request!')
+            raise serializers.ValidationError('cant not change Accepted and rejected request!')
         
         instance.approval_status = validated_data.get('approval_status', instance.approval_status)
         

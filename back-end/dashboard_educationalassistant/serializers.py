@@ -1,5 +1,6 @@
 from django.db import transaction
-from rest_framework import serializers
+from rest_framework import serializers , status
+from rest_framework.response import Response
 from datetime import date
 from .tasks import (
     send_revision_request_approval_email,
@@ -393,6 +394,7 @@ class StudentCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentCourse
         fields = ['semester_course','status','score']
+        read_only_fields = ['semester_course','status','score']
 
 
 class RevisionRequestSerializer(serializers.ModelSerializer):
@@ -402,27 +404,33 @@ class RevisionRequestSerializer(serializers.ModelSerializer):
         fields = ['id', 'student', 'teacher_approval_status',
                   'educational_assistant_approval_status', 'created_at',
                   'course', 'text', 'answer' , 'score']
-        read_only_fields = ['id', 'student', 'teacher_approval_status', 'created_at', 'course', 'text' , 
+        read_only_fields = ['id', 'student', 'teacher_approval_status', 'created_at', 'course', 'text' ,
                             'answer' , 'score']
-        
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context.get('request') and (self.context['request'].method == 'PATCH' 
+                                        or self.context['request'].method == 'PUT'):
+            fields.pop('course')
+        return fields
     def update(self, instance, validated_data):
         if instance.educational_assistant_approval_status != 'P':
             raise serializers.ValidationError('can not modify answered request')
         
         instance.educational_assistant_approval_status = validated_data.get(
             'educational_assistant_approval_status')
-
+        educational_assistant_approval_status = instance.educational_assistant_approval_status
+        score = instance.score
+        course = instance.course
+        instance1 = instance
         instance.save()
-        if instance.educational_assistant_approval_status == 'A':
-            send_revision_request_approval_email.delay(instance.student.user.email)
-            score = instance.score
-            course = instance.course
+        
+        if educational_assistant_approval_status == 'A':
             course.score = score
             course.save()
-            
-        elif instance.educational_assistant_approval_status == 'R':
-            send_revision_request_rejection_email.delay(instance.student.user.email)
-
-        return instance
+            # send_revision_request_approval_email.delay(instance.student.user.email)
+        elif educational_assistant_approval_status == 'R':
+            # send_revision_request_rejection_email.delay(instance.student.user.email)
+            pass
+        return instance1
         
     

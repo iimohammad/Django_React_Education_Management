@@ -135,7 +135,7 @@ class StudentCourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StudentCourse
-        fields = ['semester_course', 'status', 'score']
+        fields = ['id','semester_course', 'status', 'score']
 
 
 class ExamSemesterSerializer(serializers.ModelSerializer):
