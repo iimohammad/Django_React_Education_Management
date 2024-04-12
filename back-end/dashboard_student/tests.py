@@ -18,7 +18,7 @@ class tests(TestCase):
             education_group='Science'
         )
 
-    def test_student_creation_with_advisor(self):
+        # Create a student object and set it as a class attribute
         self.teacher = Teacher.objects.create(
             user=self.user,
             expertise='Test Expertise',
@@ -34,6 +34,8 @@ class tests(TestCase):
             year_of_study=1,
             major=self.major
         )
+
+    def test_student_creation_with_advisor(self):
         saved_student = Student.objects.get(user=self.user)
         self.assertEqual(saved_student.entry_semester, 'Spring')
         self.assertEqual(int(saved_student.entry_year), 2022)
@@ -46,6 +48,6 @@ def test_unit_selection_request_creation(self):
             student=self.student,
             semester_registration_request=None,  
             approval_status='P', 
-            request_course=None 
+            request_course=None  # استفاده از مقدار پیش‌فرض None برای request_course
         )
-        self.assertEqual(unit_selection_request.student, self.user)
+        self.assertEqual(unit_selection_request.student, self.student)
