@@ -77,30 +77,33 @@ class CourseMajortSerializer(serializers.ModelSerializer):
         model = Major
         fields = ['major_name']
         
+class PrerequisiteRequisiteCourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ['course_name', 'course_code', 'credit_num']
+class PrerequisiteSerializer(serializers.ModelSerializer):
+    prerequisite = PrerequisiteRequisiteCourseSerializer()
+    class Meta:
+        model = Prerequisite
+        fields = ['prerequisite']
+
+class RequisiteSerializer(serializers.ModelSerializer):
+    requisite = PrerequisiteRequisiteCourseSerializer()
+
+    class Meta:
+        model = Requisite
+        fields = ['requisite']
+
 class CourseSerializer(serializers.ModelSerializer):
-    prerequisites = 'PrerequisiteSerializer()'
-    required_by = 'RequisiteSerializer()'
+    required_by = PrerequisiteSerializer(many=True)
+    required_with = RequisiteSerializer(many=True)
     department = CourseDepartmentSerializer()
     major = CourseMajortSerializer()
     class Meta:
         model = Course
-        fields = ['course_name', 'course_code', 'credit_num', 'prerequisites', 'required_by',
+        fields = ['course_name', 'course_code', 'credit_num', 'required_by', 'required_with',
                   'course_type' , 'department' , 'major']
 
-class PrerequisiteSerializer(serializers.ModelSerializer):
-    course = CourseSerializer()
-
-    class Meta:
-        model = Prerequisite
-        fields = ['id', 'course', 'prerequisite']
-
-
-class RequisiteSerializer(serializers.ModelSerializer):
-    course = CourseSerializer()
-
-    class Meta:
-        model = Requisite
-        fields = ['id', 'course', 'requisite']
 
 
 class ClassDaysSerializer(serializers.ModelSerializer):
@@ -109,9 +112,14 @@ class ClassDaysSerializer(serializers.ModelSerializer):
         fields = ['name']
 
 
+class SemesterCourseCourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ['course_name', 'course_code', 'credit_num',
+                  'course_type']
 class SemesterCourseSerializer(serializers.ModelSerializer):
     semester = SemesterSerializer()
-    course = CourseSerializer()
+    course = SemesterCourseCourseSerializer()
     instructor = TeacherSerializer()
     class_days = ClassDaysSerializer(many=True, read_only=True)
 
@@ -147,7 +155,7 @@ class ExamSemesterSerializer(serializers.ModelSerializer):
 
 class ExamSemesterCourseSerializer(serializers.ModelSerializer):
     semester = ExamSemesterSerializer()
-    course = CourseSerializer()
+    course = SemesterCourseCourseSerializer()
 
     class Meta:
         model = SemesterCourse
@@ -189,15 +197,17 @@ class SemesterRegistrationRequestSemesterSerializer(serializers.ModelSerializer)
 
 
 class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
+    requested_courses = SemesterCourseCourseSerializer(many = True)
+    semester = SemesterSerializer()
     class Meta:
         model = SemesterRegistrationRequest
         fields = ['id', 'approval_status', 'created_at', 'semester', 'requested_courses', 'teacher_comment']
         read_only_fields = ['id', 'approval_status', 'created_at', 'teacher_comment']
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['student'] = serializers.PrimaryKeyRelatedField(read_only=True,
-                                            default=serializers.CurrentUserDefault())
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     self.fields['student'] = serializers.PrimaryKeyRelatedField(read_only=True,
+    #                                         default=serializers.CurrentUserDefault())
 
     def validate(self, data):
         student = self.context['request'].user.student
@@ -248,9 +258,9 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         request_course = validated_data.get('request_course')
         
         semester = semester_registration_request.semester
-        
+        remain_credit = find_remain_credit(student)
 
-        if find_remain_credit(student)==0:
+        if remain_credit==0 or request_course.course.credit_num > remain_credit:
             raise serializers.ValidationError("You can not add more courses")
 
         
@@ -451,10 +461,14 @@ class RevisionRequestSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Invalid student")
 
         try:
-            course = StudentCourse.objects.get(pk=student_course_pk, student=student)
+            course = StudentCourse.objects.get(pk=student_course_pk, 
+                                               student=student)
         except Exception:
             raise serializers.ValidationError("Invalid course")
 
+        if course.status == 'F':
+            raise serializers.ValidationError("Final register!")
+        
         if course.score == None:
             raise serializers.ValidationError("Invalid course score")
 
@@ -525,10 +539,7 @@ class EmergencyRemovalRequestSerializer(serializers.ModelSerializer):
                 student=student, course=course,
                 student_explanation=validated_data['student_explanation'])
         except Exception as e:
-            print('*****************')
-            print('*****************')
-            print(validated_data)
-            print(e)
+            pass
         return emergency_removal_request
 
 

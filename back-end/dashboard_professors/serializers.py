@@ -114,7 +114,22 @@ class SemesterRegistrationConfirmationSerializers(serializers.ModelSerializer):
         return instance
 
 class AddRemoveRequestViewSerializers(UnitSelectionRequestTeacherUpdateSerializer):
-    pass
+    class Meta:
+        model = AddRemoveRequest
+        fields = ['id', 'approval_status']
+
+    def validate_approval_status(self, value):
+        if value not in AddRemoveRequest.UnitSelection_APPROVAL_CHOICES:
+            raise serializers.ValidationError("Invalid approval status.")
+        return value
+
+    def update(self, instance, validated_data):
+        instance.approval_status = validated_data.get('approval_status', instance.approval_status)
+        instance.save()
+
+        student_email = instance.student.user.email
+        send_unit_selection_email.delay(student_email, instance.approval_status)
+        return instance
 
 
 class StudentCourseSerializer(serializers.ModelSerializer):

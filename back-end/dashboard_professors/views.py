@@ -193,7 +193,11 @@ class UnitSelectionRequestView(viewsets.GenericViewSet ,
             semester_registration_request__student__advisor = teacher
             )
 
-class AddRemoveRequestView(viewsets.ModelViewSet):
+class AddRemoveRequestView(viewsets.GenericViewSet ,
+                           mixins.ListModelMixin ,
+                           mixins.RetrieveModelMixin ,
+                           mixins.UpdateModelMixin ,
+                           ):
     """Add Remove Confirmation View  --------Waiting for Unit Selection--------"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
@@ -214,8 +218,6 @@ class AddRemoveRequestView(viewsets.ModelViewSet):
         return AddRemoveRequest.objects.filter(
             student__in=students
         )
-
-
 
 
 
