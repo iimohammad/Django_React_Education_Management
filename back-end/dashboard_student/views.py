@@ -468,6 +468,6 @@ class AddRemoveRequestViewSet(UnitSelectionRequestAPIView):
     permission_classes = [
         IsAuthenticated,
         IsStudent, 
-        HavePermosionForUnitSelectionForLastSemester,
+        HavePermissionBasedOnAddAndRemoveTime,
         
     ]
