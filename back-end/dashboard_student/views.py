@@ -249,8 +249,8 @@ class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
     permission_classes = [
         IsAuthenticated,
         IsStudent, 
-        HavePermosionForUnitSelectionForLastSemester,
-        HavePermissionBasedOnUnitSelectionTime,
+        # HavePermosionForUnitSelectionForLastSemester,
+        # HavePermissionBasedOnUnitSelectionTime,
     ]
 
     ordering_fields = ['created_at', 'approval_status']

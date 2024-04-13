@@ -15,6 +15,7 @@ from education.models import (
     Prerequisite,
     Requisite,
 )
+from django.db import transaction
 from accounts.models import Student, Teacher, User
 from .models import (
     SemesterRegistrationRequest,
@@ -341,11 +342,12 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
 
         
         # Add to Student Courses
-        StudentCourse.objects.create(
-                    student = student ,
-                    semester_course = request_course ,
-                    status='R',
-                    )
+        with transaction.atomic():
+            StudentCourse.objects.create(
+                        student = student ,
+                        semester_course = request_course ,
+                        status='R',
+                        )
 
         
         return unit_selection_request
@@ -370,7 +372,8 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         )
         
         # Delete the selected StudentCourse instances
-        student_courses_to_delete.delete()
+        with transaction.atomic():
+            student_courses_to_delete.delete()
         add_from_redis_to_database(instance.request_course.id)
         # Now, delete the corresponding UnitSelectionRequest instance
         instance.delete()

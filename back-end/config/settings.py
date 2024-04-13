@@ -172,14 +172,13 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static_files'),
 ]
 
+
+
 # Set STATIC_ROOT for collecting static files for deployment
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 
-
-
-
-
+MEDIA_ROOT = BASE_DIR / 'media'
 
 
 
