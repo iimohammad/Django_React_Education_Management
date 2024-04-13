@@ -41,15 +41,20 @@ class HavePermissionBasedOnUnitSelectionTime(BasePermission):
         current_date = timezone.now().date()
 
         try:
+            semester_registration_request_id = request.data.get('semester_registration_request')
+            if not semester_registration_request_id:
+                return False
+            
             semester_registration_request = SemesterRegistrationRequest.objects.get(
-                pk=request.data['semester_registration_request']
-                )
+                pk=semester_registration_request_id
+            )
         except SemesterRegistrationRequest.DoesNotExist:
             return False
 
+        semester = semester_registration_request.semester
         if (
-            current_date < semester_registration_request.semester.unit_selection.unit_selection_start or
-            current_date > semester_registration_request.semester.unit_selection.unit_selection_end
+            current_date < semester.unit_selection.unit_selection_start or
+            current_date > semester.unit_selection.unit_selection_end
         ):
             return False
         
