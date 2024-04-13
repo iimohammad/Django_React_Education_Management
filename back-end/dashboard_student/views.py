@@ -96,7 +96,10 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         last_semester = Semester.objects.order_by('-start_semester').first()
-        return SemesterCourse.objects.filter(semester=last_semester).all().order_by('course__course_name')
+        return SemesterCourse.objects.filter(semester=last_semester)\
+                .select_related('course', 'instructor')\
+                .prefetch_related('class_days')\
+                .order_by('course__course_name')
 
     # @method_decorator(cache_page(60 * 5))
     # def dispatch(self, *args, **kwargs):
@@ -121,8 +124,10 @@ class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         last_semester = Semester.objects.order_by('-start_semester').first()
         return StudentCourse.objects.filter(student__user=self.request.user,
-                                            semester_course__semester=last_semester
-                                            ).all()
+                                            semester_course__semester=last_semester)\
+                    .select_related('semester_course__course', 'semester_course__instructor')\
+                    .prefetch_related('semester_course__class_days')\
+                    .all()
 
 
 class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet):
@@ -145,7 +150,7 @@ class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet):
             student__user=self.request.user,
             score__isnull=False,
             score__gte=10,
-        ).filter(Q(status = 'R') | Q(status = 'F'))
+        ).filter(Q(status = 'R') | Q(status = 'F')).select_related('student').all()
 
 
 class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -169,7 +174,7 @@ class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet):
             student__user=self.request.user,
             semester_course__semester=last_semester,
             status='R'
-        ).all()
+        ).select_related('student', 'semester_course__semester').all()
 
 
 class StudentProfileViewset(generics.RetrieveAPIView):
@@ -204,12 +209,9 @@ class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
         raise NotImplementedError("Unsupported version requested")
 
     def get_queryset(self):
-        try:
-            data = SemesterRegistrationRequest.objects.filter(student__user=self.request.user).values_list()
-        except Exception as e:
-            pass
-        
-        return SemesterRegistrationRequest.objects.filter(student__user=self.request.user)
+        return SemesterRegistrationRequest.objects.filter(
+                student__user=self.request.user
+                ).select_related('student').all()
 
     def perform_create(self, serializer):
         serializer.save(student=self.request.user.student)
@@ -268,7 +270,8 @@ class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
     
     def get_queryset(self):
         return UnitSelectionRequest.objects.filter(
-            semester_registration_request__student__user = self.request.user)
+                semester_registration_request__student__user=self.request.user
+                ).select_related('semester_registration_request__student').all()
     
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -304,7 +307,8 @@ class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
 
     def get_queryset(self):
         return StudentDeleteSemesterRequest.objects.filter(
-            semester_registration_request__student__user=self.request.user)
+                semester_registration_request__student__user=self.request.user
+                ).select_related('semester_registration_request__student').all()
 
     # def perform_create(self, serializer):
     #     serializer.save(student=self.request.user.student)
@@ -347,8 +351,8 @@ class RevisionRequestAPIView(mixins.CreateModelMixin,
 
     def get_queryset(self):
         return RevisionRequest.objects.filter(
-            student__user=self.request.user
-            ).all()
+                student__user=self.request.user
+                ).select_related('student').all()
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -392,8 +396,8 @@ class EmergencyRemovalRequestAPIView(mixins.CreateModelMixin,
 
     def get_queryset(self):
         return EmergencyRemovalRequest.objects.filter(
-            student__user=self.request.user
-            ).all()
+                student__user=self.request.user
+                ).select_related('student').all()
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -435,8 +439,8 @@ class EmploymentEducationRequestApiView(mixins.CreateModelMixin,
 
     def get_queryset(self):
         return EmploymentEducationRequest.objects.filter(
-            student__user=self.request.user
-            ).all()
+                student__user=self.request.user
+                ).select_related('student').all()
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -495,7 +499,8 @@ class AddRemoveRequestAPIView(mixins.CreateModelMixin,
     
     def get_queryset(self):
         return AddRemoveRequest.objects.filter(
-            semester_registration_request__student__user = self.request.user)
+                semester_registration_request__student__user=self.request.user
+                ).select_related('semester_registration_request__student').all()
     
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
