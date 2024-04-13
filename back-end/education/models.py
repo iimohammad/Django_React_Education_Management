@@ -100,6 +100,7 @@ class SemesterUnitSelection(models.Model):
     unit_selection_start = models.DateField()
     unit_selection_end = models.DateField()
 
+    
 
 class SemesterClass(models.Model):
     semester = models.OneToOneField(
