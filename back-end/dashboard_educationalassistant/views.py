@@ -1,4 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from django.utils.translation import gettext_lazy as _
 from rest_framework import generics, viewsets, status, views , mixins
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
@@ -181,7 +182,7 @@ class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet):
         if self.request.version == 'v1':
             return StudentCourseSerializer
 
-        raise NotImplementedError("Unsupported version requested")
+        raise NotImplementedError(_("Unsupported version requested"))
 
     def get_queryset(self):
         major = self.request.user.educationalassistant.field
@@ -227,7 +228,7 @@ class StudentRegisteredCoursesViewSet(viewsets.ReadOnlyModelViewSet):
         if self.request.version == 'v1':
             return StudentCourseSerializer
 
-        raise NotImplementedError("Unsupported version requested")
+        raise NotImplementedError(_("Unsupported version requested"))
 
     def get_queryset(self):
         last_semester = Semester.objects.order_by('-start_semester').first()
