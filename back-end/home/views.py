@@ -3,7 +3,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.utils.translation import activate
+from django.utils.translation import activate , get_language
+from django.utils.translation import gettext_lazy as _
 from django.utils import translation
 from accounts.permissions import (IsAdmin, IsEducationalAssistant, IsStudent,
                                   IsTeacher)
@@ -33,11 +34,14 @@ def login(request):
 #         activate(language_code)
 #         return JsonResponse({'success': True})
 #     return JsonResponse({'success': False})
+
 def set_language(request):
     language = request.GET.get('language', 'en')
-    request.session['language'] = language
+
     try:
         activate(language)
-        return JsonResponse({'message': f'Language set to {language}'}, status=status.HTTP_200_OK)
-    except django.utils.translation.TranslationError as e:
-        return JsonResponse({'message': 'Failed to set language'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        response = JsonResponse({'message': _(f'Language set to {language}')}, status=status.HTTP_200_OK)
+        response.set_cookie('django_language', language, max_age=3600, secure=True, httponly=True)
+        return response
+    except:
+        return JsonResponse({'message': _(f'Failed to set {language}')}, status=status.HTTP_406_NOT_ACCEPTABLE)
