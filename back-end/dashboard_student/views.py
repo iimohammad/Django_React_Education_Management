@@ -71,11 +71,13 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         raise NotImplementedError("Unsupported version requested")
 
     def get_queryset(self):
-        return Course.objects.filter(availablity='A').order_by('course_name')
+        student = Student.objects.get(user = self.request.user)
+        department = student.major.department
+        return Course.objects.filter(availablity='A' , department = department).order_by('course_name')
 
-    # @method_decorator(cache_page(60 * 5))
-    # def dispatch(self, *args, **kwargs):
-    #     return super().dispatch(*args, **kwargs)
+    @method_decorator(cache_page(60 * 5))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
 
 
 class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -101,9 +103,9 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
                 .prefetch_related('class_days')\
                 .order_by('course__course_name')
 
-    # @method_decorator(cache_page(60 * 5))
-    # def dispatch(self, *args, **kwargs):
-    #     return super().dispatch(*args, **kwargs)
+    @method_decorator(cache_page(60 * 5))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
 
 
 class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
@@ -251,8 +253,8 @@ class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
     permission_classes = [
         IsAuthenticated,
         IsStudent,
-        HavePermosionForUnitSelectionForLastSemester,
-        HavePermissionBasedOnUnitSelectionTime,
+        # HavePermosionForUnitSelectionForLastSemester,
+        # HavePermissionBasedOnUnitSelectionTime,
     ]
 
     ordering_fields = ['created_at', 'approval_status']
@@ -480,8 +482,8 @@ class AddRemoveRequestAPIView(mixins.CreateModelMixin,
     permission_classes = [
         IsAuthenticated,
         IsStudent,
-        HavePermosionForUnitSelectionForLastSemester,
-        HavePermissionBasedOnAddAndRemoveTime,
+        # HavePermosionForUnitSelectionForLastSemester,
+        # HavePermissionBasedOnAddAndRemoveTime,
     ]
 
     ordering_fields = ['created_at', 'approval_status']
@@ -494,7 +496,7 @@ class AddRemoveRequestAPIView(mixins.CreateModelMixin,
     
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
-            return UnitSelectionRequest
+            return AddRemoveRequestSerializer
         raise NotImplementedError("Unsupported version requested")
     
     def get_queryset(self):
