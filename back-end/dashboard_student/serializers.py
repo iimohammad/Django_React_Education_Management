@@ -101,7 +101,7 @@ class CourseSerializer(serializers.ModelSerializer):
     major = CourseMajortSerializer()
     class Meta:
         model = Course
-        fields = ['course_name', 'course_code', 'credit_num', 'required_by', 'required_with',
+        fields = ['id' ,'course_name', 'course_code', 'credit_num', 'required_by', 'required_with',
                   'course_type' , 'department' , 'major']
 
 
