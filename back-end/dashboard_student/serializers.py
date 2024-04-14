@@ -204,14 +204,18 @@ class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
         fields = ['id', 'approval_status', 'created_at', 'semester', 'requested_courses', 'teacher_comment']
         read_only_fields = ['id', 'approval_status', 'created_at', 'teacher_comment']
 
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     self.fields['student'] = serializers.PrimaryKeyRelatedField(read_only=True,
-    #                                         default=serializers.CurrentUserDefault())
 
-    def validate(self, data):
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context.get('request') and (self.context['request'].method == 'POST'):
+            fields.pop('semester')
+            fields['requested_courses'] = serializers.PrimaryKeyRelatedField(
+                queryset = Course.objects.all() , many = True)
+        return fields
+    def create(self, validated_data):
         student = self.context['request'].user.student
-        semester = data['semester']
+        
+        semester = Semester.objects.order_by('-start_semester').first()
 
         existing_requests = SemesterRegistrationRequest.objects.filter(
             student=student, semester=semester, approval_status__in=['P', 'A']
@@ -221,8 +225,17 @@ class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "A request with 'P' or 'A' status already exists for this semester."
                 )
-
-        return data
+        
+        SemesterRegistrationRequest.objects.create(
+                            student = student ,
+                            semester = semester ,
+                            )
+        
+        return response.Response(
+            data={'message': 'request createed'},
+            status=status.HTTP_201_CREATED
+            )
+    
 class UnitselectionSemesterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Semester
@@ -240,13 +253,23 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
         if self.context.get('request') and self.context['request'].method == 'POST':
             self.fields['approval_status'].default = 'A'
-
+    # request_course = SemesterClassSerializer(many = True)
     class Meta:
         model = UnitSelectionRequest
         fields = ['id', 'semester_registration_request', 'approval_status',
                   'created_at', 'request_course']
         read_only_fields = ['id', 'created_at', 'approval_status']
-
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context.get('request') and self.context['request'].method == 'POST':
+            fields['request_course'] = serializers.PrimaryKeyRelatedField(
+                queryset = SemesterCourse.objects.all()
+            )
+            fields['semester_registration_request'] = serializers.PrimaryKeyRelatedField(
+                queryset = SemesterRegistrationRequest.objects.all()
+            )
+            
+        return fields
     def create(self, validated_data):
         user = self.context['user']
         student = Student.objects.get(user=user)
@@ -258,11 +281,15 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         request_course = validated_data.get('request_course')
         
         semester = semester_registration_request.semester
-        remain_credit = find_remain_credit(student)
+        # try:
+        #     remain_credit = find_remain_credit(student)
+        # except Exception as e:
+        #     pass
+        
+        # if remain_credit==0 or request_course.course.credit_num > remain_credit:
+        #     raise serializers.ValidationError("You can not add more courses")
 
-        if remain_credit==0 or request_course.course.credit_num > remain_credit:
-            raise serializers.ValidationError("You can not add more courses")
-
+        
         
         # check for request_course department
         course_department = request_course.course.department
@@ -273,7 +300,7 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         
         basic_course = request_course.course
         # #Prerequisite
-
+        
         try:
             prerequisite = Prerequisite.objects.filter(course = basic_course)
         except Exception as e:
@@ -522,10 +549,10 @@ class EmergencyRemovalRequestSerializer(serializers.ModelSerializer):
         emergency_start = course.semester_course.semester.emergency.emergency_remove_start
         emergency_end = course.semester_course.semester.emergency.emergency_remove_end
 
-        if current_date < emergency_start:
-            raise serializers.ValidationError("Emergency remove not accesible")
-        elif current_date > emergency_end:
-            raise serializers.ValidationError("Emergency remove ended")
+        # if current_date < emergency_start:
+        #     raise serializers.ValidationError("Emergency remove not accesible")
+        # elif current_date > emergency_end:
+        #     raise serializers.ValidationError("Emergency remove ended")
 
         existing_request = EmergencyRemovalRequest.objects.filter(
             course=course, student=student, approval_status='P').first()

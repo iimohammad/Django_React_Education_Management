@@ -561,8 +561,8 @@ class RevisionRequestViewSet(viewsets.ModelViewSet):
             teacher_approval_status='A',
             educational_assistant_approval_status='P',
             student__major=educational_assistant.field,
-            course__semester_course__semester__start_semester__lte=today,
-            course__semester_course__semester__end_semester__gte=today
+            # course__semester_course__semester__start_semester__lte=today,
+            # course__semester_course__semester__end_semester__gte=today
         )
 
         return queryset

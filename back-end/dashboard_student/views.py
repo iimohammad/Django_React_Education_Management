@@ -195,7 +195,11 @@ class StudentProfileViewset(generics.RetrieveAPIView):
         ).first()
 
 
-class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
+class SemesterRegistrationRequestAPIView(viewsets.GenericViewSet ,
+                                         mixins.ListModelMixin ,
+                                         mixins.CreateModelMixin ,
+                                         mixins.RetrieveModelMixin ,
+                                         ):
     """Semester Registration Request APIView Is OK"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
