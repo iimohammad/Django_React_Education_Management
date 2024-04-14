@@ -1,6 +1,6 @@
 from django.db.models import Q
 from rest_framework import serializers , response , status
-from dashboard_student.utils import calculate_credit_Course_Semester, find_remain_credit, gpa_catergory
+from dashboard_student.utils import add_from_redis_to_database, find_remain_credit, save_to_redis
 from education.models import (
     Day,
     Major,
@@ -15,6 +15,7 @@ from education.models import (
     Prerequisite,
     Requisite,
 )
+from django.db import transaction
 from accounts.models import Student, Teacher, User
 from .models import (
     SemesterRegistrationRequest,
@@ -225,7 +226,26 @@ class UnitSelectionSemesterRegistrationRequestSerializer(serializers.ModelSerial
         fields = ['semester']
 
 
+class UnitselectionSemesterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Semester
+        fields = ['name']
+
+class UnitSelectionSemesterRegistrationRequestSerializer(serializers.ModelSerializer):
+    semester = UnitselectionSemesterSerializer()
+    class Meta:
+        model = SemesterRegistrationRequest
+        fields = ['semester']
+
+
 class UnitSelectionRequestSerializer(serializers.ModelSerializer):
+    remain_course_capacity = serializers.SerializerMethodField()
+
+    def get_remain_course_capacity(self, obj):
+        semester_course = obj.request_course
+        return semester_course.remain_course_capacity
+
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.context.get('request') and self.context['request'].method == 'POST':
@@ -234,28 +254,40 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = UnitSelectionRequest
         fields = ['id', 'semester_registration_request', 'approval_status',
-                  'created_at', 'request_course']
-        read_only_fields = ['id', 'created_at', 'approval_status']
+                  'created_at', 'request_course', 'remain_course_capacity']
+        read_only_fields = ['id', 'created_at', 'approval_status', 'remain_course_capacity']
 
     def create(self, validated_data):
         user = self.context['user']
         student = Student.objects.get(user=user)
         department = student.major.department
         # print(gpa_catergory(student.gpa))
-        
         semester_registration_request = validated_data.get('semester_registration_request')
         
         request_course = validated_data.get('request_course')
         
         semester = semester_registration_request.semester
-        
-
         if find_remain_credit(student)==0:
             raise serializers.ValidationError("You can not add more courses")
 
         
+        remain_capacity = self.calculate_remaining_capacity(student, semester, request_course)
+        if remain_capacity == 0:
+            # Save request to Redis
+            save_to_redis(validated_data.get('request_course').id, user.id)
+            raise serializers.ValidationError(
+                "You cannot add course because the course capacity is full but is reserved for you"
+                )
+        
+        current_date = timezone.now().date()
+        
+        # if current_date < semester.unit_selection.unit_selection_start or \
+        #         current_date > semester.unit_selection.unit_selection_end:
+        #     raise serializers.ValidationError("Invalid semester unit selection time")
+        
         # check for request_course department
         course_department = request_course.course.department
+        print(course_department)
         if course_department != department:
             raise serializers.ValidationError(
                 "Invalid requested course, course not in your department!"
@@ -310,11 +342,12 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
 
         
         # Add to Student Courses
-        StudentCourse.objects.create(
-                    student = student ,
-                    semester_course = request_course ,
-                    status='R',
-                    )
+        with transaction.atomic():
+            StudentCourse.objects.create(
+                        student = student ,
+                        semester_course = request_course ,
+                        status='R',
+                        )
 
         
         return unit_selection_request
@@ -330,10 +363,7 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         
         current_date = timezone.now().date()
         
-        if current_date < semester.unit_selection.unit_selection_start or \
-                current_date > semester.unit_selection.unit_selection_end:
-            raise serializers.ValidationError("Invalid semester unit selection time")
-        
+
         # Get the queryset of StudentCourse instances to delete
         student_courses_to_delete = StudentCourse.objects.filter(
             student=student,
@@ -342,10 +372,19 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         )
         
         # Delete the selected StudentCourse instances
-        student_courses_to_delete.delete()
-        
+        with transaction.atomic():
+            student_courses_to_delete.delete()
+        add_from_redis_to_database(instance.request_course.id)
         # Now, delete the corresponding UnitSelectionRequest instance
         instance.delete()
+
+    def calculate_remaining_capacity(self, student, semester, request_course):
+        # Implement your logic to calculate the remaining capacity here
+        # For example:
+        max_capacity = request_course.course_capacity
+        current_enrollment = StudentCourse.objects.filter(
+            semester_course=request_course, student=student).count()
+        return max_capacity - current_enrollment
 
 class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
     # semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()

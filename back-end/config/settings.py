@@ -163,8 +163,24 @@ USE_TZ = True
 IMPORT_EXPORT_USE_TRANSACTIONS = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# STATIC_URL = '/static/'
+# STATIC_ROOT = './static_files/'
+
 STATIC_URL = '/static/'
-STATIC_ROOT = './static_files/'
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static_files'),
+]
+
+
+
+# Set STATIC_ROOT for collecting static files for deployment
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+
+MEDIA_ROOT = BASE_DIR / 'media'
+
+
 
 if DEBUG:
     REST_FRAMEWORK = {

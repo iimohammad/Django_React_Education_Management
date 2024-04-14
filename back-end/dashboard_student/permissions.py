@@ -41,41 +41,51 @@ class HavePermissionBasedOnUnitSelectionTime(BasePermission):
         current_date = timezone.now().date()
 
         try:
+            semester_registration_request_id = request.data.get('semester_registration_request')
+            if not semester_registration_request_id:
+                return False
+            
             semester_registration_request = SemesterRegistrationRequest.objects.get(
-                pk=request.data['semester_registration_request']
-                )
+                pk=semester_registration_request_id
+            )
         except SemesterRegistrationRequest.DoesNotExist:
             return False
 
+        semester = semester_registration_request.semester
         if (
-            current_date < semester_registration_request.semester.unit_selection.unit_selection_start or
-            current_date > semester_registration_request.semester.unit_selection.unit_selection_end
+            current_date < semester.unit_selection.unit_selection_start or
+            current_date > semester.unit_selection.unit_selection_end
         ):
             return False
         
         return True
 
 
+from rest_framework.permissions import BasePermission
+from django.utils import timezone
+from .models import SemesterRegistrationRequest
+
 class HavePermissionBasedOnAddAndRemoveTime(BasePermission):
     def has_permission(self, request, view):
         current_date = timezone.now().date()
 
         try:
-            add_remove_request_id = request.data.get('semester_registration_request')
-            if not add_remove_request_id:
+            semester_registration_request_id = request.data.get('semester_registration_request')
+            if not semester_registration_request_id:
                 return False
             
-            add_remove_request = AddRemoveRequest.objects.get(pk=add_remove_request_id)
-            add_remove_period = add_remove_request.semester_registration_request.semester.addremove
+            semester_registration_request = SemesterRegistrationRequest.objects.get(pk=semester_registration_request_id)
+            add_remove_period = semester_registration_request.semester.addremove
             if (
                 current_date < add_remove_period.addremove_start or
                 current_date > add_remove_period.addremove_end
             ):
                 return False
-        except (AddRemoveRequest.DoesNotExist, SemesterAddRemove.DoesNotExist):
+        except (SemesterRegistrationRequest.DoesNotExist, SemesterAddRemove.DoesNotExist):
             return False
 
         return True
+
         
 class HavePermssionBasedOnEmergencyRemoveTime(BasePermission):
     pass
