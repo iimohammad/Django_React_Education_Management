@@ -281,7 +281,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 
         queryset = Course.objects.filter(
             department=educational_assistant.field.department,
-            major=educational_assistant.field
+            # major=educational_assistant.field
         )
 
         return queryset
@@ -346,7 +346,7 @@ class SemesterCourseViewSet(viewsets.ModelViewSet):
 
         queryset = SemesterCourse.objects.filter(
             course__department=educational_assistant.field.department,
-            course__major=educational_assistant.field
+            # course__major=educational_assistant.field
         )
 
         return queryset
