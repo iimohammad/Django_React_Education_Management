@@ -65,7 +65,7 @@ class EvaluateStudentsViewSet(viewsets.ModelViewSet):
         teacher = self.request.user.teacher
         query = StudentCourse.objects.filter(
             semester_course__instructor=teacher
-        )
+            ).select_related('semester_course__instructor').all()
         return query
     
     def create(self, request, *args, **kwargs):
@@ -135,8 +135,7 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
         raise NotImplementedError("Unsupported version requested")
 
     def get_queryset(self):
-        teacher = self.request.user.teacher
-        queryset = SemesterCourse.objects.filter(instructor=teacher)
+        queryset = SemesterCourse.objects.filter(instructor=self.request.user.teacher)
         return queryset
 
 
@@ -160,7 +159,8 @@ class RevisionRequestView(viewsets.GenericViewSet ,
     def get_queryset(self):
         teacher = Teacher.objects.get(user = self.request.user)
         queryset = RevisionRequest.objects.filter(
-            course__semester_course__instructor = teacher)
+            course__semester_course__instructor = teacher).select_related(
+                'course__semester_course__instructor')
         return queryset
     
     def create(self, request, *args, **kwargs):
@@ -190,8 +190,8 @@ class UnitSelectionRequestView(viewsets.GenericViewSet ,
     def get_queryset(self):
         teacher = Teacher.objects.get(user = self.request.user)
         return UnitSelectionRequest.objects.filter(
-            semester_registration_request__student__advisor = teacher
-            )
+                semester_registration_request__student__advisor=teacher
+                ).select_related('semester_registration_request__student__advisor').all()
 
 class AddRemoveRequestView(viewsets.GenericViewSet ,
                            mixins.ListModelMixin ,
@@ -210,13 +210,9 @@ class AddRemoveRequestView(viewsets.GenericViewSet ,
         raise NotImplementedError("Unsupported version requested")
 
     def get_queryset(self):
-        # Filter students assigned to the requesting teacher
         teacher = Teacher.objects.get(user = self.request.user)
-        students = Student.objects.filter(advisor=teacher)
-
-        # Filter delete semester requests related to those students
         return AddRemoveRequest.objects.filter(
-            student__in=students
+            semester_registration_request__student__advisor=teacher
         )
 
 
