@@ -17,60 +17,60 @@ class SiteUser(HttpUser):
     @task(10)
     def view_student_courses(self):
         self.client.get('/dashboard_student/student_courses/' ,
-                        name = '/dashboard_student/student_courses/')
+                        name = 'student_courses')
         
     
         
-    @task(10)
+    @task(8)
     def view_exams(self):
         self.client.get('/dashboard_student/student_exams/' ,
-                        name = '/dashboard_student/student_exams/')
+                        name = 'student_exams')
         
-    @task(9)
+    @task(8)
     def view_semester_courses(self):
         self.client.get('/dashboard_student/semester_courses/' ,
-                        name = '/dashboard_student/semester_courses/')
+                        name = 'semester_courses')
     @task(8)
     def view_unit_selection(self):
         self.client.get('/dashboard_student/unit_selection/' ,
-                        name = '/dashboard_student/unit_selection/')
+                        name = 'unit_selection')
     @task(8)
     def view_addremove_equests(self):
         self.client.get('/dashboard_student/AddRemoveRequestViewSet/' ,
-                        name = '/dashboard_student/AddRemoveRequestViewSet/')
+                        name = 'AddRemoveRequestViewSet')
     
     @task(7)
     def view_courses(self):
         self.client.get('/dashboard_student/courses/' ,
-                        name = '/dashboard_student/courses/')
+                        name = 'courses')
         
     @task(7)
     def view_passed_courses(self):
         self.client.get('/dashboard_student/passed_courses/' ,
-                        name = '/dashboard_student/passed_courses/')
+                        name = 'passed_courses')
     
     
     @task(5)
     def view_semester_registrations(self):
         self.client.get('/dashboard_student/semester_registration/' ,
-                        name = '/dashboard_student/semester_registration/')
+                        name = 'semester_registration')
     
     @task(3)
     def view_employment_education_requests(self):
         self.client.get('/dashboard_student/employment_education_request/' ,
-                        name = '/dashboard_student/employment_education_request/')
+                        name = 'employment_education_request')
         
     @task(3)
     def view_revision_request_requests(self):
         self.client.get('/dashboard_student/revision_request/' ,
-                        name = '/dashboard_student/revision_request/')
+                        name = 'revision_request')
     
-    @task(2)
+    @task(3)
     def view_delete_semester_requests(self):
         self.client.get('/dashboard_student/delete_semester_request/' ,
-                        name = '/dashboard_student/delete_semester_request/')
+                        name = 'delete_semester_request')
     
-    @task(2)
+    @task(3)
     def view_profile(self):
         self.client.get('/dashboard_student/profile/' ,
-                        name = '/dashboard_student/profile/')
+                        name = 'profile')
