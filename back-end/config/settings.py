@@ -148,15 +148,17 @@ LANGUAGES = [
     ('fa', 'Persian'),
 ]
 
-LANGUAGE_CODE = 'en'
 
 LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]
+LANGUAGE_CODE = 'fa-IR'
 
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
+
+USE_L10N = True
 
 USE_TZ = True
 
