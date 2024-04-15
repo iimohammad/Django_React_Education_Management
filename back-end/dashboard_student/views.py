@@ -1,4 +1,4 @@
-import json
+from django.utils.translation import gettext_lazy as _
 from rest_framework import viewsets, mixins
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
@@ -6,10 +6,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from .permissions import (
     IsStudent, 
     HavePermosionForUnitSelectionForLastSemester,
-    HavePermissionBasedOnUnitSelectionTime,
+    HavePermissionBasedOnUnitSelectionTimeORaddremoveTime,
     HavePermissionBasedOnAddAndRemoveTime,
     HavePermssionEmoloymentDegreeTime,
 )
@@ -45,12 +46,15 @@ from .filters import (
     StudentCourseFilter,
     StudentExamFilter
 )
+from .utils import add_from_redis_to_database
 from .pagination import DefaultPagination
 from .versioning import DefaultVersioning
 from django_filters.rest_framework import DjangoFilterBackend
 from django.http import Http404
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
+from django.utils import timezone
+from django.db.models import Q
 
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -67,10 +71,12 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         if self.request.version == 'v1':
             return CourseSerializer
 
-        raise NotImplementedError("Unsupported version requested")
+        raise NotImplementedError(_("Unsupported version requested"))
 
     def get_queryset(self):
-        return Course.objects.filter(availablity='A').all()
+        student = Student.objects.get(user = self.request.user)
+        department = student.major.department
+        return Course.objects.filter(availablity='A' , department = department).order_by('course_name')
 
     @method_decorator(cache_page(60 * 5))
     def dispatch(self, *args, **kwargs):
@@ -91,11 +97,14 @@ class SemesterCourseViewSet(viewsets.ReadOnlyModelViewSet):
         if self.request.version == 'v1':
             return SemesterCourseSerializer
 
-        raise NotImplementedError("Unsupported version requested")
+        raise NotImplementedError(_("Unsupported version requested"))
 
     def get_queryset(self):
         last_semester = Semester.objects.order_by('-start_semester').first()
-        return SemesterCourse.objects.filter(semester=last_semester).all()
+        return SemesterCourse.objects.filter(semester=last_semester)\
+                .select_related('course', 'instructor')\
+                .prefetch_related('class_days')\
+                .order_by('course__course_name')
 
     @method_decorator(cache_page(60 * 5))
     def dispatch(self, *args, **kwargs):
@@ -110,18 +119,19 @@ class StudentCoursesViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated, IsStudent]
     search_fields = ['semester_course__course__course_name']
     ordering_fields = ['entry_semester']
-
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return StudentCourseSerializer
         
-        raise NotImplementedError("Unsupported version requested")
+        raise NotImplementedError(_("Unsupported version requested"))
 
     def get_queryset(self):
         last_semester = Semester.objects.order_by('-start_semester').first()
         return StudentCourse.objects.filter(student__user=self.request.user,
-                                            semester_course__semester=last_semester
-                                            ).all()
+                                            semester_course__semester=last_semester)\
+                    .select_related('semester_course__course', 'semester_course__instructor')\
+                    .prefetch_related('semester_course__class_days')\
+                    .all()
 
 
 class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet):
@@ -137,15 +147,14 @@ class StudentPassedCoursesViewSet(viewsets.ReadOnlyModelViewSet):
         if self.request.version == 'v1':
             return StudentCourseSerializer
 
-        raise NotImplementedError("Unsupported version requested")
+        raise NotImplementedError(_("Unsupported version requested"))
 
     def get_queryset(self):
         return StudentCourse.objects.filter(
             student__user=self.request.user,
             score__isnull=False,
             score__gte=10,
-            status='R'
-        )
+        ).filter(Q(status = 'R') | Q(status = 'F')).select_related('student').all()
 
 
 class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -161,7 +170,7 @@ class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet):
         if self.request.version == 'v1':
             return ExamStudentCourseSerializer
 
-        raise NotImplementedError("Unsupported version requested")
+        raise NotImplementedError(_("Unsupported version requested"))
 
     def get_queryset(self):
         last_semester = Semester.objects.order_by('-start_semester').first()
@@ -169,7 +178,7 @@ class StudentExamsViewSet(viewsets.ReadOnlyModelViewSet):
             student__user=self.request.user,
             semester_course__semester=last_semester,
             status='R'
-        ).all()
+        ).select_related('student', 'semester_course__semester').all()
 
 
 class StudentProfileViewset(generics.RetrieveAPIView):
@@ -180,7 +189,7 @@ class StudentProfileViewset(generics.RetrieveAPIView):
         if self.request.version == 'v1':
             return ProfileStudentSerializer
 
-        raise NotImplementedError("Unsupported version requested")
+        raise NotImplementedError(_("Unsupported version requested"))
 
     def get_object(self):
         return Student.objects.filter(
@@ -188,7 +197,11 @@ class StudentProfileViewset(generics.RetrieveAPIView):
         ).first()
 
 
-class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
+class SemesterRegistrationRequestAPIView(viewsets.GenericViewSet ,
+                                         mixins.ListModelMixin ,
+                                         mixins.CreateModelMixin ,
+                                         mixins.RetrieveModelMixin ,
+                                         ):
     """Semester Registration Request APIView Is OK"""
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     pagination_class = DefaultPagination
@@ -201,15 +214,12 @@ class SemesterRegistrationRequestAPIView(viewsets.ModelViewSet):
         if self.request.version == 'v1':
             return SemesterRegistrationRequestSerializer
 
-        raise NotImplementedError("Unsupported version requested")
+        raise NotImplementedError(_("Unsupported version requested"))
 
     def get_queryset(self):
-        try:
-            data = SemesterRegistrationRequest.objects.filter(student__user=self.request.user).values_list()
-        except Exception as e:
-            print(e)
-        print(data)
-        return SemesterRegistrationRequest.objects.filter(student__user=self.request.user)
+        return SemesterRegistrationRequest.objects.filter(
+                student__user=self.request.user
+                ).select_related('student').all()
 
     def perform_create(self, serializer):
         serializer.save(student=self.request.user.student)
@@ -248,9 +258,9 @@ class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
     versioning_class = DefaultVersioning
     permission_classes = [
         IsAuthenticated,
-        IsStudent, 
+        IsStudent,
         # HavePermosionForUnitSelectionForLastSemester,
-        # HavePermissionBasedOnUnitSelectionTime,
+        # HavePermissionBasedOnUnitSelectionTimeORaddremoveTime,
     ]
 
     ordering_fields = ['created_at', 'approval_status']
@@ -264,16 +274,36 @@ class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return UnitSelectionRequestSerializer
-        raise NotImplementedError("Unsupported version requested")
+        raise NotImplementedError(_("Unsupported version requested"))
     
     def get_queryset(self):
         return UnitSelectionRequest.objects.filter(
-            semester_registration_request__student__user = self.request.user)
+                semester_registration_request__student__user=self.request.user
+                ).select_related('semester_registration_request__student').all()
     
     def destroy(self, request, *args, **kwargs):
+        user = request.user
+        student = Student.objects.get(user=user)
         instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        serializer.delete(instance)
+        semester_registration_request = instance.semester_registration_request
+        request_course = instance.request_course
+        semester = semester_registration_request.semester
+        
+        # current_date = timezone.now().date()
+        
+        # if current_date < semester.unit_selection.unit_selection_start or \
+        #         current_date > semester.unit_selection.unit_selection_end:
+
+        #     return Response("Invalid semester unit selection time")
+        
+        # Get the queryset of StudentCourse instances to delete
+        s = StudentCourse.objects.filter(
+            student=student,
+            semester_course=request_course,
+        ).delete()
+        instance = self.get_object()
+        instance.delete()
+        add_from_redis_to_database(instance.request_course.id)
         return Response(
             {"message": "UnitSelectionRequest deleted successfully"},
               status=status.HTTP_204_NO_CONTENT)
@@ -299,12 +329,13 @@ class StudentDeleteSemesterRequestAPIView(mixins.CreateModelMixin,
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return StudentDeleteSemesterRequestSerializer
-        raise NotImplementedError("Unsupported version requested")
+        raise NotImplementedError(_("Unsupported version requested"))
     
 
     def get_queryset(self):
         return StudentDeleteSemesterRequest.objects.filter(
-            semester_registration_request__student__user=self.request.user)
+                semester_registration_request__student__user=self.request.user
+                ).select_related('semester_registration_request__student').all()
 
     # def perform_create(self, serializer):
     #     serializer.save(student=self.request.user.student)
@@ -343,12 +374,12 @@ class RevisionRequestAPIView(mixins.CreateModelMixin,
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return RevisionRequestSerializer
-        raise NotImplementedError("Unsupported version requested")
+        raise NotImplementedError(_("Unsupported version requested"))
 
     def get_queryset(self):
         return RevisionRequest.objects.filter(
-            student__user=self.request.user
-            ).all()
+                student__user=self.request.user
+                ).select_related('student').all()
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -388,12 +419,12 @@ class EmergencyRemovalRequestAPIView(mixins.CreateModelMixin,
         if self.request.version == 'v1':
             return EmergencyRemovalRequestSerializer
 
-        raise NotImplementedError("Unsupported version requested")
+        raise NotImplementedError(_("Unsupported version requested"))
 
     def get_queryset(self):
         return EmergencyRemovalRequest.objects.filter(
-            student__user=self.request.user
-            ).all()
+                student__user=self.request.user
+                ).select_related('student').all()
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -431,12 +462,12 @@ class EmploymentEducationRequestApiView(mixins.CreateModelMixin,
     def get_serializer_class(self, *args, **kwargs):
         if self.request.version == 'v1':
             return EmploymentEducationRequestSerializer
-        raise NotImplementedError("Unsupported version requested")
+        raise NotImplementedError(_("Unsupported version requested"))
 
     def get_queryset(self):
         return EmploymentEducationRequest.objects.filter(
-            student__user=self.request.user
-            ).all()
+                student__user=self.request.user
+                ).select_related('student').all()
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -463,11 +494,50 @@ class EmploymentEducationRequestApiView(mixins.CreateModelMixin,
 
 
 
-class AddRemoveRequestViewSet(UnitSelectionRequestAPIView):
+# class AddRemoveRequestAPIView(mixins.CreateModelMixin,
+#                                     mixins.RetrieveModelMixin,
+#                                     mixins.DestroyModelMixin,
+#                                     mixins.ListModelMixin,
+#                                     viewsets.GenericViewSet,
+#                                     ):
+#     """AddRemove"""
+#     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+#     pagination_class = DefaultPagination
+#     versioning_class = DefaultVersioning
+#     permission_classes = [
+#         IsAuthenticated,
+#         IsStudent,
+#         # HavePermosionForUnitSelectionForLastSemester,
+#         # HavePermissionBasedOnAddAndRemoveTime,
+#     ]
+
+#     ordering_fields = ['created_at', 'approval_status']
+#     versioning_class = DefaultVersioning
+
+#     def get_serializer_context(self):
+#         context = super().get_serializer_context()
+#         context['user'] = self.request.user
+#         return context
     
-    permission_classes = [
-        IsAuthenticated,
-        IsStudent, 
-        HavePermissionBasedOnAddAndRemoveTime,
-        
-    ]
+#     def get_serializer_class(self, *args, **kwargs):
+#         if self.request.version == 'v1':
+#             return AddRemoveRequestSerializer
+#         raise NotImplementedError("Unsupported version requested")
+    
+#     def get_queryset(self):
+#         return AddRemoveRequest.objects.filter(
+#                 semester_registration_request__student__user=self.request.user
+#                 ).select_related('semester_registration_request__student').all()
+    
+#     def destroy(self, request, *args, **kwargs):
+#         instance = self.get_object()
+#         serializer = self.get_serializer(instance)
+#         if instance.approval_status != 'P':
+#             return Response(
+#             {"message": "can not delete answered request"},
+#               status=status.HTTP_403_FORBIDDEN)
+            
+#         serializer.delete(instance)
+#         return Response(
+#             {"message": "UnitSelectionRequest deleted successfully"},
+#               status=status.HTTP_204_NO_CONTENT)

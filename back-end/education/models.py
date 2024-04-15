@@ -171,7 +171,8 @@ class SemesterCourse(models.Model):
     @property
     def remain_course_capacity(self):
         return self.course_capacity - StudentCourse.objects.filter(
-            semester_course = self).count()
+            semester_course = self).filter(
+                    models.Q(status = 'R') | models.Q(status = 'F')).count()
 
     def __str__(self):
         return f"{self.course.course_name} - {self.semester.name}"

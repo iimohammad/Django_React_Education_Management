@@ -15,7 +15,7 @@ from accounts.permissions import (IsAdmin, IsEducationalAssistant, IsStudent,
 from accounts.views import CustomLogoutView
 from home.views import login
 from utils.error_views import custom_404
-
+from django.conf.urls.i18n import i18n_patterns
 # Authentication URLs
 urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
