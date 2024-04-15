@@ -679,10 +679,6 @@ class AddRemoveRequestSerializer(serializers.ModelSerializer):
             if not exists:
                 raise serializers.ValidationError("requisite not met!")
 
-        
-        
-
-        
         with transaction.atomic():
             # Create the UnitSelectionRequest instance
             unit_selection_request = UnitSelectionRequest.objects.create(

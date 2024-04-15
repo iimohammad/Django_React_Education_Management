@@ -1,7 +1,6 @@
 from django.urls import path,include
 from rest_framework.routers import DefaultRouter
 from .views import  (
-                    AddRemoveRequestAPIView,
                     CourseViewSet, 
                     EmergencyRemovalRequestAPIView,
                     EmploymentEducationRequestApiView,
@@ -39,7 +38,7 @@ router.register('delete_semester_request' , StudentDeleteSemesterRequestAPIView 
 router.register('employment_education_request' , EmploymentEducationRequestApiView , 
                 basename='employmenteducationrequest')
 
-router.register('AddRemoveRequestViewSet',AddRemoveRequestAPIView,basename='AddRemoveRequestViewSet')
+router.register('AddRemoveRequestViewSet',UnitSelectionRequestAPIView,basename='AddRemoveRequestViewSet')
 
 
 urlpatterns = [

@@ -36,7 +36,7 @@ class HavePermosionForUnitSelectionForLastSemester(BasePermission):
             student = student,
             approval_status = 'A').exists()
 
-class HavePermissionBasedOnUnitSelectionTime(BasePermission):
+class HavePermissionBasedOnUnitSelectionTimeORaddremoveTime(BasePermission):
     def has_permission(self, request, view):
         current_date = timezone.now().date()
 
@@ -51,14 +51,23 @@ class HavePermissionBasedOnUnitSelectionTime(BasePermission):
             return False
 
         semester = semester_registration_request.semester
+        
         if (
             current_date < semester.unit_selection.unit_selection_start or
             current_date > semester.unit_selection.unit_selection_end
         ):
-            return False
+            unit_selection_permission =  False
+        else:
+            unit_selection_permission = True
         
-        return True
-
+        if (
+            current_date < semester.addremove.addremove_start or
+            current_date > semester.addremove.addremove_end
+        ):
+            addremove_permission =  False
+        else:
+            addremove_permission = True
+        return (addremove_permission or unit_selection_permission)
 
 from rest_framework.permissions import BasePermission
 from django.utils import timezone

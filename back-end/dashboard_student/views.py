@@ -10,7 +10,7 @@ from rest_framework.exceptions import ValidationError
 from .permissions import (
     IsStudent, 
     HavePermosionForUnitSelectionForLastSemester,
-    HavePermissionBasedOnUnitSelectionTime,
+    HavePermissionBasedOnUnitSelectionTimeORaddremoveTime,
     HavePermissionBasedOnAddAndRemoveTime,
     HavePermssionEmoloymentDegreeTime,
 )
@@ -260,7 +260,7 @@ class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
         IsAuthenticated,
         IsStudent,
         # HavePermosionForUnitSelectionForLastSemester,
-        # HavePermissionBasedOnUnitSelectionTime,
+        # HavePermissionBasedOnUnitSelectionTimeORaddremoveTime,
     ]
 
     ordering_fields = ['created_at', 'approval_status']
@@ -494,50 +494,50 @@ class EmploymentEducationRequestApiView(mixins.CreateModelMixin,
 
 
 
-class AddRemoveRequestAPIView(mixins.CreateModelMixin,
-                                    mixins.RetrieveModelMixin,
-                                    mixins.DestroyModelMixin,
-                                    mixins.ListModelMixin,
-                                    viewsets.GenericViewSet,
-                                    ):
-    """AddRemove"""
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    pagination_class = DefaultPagination
-    versioning_class = DefaultVersioning
-    permission_classes = [
-        IsAuthenticated,
-        IsStudent,
-        # HavePermosionForUnitSelectionForLastSemester,
-        # HavePermissionBasedOnAddAndRemoveTime,
-    ]
+# class AddRemoveRequestAPIView(mixins.CreateModelMixin,
+#                                     mixins.RetrieveModelMixin,
+#                                     mixins.DestroyModelMixin,
+#                                     mixins.ListModelMixin,
+#                                     viewsets.GenericViewSet,
+#                                     ):
+#     """AddRemove"""
+#     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+#     pagination_class = DefaultPagination
+#     versioning_class = DefaultVersioning
+#     permission_classes = [
+#         IsAuthenticated,
+#         IsStudent,
+#         # HavePermosionForUnitSelectionForLastSemester,
+#         # HavePermissionBasedOnAddAndRemoveTime,
+#     ]
 
-    ordering_fields = ['created_at', 'approval_status']
-    versioning_class = DefaultVersioning
+#     ordering_fields = ['created_at', 'approval_status']
+#     versioning_class = DefaultVersioning
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context['user'] = self.request.user
-        return context
+#     def get_serializer_context(self):
+#         context = super().get_serializer_context()
+#         context['user'] = self.request.user
+#         return context
     
-    def get_serializer_class(self, *args, **kwargs):
-        if self.request.version == 'v1':
-            return AddRemoveRequestSerializer
-        raise NotImplementedError("Unsupported version requested")
+#     def get_serializer_class(self, *args, **kwargs):
+#         if self.request.version == 'v1':
+#             return AddRemoveRequestSerializer
+#         raise NotImplementedError("Unsupported version requested")
     
-    def get_queryset(self):
-        return AddRemoveRequest.objects.filter(
-                semester_registration_request__student__user=self.request.user
-                ).select_related('semester_registration_request__student').all()
+#     def get_queryset(self):
+#         return AddRemoveRequest.objects.filter(
+#                 semester_registration_request__student__user=self.request.user
+#                 ).select_related('semester_registration_request__student').all()
     
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        if instance.approval_status != 'P':
-            return Response(
-            {"message": "can not delete answered request"},
-              status=status.HTTP_403_FORBIDDEN)
+#     def destroy(self, request, *args, **kwargs):
+#         instance = self.get_object()
+#         serializer = self.get_serializer(instance)
+#         if instance.approval_status != 'P':
+#             return Response(
+#             {"message": "can not delete answered request"},
+#               status=status.HTTP_403_FORBIDDEN)
             
-        serializer.delete(instance)
-        return Response(
-            {"message": "UnitSelectionRequest deleted successfully"},
-              status=status.HTTP_204_NO_CONTENT)
+#         serializer.delete(instance)
+#         return Response(
+#             {"message": "UnitSelectionRequest deleted successfully"},
+#               status=status.HTTP_204_NO_CONTENT)
