@@ -282,12 +282,19 @@ class EmploymentEducationConfirmationSerializer(serializers.ModelSerializer):
 
 
 class SemesterRegistrationRequestSerializers(serializers.ModelSerializer):
+    student = StudentSerializer()
+    requested_courses = CourseSerializer(many=True)
     class Meta:
         model = SemesterRegistrationRequest
         fields = ['id', 'student', 'approval_status', 'created_at',
                   'semester', 'requested_courses', 'teacher_comment']
         read_only_fields = ['id', 'student', 'created_at', 'semester', 'requested_courses']
-        
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context.get('request') and (self.context['request'].method == 'POST' 
+                                            or self.context['request'].method == 'PUT'):
+            fields.pop('requested_courses')
+        return fields
     def validate_approval_status(self, value):
         if value not in ['P', 'A', 'R']:
             raise serializers.ValidationError("Invalid approval status.")

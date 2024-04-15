@@ -225,11 +225,12 @@ class SemesterRegistrationRequestSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "A request with 'P' or 'A' status already exists for this semester."
                 )
-        
-        SemesterRegistrationRequest.objects.create(
+
+        semester_registration_request = SemesterRegistrationRequest.objects.create(
                             student = student ,
                             semester = semester ,
-                            )
+                            ).requested_courses.set(validated_data['requested_courses'])
+        # return semester_registration_request
         
         return response.Response(
             data={'message': 'request createed'},
@@ -249,11 +250,11 @@ class UnitSelectionSemesterRegistrationRequestSerializer(serializers.ModelSerial
 
 
 class UnitSelectionRequestSerializer(serializers.ModelSerializer):
+    request_course = SemesterCourseSerializer()
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.context.get('request') and self.context['request'].method == 'POST':
             self.fields['approval_status'].default = 'A'
-    # request_course = SemesterClassSerializer(many = True)
     class Meta:
         model = UnitSelectionRequest
         fields = ['id', 'semester_registration_request', 'approval_status',
@@ -277,7 +278,9 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         # print(gpa_catergory(student.gpa))
         
         semester_registration_request = validated_data.get('semester_registration_request')
-        
+        if semester_registration_request.student != student:
+            raise serializers.ValidationError("wrong semester registration request")
+
         request_course = validated_data.get('request_course')
         
         semester = semester_registration_request.semester
@@ -340,7 +343,7 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
         # Create the UnitSelectionRequest instance
         unit_selection_request = UnitSelectionRequest.objects.create(
             semester_registration_request=semester_registration_request,
-            approval_status='P',  
+            approval_status='P',
             request_course=request_course
         )
         
@@ -353,36 +356,7 @@ class UnitSelectionRequestSerializer(serializers.ModelSerializer):
                     status='R',
                     )
 
-        
         return unit_selection_request
-
-
-    def delete(self, instance):
-        user = self.context['user']
-        student = Student.objects.get(user=user)
-        
-        semester_registration_request = instance.semester_registration_request
-        request_course = instance.request_course
-        semester = semester_registration_request.semester
-        
-        current_date = timezone.now().date()
-        
-        if current_date < semester.unit_selection.unit_selection_start or \
-                current_date > semester.unit_selection.unit_selection_end:
-            raise serializers.ValidationError("Invalid semester unit selection time")
-        
-        # Get the queryset of StudentCourse instances to delete
-        student_courses_to_delete = StudentCourse.objects.filter(
-            student=student,
-            semester_course=request_course,
-            status='R',
-        )
-        
-        # Delete the selected StudentCourse instances
-        student_courses_to_delete.delete()
-        
-        # Now, delete the corresponding UnitSelectionRequest instance
-        instance.delete()
 
 class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
     # semester_registration_request = UnitSelectionSemesterRegistrationRequestSerializer()

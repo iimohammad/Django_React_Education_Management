@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from .permissions import (
     IsStudent, 
     HavePermosionForUnitSelectionForLastSemester,
@@ -51,6 +52,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.http import Http404
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
+from django.utils import timezone
 from django.db.models import Q
 
 
@@ -280,9 +282,30 @@ class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
                 ).select_related('semester_registration_request__student').all()
     
     def destroy(self, request, *args, **kwargs):
+        user = request.user
+        student = Student.objects.get(user=user)
         instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        serializer.delete(instance)
+        semester_registration_request = instance.semester_registration_request
+        request_course = instance.request_course
+        semester = semester_registration_request.semester
+        
+        current_date = timezone.now().date()
+        print('___________')
+        print('___________')
+        print(semester.unit_selection.unit_selection_start)
+        print(semester.unit_selection.unit_selection_end)
+        if current_date < semester.unit_selection.unit_selection_start or \
+                current_date > semester.unit_selection.unit_selection_end:
+
+            return Response("Invalid semester unit selection time")
+        
+        # Get the queryset of StudentCourse instances to delete
+        s = StudentCourse.objects.filter(
+            student=student,
+            semester_course=request_course,
+        ).delete()
+        instance = self.get_object()
+        instance.delete()
         return Response(
             {"message": "UnitSelectionRequest deleted successfully"},
               status=status.HTTP_204_NO_CONTENT)
