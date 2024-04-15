@@ -127,3 +127,5 @@ class EducationalAssistant(models.Model):
 class AdminUser(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, unique=True, related_name='adminuser')
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name}"
