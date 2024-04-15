@@ -401,9 +401,7 @@ class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
         educational_assistant_approval_status = validated_data.get('educational_assistant_approval_status')
         educational_assistant_explanation = validated_data.get('educational_assistant_explanation')
         semester_registration_request = validated_data.get('semester_registration_request')
-        print('________________')
-        print('________________')
-        print(semester_registration_request)
+
         
         # student_email = instance.semester_registration_request.student.user.email
         if educational_assistant_approval_status == 'A':
@@ -424,9 +422,7 @@ class StudentDeleteSemesterRequestSerializer(serializers.ModelSerializer):
                 instance.save()
                 # send_semester_delete_approval_email.delay(student_email)
             except Exception as e:
-                print('__________')
-                print('__________')
-                print(e)
+                pass
                 
             
         elif educational_assistant_explanation == 'R':

@@ -282,7 +282,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 
         queryset = Course.objects.filter(
             department=educational_assistant.field.department,
-            major=educational_assistant.field
+            # major=educational_assistant.field
         )
 
         return queryset
@@ -347,7 +347,7 @@ class SemesterCourseViewSet(viewsets.ModelViewSet):
 
         queryset = SemesterCourse.objects.filter(
             course__department=educational_assistant.field.department,
-            course__major=educational_assistant.field
+            # course__major=educational_assistant.field
         )
 
         return queryset
@@ -562,8 +562,8 @@ class RevisionRequestViewSet(viewsets.ModelViewSet):
             teacher_approval_status='A',
             educational_assistant_approval_status='P',
             student__major=educational_assistant.field,
-            course__semester_course__semester__start_semester__lte=today,
-            course__semester_course__semester__end_semester__gte=today
+            # course__semester_course__semester__start_semester__lte=today,
+            # course__semester_course__semester__end_semester__gte=today
         )
 
         return queryset
