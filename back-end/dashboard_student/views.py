@@ -46,6 +46,7 @@ from .filters import (
     StudentCourseFilter,
     StudentExamFilter
 )
+from .utils import add_from_redis_to_database
 from .pagination import DefaultPagination
 from .versioning import DefaultVersioning
 from django_filters.rest_framework import DjangoFilterBackend
@@ -288,15 +289,12 @@ class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
         request_course = instance.request_course
         semester = semester_registration_request.semester
         
-        current_date = timezone.now().date()
-        print('___________')
-        print('___________')
-        print(semester.unit_selection.unit_selection_start)
-        print(semester.unit_selection.unit_selection_end)
-        if current_date < semester.unit_selection.unit_selection_start or \
-                current_date > semester.unit_selection.unit_selection_end:
+        # current_date = timezone.now().date()
+        
+        # if current_date < semester.unit_selection.unit_selection_start or \
+        #         current_date > semester.unit_selection.unit_selection_end:
 
-            return Response("Invalid semester unit selection time")
+        #     return Response("Invalid semester unit selection time")
         
         # Get the queryset of StudentCourse instances to delete
         s = StudentCourse.objects.filter(
@@ -305,6 +303,7 @@ class UnitSelectionRequestAPIView(viewsets.ModelViewSet):
         ).delete()
         instance = self.get_object()
         instance.delete()
+        add_from_redis_to_database(instance.request_course.id)
         return Response(
             {"message": "UnitSelectionRequest deleted successfully"},
               status=status.HTTP_204_NO_CONTENT)

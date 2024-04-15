@@ -255,8 +255,9 @@ class RevisionRequestSerializers(serializers.ModelSerializer):
         instance.teacher_approval_status = validated_data.get(
             'teacher_approval_status', instance.teacher_approval_status)
         
-        instance.answer = validated_data.get('answer', instance.answer)
+        
         if instance.teacher_approval_status == 'A':
+            instance.answer = validated_data.get('answer', instance.answer)
             score = validated_data.get('score')
             try:
                 score = decimal.Decimal(score)
@@ -265,10 +266,11 @@ class RevisionRequestSerializers(serializers.ModelSerializer):
             if score>20 or score<0:
                 raise serializers.ValidationError('invalid score!')
             instance.score =score
-            send_approved_revision.delay(instance.student.user.email)
+            # send_approved_revision.delay(instance.student.user.email)
         elif instance.teacher_approval_status == 'R':
-            send_rejected_revision.delay(instance.student.user.email)
-
+            instance.answer = validated_data.get('answer', instance.answer)
+            # send_rejected_revision.delay(instance.student.user.email)
+        
         instance.save()
         return instance
 

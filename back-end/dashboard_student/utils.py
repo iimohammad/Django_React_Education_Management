@@ -61,7 +61,6 @@ def find_remain_credit(desired_student):
 def save_to_redis(course_id, user_id):
     redis_instance = redis.StrictRedis(
         host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
-
     if not redis_instance.sismember(f"course_{course_id}_requests", user_id):
         redis_instance.sadd(f"course_{course_id}_requests", user_id)
 
