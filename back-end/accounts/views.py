@@ -31,7 +31,7 @@ class LogoutAPIView(APIView):
     def post(self, request):
         request.user.auth_token.delete()
         return Response(
-            data={'message': f'{_('Bye')} {request.user.username}!'},
+            data={'message': f'Bye {request.user.username}!'},
             status=status.HTTP_204_NO_CONTENT
         )
 
