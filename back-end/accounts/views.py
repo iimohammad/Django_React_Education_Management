@@ -21,7 +21,7 @@ from rest_framework.reverse import reverse_lazy
 from .models import User
 from .versioning import DefualtVersioning
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
+from django.utils.translation import gettext_lazy as _
 from django.core.cache import cache
 from .permissions import IsNotAuthenticated
 
@@ -31,7 +31,7 @@ class LogoutAPIView(APIView):
     def post(self, request):
         request.user.auth_token.delete()
         return Response(
-            data={'message': f'Bye {request.user.username}!'},
+            data={'message': f'{_('Bye')} {request.user.username}!'},
             status=status.HTTP_204_NO_CONTENT
         )
 
