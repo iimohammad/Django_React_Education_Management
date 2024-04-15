@@ -159,8 +159,6 @@ class tests(APITestCase):
         response = self.client.patch(url, json.dumps(data),
                                 content_type='application/json',
                                 HTTP_ACCEPT='application/json; version=v1')
-        print('____________')
-        print(response.content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
     def test_show_my_students_get_list(self):

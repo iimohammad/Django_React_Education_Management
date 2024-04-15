@@ -114,7 +114,22 @@ class SemesterRegistrationConfirmationSerializers(serializers.ModelSerializer):
         return instance
 
 class AddRemoveRequestViewSerializers(UnitSelectionRequestTeacherUpdateSerializer):
-    pass
+    class Meta:
+        model = AddRemoveRequest
+        fields = ['id', 'approval_status']
+
+    def validate_approval_status(self, value):
+        if value not in AddRemoveRequest.UnitSelection_APPROVAL_CHOICES:
+            raise serializers.ValidationError("Invalid approval status.")
+        return value
+
+    def update(self, instance, validated_data):
+        instance.approval_status = validated_data.get('approval_status', instance.approval_status)
+        instance.save()
+
+        student_email = instance.student.user.email
+        send_unit_selection_email.delay(student_email, instance.approval_status)
+        return instance
 
 
 class StudentCourseSerializer(serializers.ModelSerializer):
@@ -240,8 +255,9 @@ class RevisionRequestSerializers(serializers.ModelSerializer):
         instance.teacher_approval_status = validated_data.get(
             'teacher_approval_status', instance.teacher_approval_status)
         
-        instance.answer = validated_data.get('answer', instance.answer)
+        
         if instance.teacher_approval_status == 'A':
+            instance.answer = validated_data.get('answer', instance.answer)
             score = validated_data.get('score')
             try:
                 score = decimal.Decimal(score)
@@ -250,10 +266,11 @@ class RevisionRequestSerializers(serializers.ModelSerializer):
             if score>20 or score<0:
                 raise serializers.ValidationError('invalid score!')
             instance.score =score
-            send_approved_revision.delay(instance.student.user.email)
+            # send_approved_revision.delay(instance.student.user.email)
         elif instance.teacher_approval_status == 'R':
-            send_rejected_revision.delay(instance.student.user.email)
-
+            instance.answer = validated_data.get('answer', instance.answer)
+            # send_rejected_revision.delay(instance.student.user.email)
+        
         instance.save()
         return instance
 
@@ -267,12 +284,19 @@ class EmploymentEducationConfirmationSerializer(serializers.ModelSerializer):
 
 
 class SemesterRegistrationRequestSerializers(serializers.ModelSerializer):
+    student = StudentSerializer()
+    requested_courses = CourseSerializer(many=True)
     class Meta:
         model = SemesterRegistrationRequest
         fields = ['id', 'student', 'approval_status', 'created_at',
                   'semester', 'requested_courses', 'teacher_comment']
         read_only_fields = ['id', 'student', 'created_at', 'semester', 'requested_courses']
-        
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context.get('request') and (self.context['request'].method == 'POST' 
+                                            or self.context['request'].method == 'PUT'):
+            fields.pop('requested_courses')
+        return fields
     def validate_approval_status(self, value):
         if value not in ['P', 'A', 'R']:
             raise serializers.ValidationError("Invalid approval status.")
