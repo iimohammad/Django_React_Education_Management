@@ -13,11 +13,15 @@ from rest_framework_simplejwt.views import (TokenObtainPairView,
 from accounts.permissions import (IsAdmin, IsEducationalAssistant, IsStudent,
                                   IsTeacher)
 from accounts.views import CustomLogoutView
+from dashboard_educationalassistant.schema import schema
 from home.views import login
 from utils.error_views import custom_404
 from django.conf.urls.i18n import i18n_patterns
+from graphene_django.views import GraphQLView
+
 # Authentication URLs
 urlpatterns = [
+    path('graphql/', GraphQLView.as_view(graphiql=True, schema=schema)),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
