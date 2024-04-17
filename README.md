@@ -37,8 +37,6 @@ This project is a University Education System designed to manage various compone
 - Backend API: http://localhost:8000/api/
 - Frontend UI: http://localhost:3000/
 
-## Our Team
-![Team Image](ourTeam.png)
 
 
 ## License
